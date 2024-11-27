@@ -1,0 +1,49 @@
+#include "verilated.h"
+#include "verilated_vcd_c.h"
+#include "VALU.h"
+#include <stdio.h>
+#include "nvboard.h"
+#include <stdlib.h>
+
+VerilatedContext* contextp = NULL;
+VerilatedVcdC* tfp = NULL;
+
+static VALU* top;
+
+void nvboard_bind_all_pins(VALU* top);
+
+void step_and_dump_wave(){
+  top->eval();
+  contextp->timeInc(1);
+  tfp->dump(contextp->time());
+}
+
+void sim_init(){
+  contextp = new VerilatedContext;
+  tfp = new VerilatedVcdC;
+  top = new VALU;
+  contextp->traceEverOn(true);
+  top->trace(tfp, 0);
+  tfp->open("dump.vcd");
+}
+
+void sim_exit(){
+  step_and_dump_wave();
+  tfp->close();
+}
+
+int main() {
+  sim_init();
+  nvboard_bind_all_pins(top);
+  nvboard_init();
+
+   while(1){
+   	nvboard_update();
+   	top->eval();
+   	contextp->timeInc(1);
+   }
+
+  sim_exit();
+  nvboard_quit();
+}
+
