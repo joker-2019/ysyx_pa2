@@ -76,6 +76,7 @@ static int cmd_printR(char *args){
     printf("Missing parameters, Usage: info r(registers) or info w(watchpoints)\r\n");
   }else{
   if(strcmp(args,"r")){
+    printf("%s",args);
     isa_reg_display();
   }else if(strcmp(args, "w")){
     //TODO
