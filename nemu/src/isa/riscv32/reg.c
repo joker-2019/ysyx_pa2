@@ -30,9 +30,9 @@ void isa_reg_display() {
   for (int i = 0; i<32; i++)
   {
     /* code */
-     printf("%-10s 0x%-10x %10d\r\n",regs[i], cpu.gpr[i], cpu.gpr[i]);
+     printf("%-13s 0x%-16x%d\r\n",regs[i], cpu.gpr[i], cpu.gpr[i]);
   }
-  printf("%-10s 0x%-10x %10d\r\n","pc", cpu.pc, cpu.pc);
+  printf("%-13s 0x%-16x%d\r\n","pc", cpu.pc, cpu.pc);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
