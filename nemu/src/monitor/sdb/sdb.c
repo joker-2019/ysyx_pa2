@@ -70,15 +70,16 @@ static int cmd_step(char *args){
 // 打印寄存器状态
 
 static int cmd_printR(char *args){
-  printf("%s",args);
   char *arg = strtok(NULL," ");
+  printf("%s", arg);
   if(arg == NULL)
   {
     printf("Missing parameters, Usage: info r(registers) or info w(watchpoints)\r\n");
   }else{
-  if(strcmp(args,"r")){
+  //if(strcmp(args,'r')){
+  if(strcmp(arg, "r")){
     isa_reg_display();
-  }else if(strcmp(args, "w")){
+  }else if(strcmp(arg, "w")){
     //TODO
     //display_watchpoint();
   }else{
