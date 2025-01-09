@@ -18,6 +18,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include "memory/vaddr.h"
+
 
 static int is_batch_mode = false;
 
@@ -53,6 +55,60 @@ static int cmd_q(char *args) {
   return -1;
 }
 
+//单步执行
+static int cmd_step(char *args){
+  int step;
+  if (args == NULL){
+    step = 1;
+  }else{
+    sscanf(args, "%d", &step);
+  }
+  cpu_exec(step);
+  return 0;
+}
+
+// 打印寄存器状态
+
+static int cmd_printR(char *args){
+  char *arg = strtok(NULL," ");
+  if(arg == NULL)
+  {
+    printf("Missing parameters, Usage: info r(registers) or info w(watchpoints)\r\n");
+  }else{
+  if(strcmp(args,"r")){
+    isa_reg_display();
+  }else if(strcmp(args, "w")){
+    //TODO
+    //display_watchpoint();
+  }else{
+      printf("Usage: info r(registers) or info w(watchpoints)\r\n");
+    }
+
+  }
+  return 0;
+  
+}
+// 扫描内存
+static int cmd_x(char *args) {
+  char *n = strtok(NULL," ");
+  char *vaddr = strtok(NULL," ");
+  if(n == NULL || vaddr == NULL){
+    printf("Usage: x N EXPR\r\n");
+    return 0;
+  }
+  int num;
+  //vaddr_t addr;
+  unsigned int addr;
+  sscanf(n,"%d",&num);
+  sscanf(vaddr,"%x",&addr);
+  for(int i=0;i<num;i++)
+  {
+    printf("0x%08x\r\n",vaddr_read(addr+i*4,4));
+  }
+  return 0;
+  
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -63,6 +119,9 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
+  { "x", "scan addr",cmd_x},
+  { "p", "print register", cmd_printR},
+  { "s", "print step", cmd_step}
 
   /* TODO: Add more commands */
 
