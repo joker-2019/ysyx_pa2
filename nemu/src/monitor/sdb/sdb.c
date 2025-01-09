@@ -19,6 +19,7 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include "memory/vaddr.h"
+#include </home/wp/ysyx-workbench/nemu/src/isa/riscv32/local-include/reg.h>
 
 
 static int is_batch_mode = false;
