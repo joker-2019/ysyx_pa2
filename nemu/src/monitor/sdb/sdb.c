@@ -71,15 +71,15 @@ static int cmd_step(char *args){
 
 static int cmd_printR(char *args){
   char *arg = strtok(NULL," ");
-  printf("%s\n", arg);
+  //printf("%s\n", arg);
   if(arg == NULL)
   {
     printf("Missing parameters, Usage: info r(registers) or info w(watchpoints)\r\n");
   }else{
-  printf("get in here\n");
+  //printf("get in here\n");
   //if(strcmp(args,'r')){
   if(!strcmp(arg, "r")){
-    printf("111\n");
+    //printf("111\n");
     isa_reg_display();
   }else if(!strcmp(arg, "w")){
     //TODO
@@ -124,8 +124,8 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "x", "scan addr",cmd_x},
-  { "p", "print register", cmd_printR},
-  { "s", "print step", cmd_step}
+  { "info", "print register", cmd_printR},
+  { "si", "print step", cmd_step}
 
   /* TODO: Add more commands */
 
