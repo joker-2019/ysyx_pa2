@@ -19,7 +19,6 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include "memory/vaddr.h"
-#include </home/wp/ysyx-workbench/nemu/src/isa/riscv32/local-include/reg.h>
 
 
 static int is_batch_mode = false;
@@ -72,17 +71,17 @@ static int cmd_step(char *args){
 
 static int cmd_printR(char *args){
   char *arg = strtok(NULL," ");
-  printf("%s", arg);
+  printf("%s\n", arg);
   if(arg == NULL)
   {
     printf("Missing parameters, Usage: info r(registers) or info w(watchpoints)\r\n");
   }else{
-  printf("get in here");
+  printf("get in here\n");
   //if(strcmp(args,'r')){
-  if(strcmp(arg, "r") == 0){
+  if(!strcmp(arg, "r")){
     printf("111\n");
     isa_reg_display();
-  }else if(strcmp(arg, "w")){
+  }else if(!strcmp(arg, "w")){
     //TODO
     //display_watchpoint();
   }else{

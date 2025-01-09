@@ -15,6 +15,7 @@
 
 #include <isa.h>
 #include "local-include/reg.h"
+#define NR_REGS ARRLEN(regs) //sizeof(regs)/sizeof(regs[0])
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -24,6 +25,14 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+  //add new code
+  printf("register     Hexadecimal     Decimal\r\n");
+  for (int i = 0; i<32; i++)
+  {
+    /* code */
+     printf("%-13s0x%-16x%d\r\n",regs[i],cpu.gpr[i],cpu.gpr[i]);
+  }
+  printf("%-13s0x%-16x%d\r\n","pc",cpu.pc,cpu.pc);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
