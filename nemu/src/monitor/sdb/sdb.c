@@ -79,6 +79,7 @@ static int cmd_printR(char *args){
   printf("get in here");
   //if(strcmp(args,'r')){
   if(strcmp(arg, "r")){
+    printf("111");
     isa_reg_display();
   }else if(strcmp(arg, "w")){
     //TODO
