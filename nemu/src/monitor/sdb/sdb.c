@@ -92,7 +92,9 @@ static int cmd_printR(char *args){
 // 扫描内存
 static int cmd_x(char *args) {
   char *n = strtok(NULL," ");
+  printf("%s", n);
   char *vaddr = strtok(NULL," ");
+  printf("%s", vaddr);
   if(n == NULL || vaddr == NULL){
     printf("Usage: x N EXPR\r\n");
     return 0;
