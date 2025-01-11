@@ -76,10 +76,7 @@ static int cmd_printR(char *args){
   {
     printf("Missing parameters, Usage: info r(registers) or info w(watchpoints)\r\n");
   }else{
-  //printf("get in here\n");
-  //if(strcmp(args,'r')){
   if(!strcmp(arg, "r")){
-    //printf("111\n");
     isa_reg_display();
   }else if(!strcmp(arg, "w")){
     //TODO
@@ -101,8 +98,8 @@ static int cmd_x(char *args) {
     return 0;
   }
   int num;
-  //vaddr_t addr;
-  unsigned int addr;
+  vaddr_t addr;
+  //unsigned int addr;
   sscanf(n,"%d",&num);
   sscanf(vaddr,"%x",&addr);
   for(int i=0;i<num;i++)
