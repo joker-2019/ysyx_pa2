@@ -19,6 +19,8 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include "memory/vaddr.h"
+//#include "expr.h"
+
 
 
 static int is_batch_mode = false;
@@ -112,6 +114,21 @@ static int cmd_x(char *args) {
   
 }
 
+// Expression evaluation
+static int cmd_p(char *args) {
+  char *exprecession = strtok(NULL," ");
+  if(exprecession == NULL){
+    printf("Usage: x N EXPR\r\n");
+    return 0;
+  }
+  char expreces;
+  sscanf(exprecession,"%s",&expreces);
+  bool str = true;
+  expr(&expreces,&str);
+  return 0;
+  
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -124,7 +141,8 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   { "x", "scan addr",cmd_x},
   { "info", "print register", cmd_printR},
-  { "si", "print step", cmd_step}
+  { "si", "print step", cmd_step},
+  {"p", "Expression evaluation", cmd_p}
 
   /* TODO: Add more commands */
 

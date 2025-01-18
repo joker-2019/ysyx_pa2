@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,
+  TK_NOTYPE = 256, TK_EQ, TK_MUL, TK_DIV, TK_LPAREN, TK_RPAREN, TK_NEQ, TK_AND, TK_OR, TK_NUM
 
   /* TODO: Add more token types */
 
@@ -39,6 +39,15 @@ static struct rule {
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"==", TK_EQ},        // equal
+  {"\\*", TK_MUL},      //mul
+  {"/", TK_DIV},          // 除法 /
+  {"\\(", TK_LPAREN},     // 左括号 (
+  {"\\)", TK_RPAREN},     // 右括号 )
+  {"==", TK_EQ},          // 相等 ==
+  {"!=", TK_NEQ},         // 不等 !=
+  {"&&", TK_AND},         // 逻辑与 &&
+  {"\\|\\|", TK_OR},      // 逻辑或 ||
+  {"[0-9]+", TK_NUM}      // 整数
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -67,8 +76,15 @@ typedef struct token {
   char str[32];
 } Token;
 
+typedef struct result{
+  int data;
+  bool is_valid;
+
+} Result;
+
 static Token tokens[32] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
+Result eval(int p, int q);
 
 static bool make_token(char *e) {
   int position = 0;
@@ -95,7 +111,17 @@ static bool make_token(char *e) {
          */
 
         switch (rules[i].token_type) {
-          default: TODO();
+          case TK_NOTYPE : break;  //space
+
+          case TK_NUM:
+            Assert((substr_len < 32),"%s","An out of buffer error occurred\r\n");
+            strncpy(tokens[nr_token].str, substr_start, substr_len);
+            tokens[nr_token].str[substr_len] = '\0';
+  
+          default: //TODO();
+             tokens[nr_token].type = rules[i].token_type;
+             nr_token++;
+             break;
         }
 
         break;
@@ -119,7 +145,145 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
-
+  //TODO();
+  Result res = eval(0,nr_token-1);
+  *success = res.is_valid;
+  return res.data;
+  
   return 0;
+}
+
+bool check_parentheses(uint32_t p, uint32_t q) {
+  if (tokens[p].type != TK_LPAREN || tokens[q].type != TK_RPAREN) {
+    return false;  // 开头和结尾不是括号，直接返回false
+  }
+
+  int balance = 0;
+  for (int i = p; i <= q; i++) {
+    if (tokens[i].type == TK_LPAREN) {
+      balance++;  // 遇到左括号，+1
+    } else if (tokens[i].type == TK_RPAREN) {
+      balance--;  // 遇到右括号，-1
+    }
+
+    if (balance == 0 && i < q) {
+      // 在q之前括号已经闭合，说明外层括号不完整
+      return false;
+    }
+  }
+
+  return balance == 0;  // 如果balance为0，则括号完整包裹
+}
+
+int get_priority(int type) {
+  switch (type) {
+    case TK_OR:     return 1;  // ||
+    case TK_AND:    return 2;  // &&
+    case TK_EQ:     // == 
+    case TK_NEQ:    return 3;  // !=
+    case '+':       
+    case '-':       return 4;  // + -
+    case '*':       
+    case '/':       return 5;  // * /
+    default:        return -1; // 非运算符
+  }
+}
+
+int find_major_op(int p, int q) {
+  int pos = -1;     // 主运算符的位置
+  int min_pri = 100; // 当前最低优先级（越小优先级越高）
+  int balance = 0;  // 括号嵌套深度
+
+  for (int i = p; i <= q; i++) {
+    if (tokens[i].type == TK_LPAREN) {
+      balance++;  // 进入括号内部
+    } else if (tokens[i].type == TK_RPAREN) {
+      balance--;  // 离开括号
+    }
+
+    if (balance > 0) {
+      continue;  // 括号内的运算符跳过
+    }
+
+    int pri = get_priority(tokens[i].type);  // 获取当前运算符优先级
+
+    if (pri <= min_pri && pri != -1) {
+      // 优先选择最右边的低优先级运算符（左结合性）
+      min_pri = pri;
+      pos = i;
+    }
+  }
+
+  return pos;  // 返回主运算符位置
+}
+
+
+
+Result eval(int p, int q) {
+
+  Result res;
+  Result val1;
+  Result val2;
+  int op = p;
+
+  if (p > q) {
+    /* Bad expression */
+    res.is_valid = false;
+    return res;
+  }
+
+  else if (p == q) {
+    /* Single token.
+     * For now this token should be a number.
+     * Return the value of the number.
+     */
+    if (tokens[p].type == TK_NUM)
+    {
+      res.data = atoi(tokens[p].str);  // 转换字符串为整数
+      res.is_valid = true;
+    }else{
+      res.is_valid = false;
+    }
+    return res;
+  }
+
+  else if (check_parentheses(p, q) == true) {
+    /* The expression is surrounded by a matched pair of parentheses.
+     * If that is the case, just throw away the parentheses.
+     */
+    return eval(p + 1, q - 1);
+  }
+  else {
+    op = find_major_op(p,q);// the position of 主运算符 in the token expression;
+    val1 = eval(p, op - 1);
+    val2 = eval(op + 1, q);
+  
+    if(!(val1.is_valid && val2.is_valid)){
+      res.is_valid = false;
+        return res;
+      } 
+      res.is_valid=true;
+
+    switch (tokens[op].type) {
+      case '+':
+      res.data = val1.data + val2.data;
+      break;
+      case '-':
+      res.data = val1.data + val2.data;
+      break;
+      case '*':
+      res.data = val1.data + val2.data;
+      break;
+      case '/': 
+       if (val2.data == 0) {
+          printf("Error: Division by zero!\n");
+          res.is_valid = false;
+          return res;
+        }
+        res.data = val1.data / val2.data;
+        break;
+      default: assert(0);
+    }
+  }
+  return res;
 }
