@@ -146,6 +146,7 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
   //TODO();
+  printf("second...");
   Result res = eval(0,nr_token-1);
   *success = res.is_valid;
   return res.data;
@@ -250,7 +251,7 @@ Result eval(int p, int q) {
     return res;
   }
 
-  else if (check_parentheses(p, q) == true) {
+  else if (check_parentheses(p, q)) {
     /* The expression is surrounded by a matched pair of parentheses.
      * If that is the case, just throw away the parentheses.
      */
