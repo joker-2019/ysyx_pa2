@@ -21,10 +21,10 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_ADD, TK_SUB, TK_EQ, TK_MUL, TK_DIV, TK_LPAREN, TK_RPAREN, TK_NEQ, TK_AND, TK_OR, TK_NUM
+  TK_NOTYPE = 256, TK_LT, TK_GT, TK_LE, TK_EQ, TK_GE, TK_NEQ, TK_AND, TK_OR, TK_NUM, TK_REG, 
 
   /* TODO: Add more token types */
-
+  TK_POS,TK_NEG,TK_DEREF
 };
 
 static struct rule {
@@ -37,18 +37,22 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
-  {"\\+", TK_ADD},         // plus
-  {"\\-", TK_SUB},      // sub
-  {"==", TK_EQ},        // equal
-  {"\\*", TK_MUL},      //mul
-  {"/", TK_DIV},          // 除法 /
-  {"\\(", TK_LPAREN},     // 左括号 (
-  {"\\)", TK_RPAREN},     // 右括号 )
-  {"==", TK_EQ},          // 相等 ==
-  {"!=", TK_NEQ},         // 不等 !=
-  {"&&", TK_AND},         // 逻辑与 &&
-  {"\\|\\|", TK_OR},      // 逻辑或 ||
-  {"[0-9]+", TK_NUM}      // 整数
+  {"\\(", '('}, 
+  {"\\)", ')'},
+  {"\\*", '*'}, 
+  {"/", '/'},
+  {"\\+", '+'}, 
+  {"-", '-'},
+  {"<", TK_LT}, 
+  {">", TK_GT}, 
+  {"<=", TK_LE}, 
+  {">=", TK_GE},
+  {"==", TK_EQ}, 
+  {"!=", TK_NEQ},
+  {"&&", TK_AND},
+  {"\\|\\|", TK_OR},
+  {"(0x)?[0-9]+", TK_NUM},
+  {"\\$\\w+", TK_REG}
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -115,27 +119,27 @@ static bool make_token(char *e) {
           case TK_NOTYPE : break;  //space
 
           case TK_NUM:
+          case TK_REG:
             Assert((substr_len < 32),"%s","An out of buffer error occurred\r\n");
             strncpy(tokens[nr_token].str, substr_start, substr_len);
             tokens[nr_token].str[substr_len] = '\0';
-  
-          default: //TODO();
-             tokens[nr_token].type = rules[i].token_type;
-             nr_token++;
-             break;
-        }
+            break;
 
+            default: //TODO();
+              tokens[nr_token].type = rules[i].token_type;
+              nr_token++;
+        }
         break;
+
       }
     }
 
     if (i == NR_REGEX) {
       printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
       return false;
-    }
+    }   
   }
-
-  return true;
+    return true;
 }
 
 
@@ -147,24 +151,41 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
   //TODO();
-  printf("second...");
-  Result res = eval(0,nr_token-1);
+
+  /*for(int i=0;i<nr_token;i++){
+    if(  i==0 || !(tokens[i-1].type==TK_NUM 
+               || tokens[i-1].type == ')' 
+               || tokens[i-1].type == TK_REG)
+        )
+    {
+      switch (tokens[i].type)
+      {
+        case '*':
+        tokens[i].type = TK_DEF;
+        break;
+        case '-':
+        tokens[i].type = TK_MINUS;
+        break;
+        default:break;
+      }
+    }
+  }
+  */
+  Result res = eval(0, nr_token-1);
   *success = res.is_valid;
   return res.data;
-  
-  return 0;
 }
 
 bool check_parentheses(int p, int q) {
-  if (tokens[p].type != TK_LPAREN || tokens[q].type != TK_RPAREN) {
+  if (tokens[p].type != '(' || tokens[q].type != ')') {
     return false;  // 开头和结尾不是括号，直接返回false
   }
 
   int balance = 0;
   for (int i = p; i <= q; i++) {
-    if (tokens[i].type == TK_LPAREN) {
+    if (tokens[i].type == '(') {
       balance++;  // 遇到左括号，+1
-    } else if (tokens[i].type == TK_RPAREN) {
+    } else if (tokens[i].type == ')') {
       balance--;  // 遇到右括号，-1
     }
 
@@ -175,9 +196,9 @@ bool check_parentheses(int p, int q) {
   }
   if (balance != 0)
   {
-     return false;  // 如果balance为0，则括号完整包裹
+     return false;  
   }
-  return true;
+  return true; // 如果balance为0，则括号完整包裹
 }
 
 int get_priority(int type) {
@@ -186,10 +207,13 @@ int get_priority(int type) {
     case TK_AND:    return 2;  // &&
     case TK_EQ:     // == 
     case TK_NEQ:    return 3;  // !=
-    case TK_ADD:       
-    case TK_SUB:       return 4;  // + -
-    case TK_MUL:       
-    case TK_DIV:       return 5;  // * /
+    case '+':       
+    case '-':       return 4;  // + -
+    case '*':       
+    case '/':       return 5;  // * /
+    /*case TK_DEF:    
+    case TK_MINUS:  return 6;  // 一元操作符（负号、解引用）
+    */
     default:        return -1; // 非运算符
   }
 }
@@ -200,9 +224,9 @@ int find_major_op(int p, int q) {
   int balance = 0;  // 括号嵌套深度
 
   for (int i = p; i <= q; i++) {
-    if (tokens[i].type == TK_LPAREN) {
+    if (tokens[i].type == '(') {
       balance++;  // 进入括号内部
-    } else if (tokens[i].type == TK_RPAREN) {
+    } else if (tokens[i].type == ')') {
       balance--;  // 离开括号
     }
 
@@ -226,15 +250,16 @@ int find_major_op(int p, int q) {
 
 Result eval(int p, int q) {
 
-  Result res;
+  Result result;
   Result val1;
   Result val2;
   int op = p;
 
   if (p > q) {
     /* Bad expression */
-    res.is_valid = false;
-    return res;
+    result.is_valid = false;
+    printf("Bad expression!!!\r\n");
+    return result;
   }
 
   else if (p == q) {
@@ -242,16 +267,12 @@ Result eval(int p, int q) {
      * For now this token should be a number.
      * Return the value of the number.
      */
-    if (tokens[p].type == TK_NUM)
-    {
-      res.data = atoi(tokens[p].str);  // 转换字符串为整数
-      res.is_valid = true;
-    }else{
-      res.is_valid = false;
+    if(tokens[p].type == TK_NUM){
+      result.data = strtol(tokens[p].str,NULL,10);
+      result.is_valid = true;
     }
-    return res;
+    return result; 
   }
-
   else if (check_parentheses(p, q)) {
     /* The expression is surrounded by a matched pair of parentheses.
      * If that is the case, just throw away the parentheses.
@@ -259,36 +280,28 @@ Result eval(int p, int q) {
     return eval(p + 1, q - 1);
   }
   else {
-    op = find_major_op(p,q);// the position of 主运算符 in the token expression;
-    val1 = eval(p, op - 1);
-    val2 = eval(op + 1, q);
-  
-    if(!(val1.is_valid && val2.is_valid)){
-      res.is_valid = false;
-        return res;
-      } 
-      res.is_valid=true;
+    op = find_major_op(p,q);
 
-    switch (tokens[op].type) {
-      case '+':
-      res.data = val1.data + val2.data;
-      break;
-      case '-':
-      res.data = val1.data + val2.data;
-      break;
-      case '*':
-      res.data = val1.data + val2.data;
-      break;
-      case '/': 
-       if (val2.data == 0) {
-          printf("Error: Division by zero!\n");
-          res.is_valid = false;
-          return res;
-        }
-        res.data = val1.data / val2.data;
-        break;
-      default: assert(0);
+    val1 = eval(p,op-1);
+    val2 = eval(op+1,q);
+
+    if(val1.is_valid && val2.is_valid) 
+        result.is_valid= true;
+      else {
+        result.is_valid = false;
+        return result;
+      }
+      switch(tokens[op].type){
+        case '+':    result.data = val1.data +  val2.data;break;
+        case '-':    result.data = val1.data -  val2.data;break;
+        case '*':    result.data = val1.data *  val2.data;break;
+        case '/':    result.data = val1.data /  val2.data;break;
+        case TK_AND: result.data = val1.data && val2.data;break;
+        case TK_OR:  result.data = val1.data || val2.data;break;
+        case TK_EQ:  result.data = val1.data == val2.data;break;
+        case TK_NEQ: result.data = val1.data != val2.data;break;
+        default: Log("Invalid Operator\r\n");break;
+      } 
+    return result;
     }
   }
-  return res;
-}
