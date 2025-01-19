@@ -92,7 +92,7 @@ static int nr_token __attribute__((used))  = 0;
 Result eval(int p, int q);
 
 static bool make_token(char *e) {
-  printf("expresion:%s", e);
+  printf("expresion:%s\n", e);
   int position = 0;
   int i;
   regmatch_t pmatch;
