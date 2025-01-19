@@ -153,7 +153,7 @@ word_t expr(char *e, bool *success) {
   return 0;
 }
 
-bool check_parentheses(uint32_t p, uint32_t q) {
+bool check_parentheses(int p, int q) {
   if (tokens[p].type != TK_LPAREN || tokens[q].type != TK_RPAREN) {
     return false;  // 开头和结尾不是括号，直接返回false
   }
@@ -171,8 +171,11 @@ bool check_parentheses(uint32_t p, uint32_t q) {
       return false;
     }
   }
-
-  return balance == 0;  // 如果balance为0，则括号完整包裹
+  if (balance != 0)
+  {
+     return false;  // 如果balance为0，则括号完整包裹
+  }
+  return true;
 }
 
 int get_priority(int type) {
