@@ -92,6 +92,7 @@ static int nr_token __attribute__((used))  = 0;
 Result eval(int p, int q);
 
 static bool make_token(char *e) {
+  printf("expresion:%s", e);
   int position = 0;
   int i;
   regmatch_t pmatch;
@@ -120,7 +121,7 @@ static bool make_token(char *e) {
 
           case TK_NUM:
           case TK_REG:
-            //Assert((substr_len < 32),"%s","An out of buffer error occurred\r\n");
+            Assert((substr_len < 32),"%s","An out of buffer error occurred\r\n");
             strncpy(tokens[nr_token].str, substr_start, substr_len);
             tokens[nr_token].str[substr_len] = '\0';
             break;
