@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, TK_MUL, TK_DIV, TK_LPAREN, TK_RPAREN, TK_NEQ, TK_AND, TK_OR, TK_NUM
+  TK_NOTYPE = 256, TK_ADD, TK_SUB, TK_EQ, TK_MUL, TK_DIV, TK_LPAREN, TK_RPAREN, TK_NEQ, TK_AND, TK_OR, TK_NUM
 
   /* TODO: Add more token types */
 
@@ -37,7 +37,8 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
-  {"\\+", '+'},         // plus
+  {"\\+", TK_ADD},         // plus
+  {"\\-", TK_SUB},      // sub
   {"==", TK_EQ},        // equal
   {"\\*", TK_MUL},      //mul
   {"/", TK_DIV},          // 除法 /
@@ -185,10 +186,10 @@ int get_priority(int type) {
     case TK_AND:    return 2;  // &&
     case TK_EQ:     // == 
     case TK_NEQ:    return 3;  // !=
-    case '+':       
-    case '-':       return 4;  // + -
-    case '*':       
-    case '/':       return 5;  // * /
+    case TK_ADD:       
+    case TK_SUB:       return 4;  // + -
+    case TK_MUL:       
+    case TK_DIV:       return 5;  // * /
     default:        return -1; // 非运算符
   }
 }
