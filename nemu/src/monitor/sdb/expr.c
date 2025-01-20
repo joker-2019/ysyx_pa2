@@ -323,7 +323,13 @@ Result eval(int p, int q) {
         case '+':    result.data = val1.data +  val2.data;break;
         case '-':    result.data = val1.data -  val2.data;break;
         case '*':    result.data = val1.data *  val2.data;break;
-        case '/':    result.data = val1.data /  val2.data;break;
+        case '/':
+         if (val2.data == 0) {
+          result.is_valid = false;  // 检测到分母 = 0
+          return result;
+        }    
+        result.data = val1.data /  val2.data; break;
+
         case TK_AND: result.data = val1.data && val2.data;break;
         case TK_OR:  result.data = val1.data || val2.data;break;
         case TK_EQ:  result.data = val1.data == val2.data;break;
