@@ -127,7 +127,7 @@ static bool make_token(char *e) {
             break;
 
             default: //TODO();
-              printf("%c",rules[i].token_type);
+              printf("token_type: %c\n",rules[i].token_type);
               tokens[nr_token].type = rules[i].token_type;
               nr_token++;
         }
@@ -141,6 +141,7 @@ static bool make_token(char *e) {
       return false;
     }   
   }
+    printf("true\n");
     return true;
 }
 
