@@ -287,9 +287,11 @@ Result eval(int p, int q) {
   }
   else {
     op = find_major_op(p,q);
-    printf("op: %d",op);
+    printf("op: %d\n",op);
     val1 = eval(p,op-1);
+    printf("val1:%d",val1.data);
     val2 = eval(op+1,q);
+    printf("val2:%d",val2.data);
 
     if(val1.is_valid && val2.is_valid) 
         result.is_valid= true;
