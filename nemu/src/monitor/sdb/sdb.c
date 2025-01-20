@@ -214,7 +214,6 @@ void sdb_mainloop() {
 }
 
 void test_expr() {
-//注意了各位，这里fopen是你的虚拟机上的input的位置，记得要修改啊！
   FILE *fp = fopen("/home/wp/ysyx-workbench/nemu/tools/gen-expr/input", "r");
   if (fp == NULL) perror("test_expr error");
  
