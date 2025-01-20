@@ -121,6 +121,8 @@ static bool make_token(char *e) {
 
           case TK_NUM:
             Assert((substr_len < 32),"%s","An out of buffer error occurred\r\n");
+            tokens[nr_token].type = rules[i].token_type;
+            nr_token++;
             strncpy(tokens[nr_token].str, substr_start, substr_len);
             tokens[nr_token].str[substr_len] = '\0';
             break;
