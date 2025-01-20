@@ -272,6 +272,7 @@ Result eval(int p, int q) {
      * Return the value of the number.
      */
     if(tokens[p].type == TK_NUM){
+      printf("tokens[p].str:%s\n",tokens[p].str);
       result.data = strtol(tokens[p].str,NULL,10);
       //printf("result.data:%d",result.data);
       result.is_valid = true;
@@ -289,9 +290,9 @@ Result eval(int p, int q) {
     op = find_major_op(p,q);
     printf("op: %d\n",op);
     val1 = eval(p,op-1);
-    printf("val1:%d",val1.data);
+    printf("val1:%d\n",val1.data);
     val2 = eval(op+1,q);
-    printf("val2:%d",val2.data);
+    printf("val2:%d\n",val2.data);
 
     if(val1.is_valid && val2.is_valid) 
         result.is_valid= true;
