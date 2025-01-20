@@ -116,17 +116,15 @@ static int cmd_x(char *args) {
 
 // Expression evaluation
 static int cmd_p(char *args) {
-  char *exprecession = strtok(NULL," ");
-  if(exprecession == NULL){
-    printf("Usage: x N EXPR\r\n");
-    return 0;
+  bool success;
+  printf("args:%s",args);
+  word_t res = expr(args, &success);
+  if (!success) {
+    puts("invalid expression");
+  } else {
+    printf("%d\n", res);
   }
-  char expreces;
-  sscanf(exprecession,"%s",&expreces);
-  bool str = true;
-  expr(&expreces,&str);
   return 0;
-  
 }
 
 static int cmd_help(char *args);
