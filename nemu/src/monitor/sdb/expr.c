@@ -120,7 +120,6 @@ static bool make_token(char *e) {
           case TK_NOTYPE : break;  //space
 
           case TK_NUM:
-          case TK_REG:
             Assert((substr_len < 32),"%s","An out of buffer error occurred\r\n");
             strncpy(tokens[nr_token].str, substr_start, substr_len);
             tokens[nr_token].str[substr_len] = '\0';
@@ -272,7 +271,7 @@ Result eval(int p, int q) {
      */
     if(tokens[p].type == TK_NUM){
       result.data = strtol(tokens[p].str,NULL,10);
-      printf("result.data:%d",result.data);
+      //printf("result.data:%d",result.data);
       result.is_valid = true;
     }
     
