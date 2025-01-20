@@ -252,7 +252,7 @@ int find_major_op(int p, int q) {
 
 Result eval(int p, int q) {
 
-  printf("p:%d,q:%d",p,q);
+  printf("p:%d,q:%d\n",p,q);
 
   Result result;
   Result val1;
