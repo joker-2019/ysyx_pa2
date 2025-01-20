@@ -92,7 +92,7 @@ static int nr_token __attribute__((used))  = 0;
 Result eval(int p, int q);
 
 static bool make_token(char *e) {
-  printf("expresion:%s\n", e);
+  //printf("expresion:%s\n", e);
   int position = 0;
   int i;
   regmatch_t pmatch;
@@ -141,7 +141,6 @@ static bool make_token(char *e) {
       return false;
     }   
   }
-    printf("true\n");
     return true;
 }
 
@@ -252,6 +251,8 @@ int find_major_op(int p, int q) {
 
 Result eval(int p, int q) {
 
+  printf("p:%d,q:%d",p,q);
+
   Result result;
   Result val1;
   Result val2;
@@ -271,8 +272,10 @@ Result eval(int p, int q) {
      */
     if(tokens[p].type == TK_NUM){
       result.data = strtol(tokens[p].str,NULL,10);
+      printf("result.data:%d",result.data);
       result.is_valid = true;
     }
+    
     return result; 
   }
   else if (check_parentheses(p, q)) {
