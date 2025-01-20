@@ -20,6 +20,9 @@
  */
 #include <regex.h>
 
+#define INITIAL_TOKENS_SIZE 256
+#define TOKENS_SIZE_INCREMENT 256
+
 enum {
   TK_NOTYPE = 256, TK_LT, TK_GT, TK_LE, TK_EQ, TK_GE, TK_NEQ, TK_AND, TK_OR, TK_NUM, TK_REG, 
 
@@ -87,9 +90,21 @@ typedef struct result{
 
 } Result;
 
-static Token tokens[32] __attribute__((used)) = {};
+//static Token tokens[32] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
+static int tokens_capacity = 0;
+static Token *tokens = NULL;  // Declare as pointer, not array
 Result eval(int p, int q);
+
+void resize_tokens_array() {
+  if (tokens == NULL) {
+    tokens = (Token *)malloc(INITIAL_TOKENS_SIZE * sizeof(Token));
+    tokens_capacity = INITIAL_TOKENS_SIZE;
+  } else if (nr_token >= tokens_capacity) {
+    tokens_capacity += TOKENS_SIZE_INCREMENT;
+    tokens = (Token *)realloc(tokens, tokens_capacity * sizeof(Token));
+  }
+}
 
 static bool make_token(char *e) {
   //printf("expresion:%s\n", e);
@@ -100,6 +115,8 @@ static bool make_token(char *e) {
   nr_token = 0;
 
   while (e[position] != '\0') {
+
+    resize_tokens_array(); // Ensure the tokens array has enough space
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
