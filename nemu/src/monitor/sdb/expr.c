@@ -151,8 +151,7 @@ word_t expr(char *e, bool *success) {
     *success = false;
     return 0;
   }
-
-
+  *success = true;
   /* TODO: Insert codes to evaluate the expression. */
   //TODO();
 
@@ -176,8 +175,6 @@ word_t expr(char *e, bool *success) {
   }
   */
   Result res = eval(0, nr_token-1);
-  *success = res.is_valid;
-  printf("success: %c\n",res.is_valid);
   return res.data;
 }
 
