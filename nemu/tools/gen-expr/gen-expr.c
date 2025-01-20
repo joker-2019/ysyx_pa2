@@ -30,9 +30,63 @@ static char *code_format =
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
+static int buf_index = 0;
+
+// 生成一个小于 n 的随机数
+uint32_t choose(uint32_t n) {
+  return rand() % n;
+}
+
+static void gen_space() {
+  int num_spaces = choose(2);  // 随机生成 0 到 2 个空格
+  for (int i = 0; i < num_spaces; i++) {
+    buf[buf_index++] = ' ';
+  }
+}
+
+ void gen_num(){
+  int num = choose(999);  // 生成 0 到 999 的随机数
+  
+  // 检查当前缓冲区中的上一个字符是否是除法运算符，如果是，避免生成0
+  if (buf_index > 0 && buf[buf_index - 1] == '/') {
+    num = choose(999) + 1;  // 确保最小值为1，避免0作为除数
+  }
+  buf_index += sprintf(buf + buf_index, "%d", num);
+  gen_space();
+ }
+
+ // 生成一个随机操作符
+void gen_rand_op() {
+  char ops[] = "+-*/";
+  buf[buf_index++] = ops[choose(4)];  // 选择随机运算符
+}
+
+ // 生成单个字符（用于括号）
+void gen(char c) {
+  buf[buf_index++] = ' ';
+  buf[buf_index++] = c;
+  buf[buf_index++] = ' ';
+}
 
 static void gen_rand_expr() {
-  buf[0] = '\0';
+ 
+  switch (choose(3)) {
+    case 0: 
+    gen_num();
+    break;
+    
+    case 1: 
+    gen('('); 
+    gen_rand_expr(); 
+    gen(')'); 
+    break;
+
+    default: 
+    gen_rand_expr(); 
+    gen_rand_op(); 
+    gen_rand_expr();
+    break;
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -44,6 +98,8 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
+    buf_index = 0;  // 清空索引
+    memset(buf, 0, sizeof(buf));  // 清空字符串
     gen_rand_expr();
 
     sprintf(code_buf, code_format, buf);
