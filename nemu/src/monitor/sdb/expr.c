@@ -283,7 +283,7 @@ Result eval(int p, int q) {
   }
   else {
     op = find_major_op(p,q);
-
+    printf("op: %d",op);
     val1 = eval(p,op-1);
     val2 = eval(op+1,q);
 
