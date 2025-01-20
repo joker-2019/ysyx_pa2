@@ -113,13 +113,25 @@ int main(int argc, char *argv[]) {
     if (ret != 0) continue;
 
     fp = popen("/tmp/.expr", "r");
-    assert(fp != NULL);
+    if (!fp) {
+      // popen 失败也跳过
+      continue;
+    }
+    //assert(fp != NULL);
 
     int result;
-    ret = fscanf(fp, "%d", &result);
-    pclose(fp);
+    //ret = fscanf(fp, "%d", &result);
+    //pclose(fp);
+    int scan_ret = fscanf(fp, "%d", &result);
+    int code_ret = pclose(fp); // 获取子进程退出状态
 
-    printf("%u %s\n", result, buf);
+    // 如果能成功读到整数，并且子进程返回值为0，说明正常运行
+    if (scan_ret == 1 && code_ret == 0) {
+      // 只有在没有产生运行时错误的情况下，才输出表达式和结果
+      printf("%u %s\n", result, buf);
+    }
+
+    //printf("%u %s\n", result, buf);
   }
   return 0;
 }
