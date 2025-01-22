@@ -68,8 +68,13 @@ void gen(char c) {
   buf[buf_index++] = ' ';
 }
 
-static void gen_rand_expr() {
- 
+static void gen_rand_expr(depth) {
+ if (strlen(buf) > 65536 - 10000 || depth > 10){
+     gen('(');
+     gen_num();
+     gen(')');  
+ }
+
   switch (choose(3)) {
     case 0: 
     gen_num();
@@ -77,14 +82,14 @@ static void gen_rand_expr() {
     
     case 1: 
     gen('('); 
-    gen_rand_expr(); 
+    gen_rand_expr(depth + 1); 
     gen(')'); 
     break;
 
     default: 
-    gen_rand_expr(); 
+    gen_rand_expr(depth + 1); 
     gen_rand_op(); 
-    gen_rand_expr();
+    gen_rand_expr(depth + 1);
     break;
   }
 }
@@ -100,7 +105,7 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < loop; i ++) {
     buf_index = 0;  // 清空索引
     memset(buf, 0, sizeof(buf));  // 清空字符串
-    gen_rand_expr();
+    gen_rand_expr(10);
 
     sprintf(code_buf, code_format, buf);
 
