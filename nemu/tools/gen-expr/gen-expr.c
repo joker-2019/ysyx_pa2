@@ -45,7 +45,7 @@ static void gen_space() {
 }
 
  void gen_num(){
-  unsigned int num = choose(999);  // 生成 0 到 999 的随机数
+  unsigned int num = choose(UINT8_MAX);  // 生成 0 到 999 的随机数
   
   // 检查当前缓冲区中的上一个字符是否是除法运算符，如果是，避免生成0
   if (buf_index > 0 && buf[buf_index - 1] == '/') {
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
     int result;
     //ret = fscanf(fp, "%d", &result);
     //pclose(fp);
-    int scan_ret = fscanf(fp, "%d", &result);
+    int scan_ret = fscanf(fp, "%u", &result);
     int code_ret = pclose(fp); // 获取子进程退出状态
 
     // 如果能成功读到整数，并且子进程返回值为0，说明正常运行
