@@ -51,7 +51,7 @@ static void gen_space() {
   if (buf_index > 0 && buf[buf_index - 1] == '/') {
     num = choose(UINT8_MAX) + 1;  // 确保最小值为1，避免0作为除数
   }
-  buf_index += sprintf(buf + buf_index, "(unsigned)%u", num);
+  buf_index += sprintf(buf + buf_index, "%u", num);
   gen_space();
  }
 
