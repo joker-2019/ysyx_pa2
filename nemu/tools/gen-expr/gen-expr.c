@@ -129,11 +129,11 @@ int main(int argc, char *argv[]) {
     buf_index = 0;  // 清空索引
     memset(buf, 0, sizeof(buf));  // 清空字符串
     gen_rand_expr();
-    char code_1[65536] = {};
-    convert_to_unsigned(buf, code_1);
+    //char code_1[65536] = {};
+    //convert_to_unsigned(buf, code_1);
 
-    //sprintf(code_buf, code_format, buf);
-    sprintf(code_buf, code_format, code_1);
+    sprintf(code_buf, code_format, buf);
+    //sprintf(code_buf, code_format, code_1);
 
 
     FILE *fp = fopen("/tmp/.code.c", "w");
