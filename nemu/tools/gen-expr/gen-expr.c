@@ -68,11 +68,10 @@ void gen(char c) {
   buf[buf_index++] = ' ';
 }
 
-static void gen_rand_expr(depth) {
+static void gen_rand_expr(int depth) {
  if (strlen(buf) > 65536 - 10000 || depth > 10){
-     gen('(');
-     gen_num();
-     gen(')');  
+      gen_num(); 
+      return;  // 防止继续递归
  }
 
   switch (choose(3)) {
