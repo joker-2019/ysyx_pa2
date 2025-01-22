@@ -26,7 +26,7 @@ static char code_buf[65536 + 128] = {}; // a little larger than `buf`
 static char *code_format =
 "#include <stdio.h>\n"
 "int main() { "
-"  unsigned result = %s; "
+"  unsigned result = (unsigned int)%s; "
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
@@ -51,7 +51,7 @@ static void gen_space() {
   if (buf_index > 0 && buf[buf_index - 1] == '/') {
     num = choose(UINT8_MAX) + 1;  // 确保最小值为1，避免0作为除数
   }
-  buf_index += sprintf(buf + buf_index, "%u", num);
+  buf_index += sprintf(buf + buf_index, "(unsigned)%u", num);
   gen_space();
  }
 
@@ -114,8 +114,8 @@ int main(int argc, char *argv[]) {
     fputs(code_buf, fp);
     fclose(fp);
 
-    int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
-    //int ret = system("gcc -O0 -w /tmp/.code.c -o /tmp/.expr");
+    //int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
+    int ret = system("gcc -O0 -Wall -Werror /tmp/.code.c -o /tmp/.expr");
     if (ret != 0) continue;
 
     fp = popen("/tmp/.expr", "r");
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
       continue;
     }*/
     assert(fp != NULL);
-    int result;
+    unsigned int result;
     //ret = fscanf(fp, "%d", &result);
     //pclose(fp);
     int scan_ret = fscanf(fp, "%u", &result);
