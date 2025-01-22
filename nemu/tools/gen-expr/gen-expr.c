@@ -38,20 +38,20 @@ uint32_t choose(uint32_t n) {
 }
 
 static void gen_space() {
-  int num_spaces = choose(2);  // 随机生成 0 到 2 个空格
+  int num_spaces = choose(2);  // 随机生成 0 到 1 个空格
   for (int i = 0; i < num_spaces; i++) {
     buf[buf_index++] = ' ';
   }
 }
 
  void gen_num(){
-  int num = choose(999);  // 生成 0 到 999 的随机数
+  unsigned int num = choose(999);  // 生成 0 到 999 的随机数
   
   // 检查当前缓冲区中的上一个字符是否是除法运算符，如果是，避免生成0
   if (buf_index > 0 && buf[buf_index - 1] == '/') {
     num = choose(999) + 1;  // 确保最小值为1，避免0作为除数
   }
-  buf_index += sprintf(buf + buf_index, "%d", num);
+  buf_index += sprintf(buf + buf_index, "%u", num);
   gen_space();
  }
 
@@ -63,9 +63,7 @@ void gen_rand_op() {
 
  // 生成单个字符（用于括号）
 void gen(char c) {
-  buf[buf_index++] = ' ';
   buf[buf_index++] = c;
-  buf[buf_index++] = ' ';
 }
 
 static void gen_rand_expr() {

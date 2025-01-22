@@ -85,7 +85,7 @@ typedef struct token {
 } Token;
 
 typedef struct result{
-  int data;
+  unsigned int data;
   bool is_valid;
 
 } Result;
