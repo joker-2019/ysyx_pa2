@@ -33,7 +33,7 @@ static char *code_format =
 static int buf_index = 0;
 
 // 生成一个小于 n 的随机数
-uint32_t choose(uint32_t n) {
+unsigned int choose(unsigned int n) {
   return rand() % n;
 }
 
