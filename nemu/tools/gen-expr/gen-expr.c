@@ -52,7 +52,7 @@ static void gen_space() {
     num = choose(UINT8_MAX) + 1;  // 确保最小值为1，避免0作为除数
   }
   */
-  buf_index += sprintf(buf + buf_index, "(unsigned)%u", num);
+  buf_index += sprintf(buf + buf_index, "(unsigned int)%u", num);
   gen_space();
  }
 
