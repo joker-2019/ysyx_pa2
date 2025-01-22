@@ -70,7 +70,7 @@ void gen(char c) {
 
 static void gen_rand_expr() {
  //if (strlen(buf) > 65536 - 10000 || depth > 15){
- if (strlen(buf) > 65536 - 10000){
+ if (strlen(buf) > 1000){
       gen('(');
       gen_num();
       gen(')');  
