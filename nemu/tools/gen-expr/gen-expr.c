@@ -19,6 +19,7 @@
 #include <time.h>
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 
 // this should be enough
 static char buf[65536] = {};
@@ -52,7 +53,7 @@ static void gen_space() {
     num = choose(UINT8_MAX) + 1;  // 确保最小值为1，避免0作为除数
   }
   */
-  buf_index += sprintf(buf + buf_index, "(unsigned)%u", num);
+  buf_index += sprintf(buf + buf_index, "%u", num);
   gen_space();
  }
 
@@ -95,6 +96,27 @@ static void gen_rand_expr() {
   }
 }
 
+void convert_to_unsigned(const char *input, char *output) {
+    const char *p = input;
+    char *q = output;
+    while (*p != '\0') {
+        // Skip whitespaces
+        while (isspace(*p)) p++;
+
+        // Process digits and add 'U' suffix
+        if (isdigit(*p)) {
+            while (isdigit(*p)) {
+                *q++ = *p++;
+            }
+            *q++ = 'U';
+        } else {
+            // Copy other characters directly
+            *q++ = *p++;
+        }
+    }
+    *q = '\0';
+}
+
 int main(int argc, char *argv[]) {
   int seed = time(0);
   srand(seed);
@@ -107,8 +129,12 @@ int main(int argc, char *argv[]) {
     buf_index = 0;  // 清空索引
     memset(buf, 0, sizeof(buf));  // 清空字符串
     gen_rand_expr();
+    char code_1[65536] = {};
+    convert_to_unsigned(buf, code_1);
 
-    sprintf(code_buf, code_format, buf);
+    //sprintf(code_buf, code_format, buf);
+    sprintf(code_buf, code_format, code_1);
+
 
     FILE *fp = fopen("/tmp/.code.c", "w");
     assert(fp != NULL);
