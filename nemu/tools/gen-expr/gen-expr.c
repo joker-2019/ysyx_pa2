@@ -26,14 +26,14 @@ static char code_buf[65536 + 128] = {}; // a little larger than `buf`
 static char *code_format =
 "#include <stdio.h>\n"
 "int main() { "
-"  unsigned result = (unsigned)%s; "
+"  unsigned result = %s; "
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
 static int buf_index = 0;
 
 // 生成一个小于 n 的随机数
-unsigned choose(unsigned n) {
+unsigned int choose(unsigned int n) {
   return rand() % n;
 }
 
@@ -45,14 +45,14 @@ static void gen_space() {
 }
 
  void gen_num(){
-  unsigned num = choose(UINT8_MAX);  // 生成 0 到 999 的随机数
+  unsigned int num = choose(UINT8_MAX);  // 生成 0 到 999 的随机数
   
   // 检查当前缓冲区中的上一个字符是否是除法运算符，如果是，避免生成0
   /*if (buf_index > 0 && buf[buf_index - 1] == '/') {
     num = choose(UINT8_MAX) + 1;  // 确保最小值为1，避免0作为除数
   }
   */
-  buf_index += sprintf(buf + buf_index, "(unsigned int)%u", num);
+  buf_index += sprintf(buf + buf_index, "%uU", num);
   gen_space();
  }
 
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
       continue;
     }*/
     assert(fp != NULL);
-    unsigned result;
+    unsigned int result;
     //ret = fscanf(fp, "%d", &result);
     //pclose(fp);
     int scan_ret = fscanf(fp, "%u", &result);
