@@ -52,7 +52,7 @@ static void gen_space() {
     num = choose(UINT8_MAX) + 1;  // 确保最小值为1，避免0作为除数
   }
   */
-  buf_index += sprintf(buf + buf_index, "U%u", num);
+  buf_index += sprintf(buf + buf_index, "%uU", num);
   gen_space();
  }
 
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
     fclose(fp);
 
     //int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
-    int ret = system("gcc -O0 -Wall -Werror /tmp/.code.c -o /tmp/.expr");
+    int ret = system("gcc -O0 /tmp/.code.c -o /tmp/.expr");
     if (ret != 0) continue;
 
     fp = popen("/tmp/.expr", "r");
