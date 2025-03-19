@@ -19,8 +19,7 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include "memory/vaddr.h"
-//#include "expr.h"
-
+#include "watchpoint.h"
 
 
 static int is_batch_mode = false;
@@ -82,7 +81,7 @@ static int cmd_printR(char *args){
     isa_reg_display();
   }else if(!strcmp(arg, "w")){
     //TODO
-    //display_watchpoint();
+    display_watchpoint();
   }else{
       printf("Usage: info r(registers) or info w(watchpoints)\r\n");
     }
@@ -122,8 +121,37 @@ static int cmd_p(char *args) {
   if (!success) {
     puts("invalid expression");
   } else {
-    printf("%d\n", res);
+    printf("%u\n", res);
   }
+  return 0;
+}
+
+//设置监视点
+static int cmd_w(char* args) {
+  if (!args) {
+    printf("Usage: w EXPR\n");
+    return 0;
+  }
+  bool success;
+  expr(args, &success);
+  if (!success) {
+    puts("invalid expression");
+  } else {
+    //wp_watch(args, res);
+    new_wp(args);
+  }
+  return 0;
+}
+
+//删除监视点
+static int cmd_d(char* args) {
+  char *arg = strtok(NULL, "");
+  if (!arg) {
+    printf("Usage: d N\n");
+    return 0;
+  }
+  int no = strtol(arg, NULL, 10);
+  free_wp(no);
   return 0;
 }
 
@@ -140,8 +168,9 @@ static struct {
   { "x", "scan addr",cmd_x},
   { "info", "print register", cmd_printR},
   { "si", "print step", cmd_step},
-  {"p", "Expression evaluation", cmd_p}
-
+  {"p", "Expression evaluation", cmd_p},
+  {"w","Usage: w EXPR. Watch for the variation of the result of EXPR, pause at variation point", cmd_w },
+  {"d", "Usage: d N. Delete watchpoint of wp.NO=N", cmd_d},
   /* TODO: Add more commands */
 
 };
@@ -212,7 +241,7 @@ void sdb_mainloop() {
     if (i == NR_CMD) { printf("Unknown command '%s'\n", cmd); }
   }
 }
-
+/*
 void test_expr() {
   FILE *fp = fopen("/home/wp/ysyx-workbench/nemu/tools/gen-expr/input", "r");
   if (fp == NULL) perror("test_expr error");
@@ -243,12 +272,13 @@ void test_expr() {
  
   Log("expr test pass");
 }
+*/
 
 void init_sdb() {
   /* Compile the regular expressions. */
   init_regex();
   /* test math expression calculation */
-  test_expr();
+  //test_expr();
   /* Initialize the watchpoint pool. */
   init_wp_pool();
 }
