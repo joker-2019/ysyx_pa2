@@ -241,7 +241,7 @@ void sdb_mainloop() {
     if (i == NR_CMD) { printf("Unknown command '%s'\n", cmd); }
   }
 }
-/*
+
 void test_expr() {
   FILE *fp = fopen("/home/wp/ysyx-workbench/nemu/tools/gen-expr/input", "r");
   if (fp == NULL) perror("test_expr error");
@@ -272,13 +272,13 @@ void test_expr() {
  
   Log("expr test pass");
 }
-*/
+
 
 void init_sdb() {
   /* Compile the regular expressions. */
   init_regex();
   /* test math expression calculation */
-  //test_expr();
+  test_expr();
   /* Initialize the watchpoint pool. */
   init_wp_pool();
 }
