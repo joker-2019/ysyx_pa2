@@ -2,6 +2,7 @@
 
 # Top module name
 # TOPNAME = top
+# TOPNAME = light
 # TOPNAME = mux41
 # TOPNAME = decode38
 # TOPNAME = ALU
@@ -10,6 +11,7 @@ TOPNAME = keyboard_display
 
 # NXDC constraint file
 # NXDC_FILES = constr/top.nxdc
+# NXDC_FILES = constr/light.nxdc
 # NXDC_FILES = constr/mux41.nxdc
 # NXDC_FILES = constr/decode38.nxdc
 # NXDC_FILES = constr/ALU.nxdc
@@ -30,6 +32,7 @@ BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
+
 # Default target
 default: $(BIN)
 
@@ -46,8 +49,10 @@ VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
 # CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 # VSRCS = $(shell find $(abspath ./vsrc) -name "mux41.v")
 # VSRCS = $(shell find $(abspath ./vsrc) -name "decode38.v")
-#VSRCS = $(shell find $(abspath ./vsrc) -name "ALU.v" -o -name "bcd7seg.v" -o -name "ALU_control.v" -o -name "ALU_logic.v")
+# VSRCS = $(shell find $(abspath ./vsrc) -name "keyboard_display.v")
+# VSRCS = $(shell find $(abspath ./vsrc) -name "ALU.v" -o -name "bcd7seg.v" -o -name "ALU_control.v" -o -name "ALU_logic.v")
 # CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+# CSRCS = $(shell find $(abspath ./csrc) -name "light.cpp")
 # CSRCS = $(shell find $(abspath ./csrc) -name "mux41.cpp")
 # CSRCS = $(shell find $(abspath ./csrc) -name "decode38.cpp")
 # CSRCS = $(shell find $(abspath ./csrc) -name "ALU.cpp")
@@ -72,6 +77,13 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 
 # Default and run targets
 all: default
+
+# 仿真目标
+sim: $(BIN)
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@echo "[SIM] 启动仿真..."
+	@$(BIN)
+
 run: $(BIN)
 	@$^
 
@@ -82,5 +94,5 @@ view:$(FST_FILE)
 clean:
 	rm -rf $(BUILD_DIR)
         
-.PHONY: default all clean run
+.PHONY: default all clean run view sim
 
