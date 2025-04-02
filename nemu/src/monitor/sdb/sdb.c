@@ -62,7 +62,12 @@ static int cmd_step(char *args){
   if (args == NULL){
     step = 1;
   }else{
-    sscanf(args, "%d", &step);
+    char *endptr;
+    step = strtol(args, &endptr, 10); // 十进制解析
+    if (*endptr != '\0' || args == endptr || step <= 0) { // 无效字符或空字符串或者步数小于0,均为非法
+      printf("Invalid step format: '%s'\n", args);
+      return -1;
+    }
   }
   cpu_exec(step);
   return 0;
