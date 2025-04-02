@@ -97,7 +97,38 @@ static int cmd_printR(char *args){
 }
 // 扫描内存
 static int cmd_x(char *args) {
-  char *n = strtok(NULL," ");
+  char *saveptr;
+  char *n = strtok_r(args, " ", &saveptr);      // 提取参数 N
+  char *vaddr = strtok_r(NULL, " ", &saveptr);  // 提取地址表达式
+
+  // 参数校验
+  if (n == NULL || vaddr == NULL) {
+    printf("Usage: x N EXPR\r\n");
+    return -1;
+  }
+  // 解析 N（正整数）
+  char *n_end;
+  long num = strtol(n, &n_end, 10); // 十进制解析
+  if (num <= 0 || *n_end != '\0') {
+    printf("Invalid count: '%s' (must be positive integer)\r\n", n);
+    return -1;
+  }
+
+  // 解析地址（十六进制）
+  char *addr_end;
+  unsigned long addr = strtoul(vaddr, &addr_end, 16); // 十六进制解析
+  if (addr_end == vaddr || *addr_end != '\0') {
+    printf("Invalid address: '%s'\r\n", vaddr);
+    return -1;
+  }
+
+  // 内存访问
+  for (int i = 0; i < num; i++) {
+    printf("0x%08x\r\n",vaddr_read(addr+i*4,4));
+  }
+  return 0;
+
+  /*char *n = strtok(NULL," ");
   //printf("%s\n", n);
   char *vaddr = strtok(NULL," ");
   //printf("%s\n", vaddr);
@@ -115,6 +146,7 @@ static int cmd_x(char *args) {
     printf("0x%08x\r\n",vaddr_read(addr+i*4,4));
   }
   return 0;
+  */
   
 }
 
