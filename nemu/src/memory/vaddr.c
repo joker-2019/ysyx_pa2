@@ -16,11 +16,11 @@
 #include <isa.h>
 #include <memory/paddr.h>
 
-word_t vaddr_ifetch(vaddr_t addr, int len) {
+word_t vaddr_ifetch(vaddr_t addr, int len) { //取值
   return paddr_read(addr, len);
 }
 
-word_t vaddr_read(vaddr_t addr, int len) {
+word_t vaddr_read(vaddr_t addr, int len) {  //读取地址
   return paddr_read(addr, len);
 }
 
