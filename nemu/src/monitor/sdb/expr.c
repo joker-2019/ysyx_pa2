@@ -221,6 +221,7 @@ bool check_parentheses(int p, int q) {
     } else if (tokens[i].type == ')') {
       balance--;  // 遇到右括号，-1
     }
+    printf("balance:%d",balance);
     if (balance != 0)
     {
      return false;  
