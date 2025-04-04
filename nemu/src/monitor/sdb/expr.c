@@ -20,6 +20,7 @@
  */
 #include <regex.h>
 #include <memory/paddr.h>
+// #include "local-include/reg.h"
 
 #define INITIAL_TOKENS_SIZE 256
 #define TOKENS_SIZE_INCREMENT 256
@@ -334,6 +335,8 @@ Result eval(int p, int q){
     }
     else if(tokens[p].type == TK_REG){
       bool success_reg = false;
+      printf("tokens[p].str:%s", tokens[p].str);
+      printf("tokens[p].str+1:%s", tokens[p].str+1);
       result.data = isa_reg_str2val(tokens[p].str+1, &success_reg);  //reg
       result.is_valid = success_reg;
       if(success_reg == false)
