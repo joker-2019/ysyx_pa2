@@ -152,7 +152,6 @@ static bool make_token(char *e) {
           Assert((substr_len < 32),"%s","An out of buffer error occurred\r\n");
           strncpy(tokens[nr_token].str, substr_start, substr_len);
           tokens[nr_token].str[substr_len] = '\0';
-          break;
 
           default:
           tokens[nr_token].type = rules[i].token_type; 
@@ -192,7 +191,7 @@ word_t expr(char *e, bool *success) {
 
 // 若 * 为第一个 token 或者 * 前一个 token 的类型为二元运算符（或者就是解引用，或者是左括号），那么这个 * 就是指针解引用。
   for(int i=0;i<nr_token;i++){
-    if(  i==0 || (tokens[i-1].type!=TK_NUM && tokens[i-1].type != ')' && tokens[i-1].type != TK_REG && tokens[i-1].type != TK_HEX) )
+    if(  i==0 || !(tokens[i-1].type==TK_NUM || tokens[i-1].type == ')' || tokens[i-1].type == TK_REG || tokens[i-1].type == TK_HEX) )
     {
       switch (tokens[i].type)
       {
