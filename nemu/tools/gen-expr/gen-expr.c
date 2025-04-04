@@ -89,7 +89,7 @@ void gen(char c) {
 //生成随机表达式
 static void gen_rand_expr() {
 
-	if(buf_index > 65530){
+	if(buf_index > 65536){
     // 清空缓冲区并终止当前表达式生成
     buf_index = 0;
     return;

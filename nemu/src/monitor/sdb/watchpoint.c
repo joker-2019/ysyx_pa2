@@ -17,17 +17,21 @@
 #include "watchpoint.h"
 
 #define NR_WP 32
+
 /*
 typedef struct watchpoint {
   int NO;
   struct watchpoint *next;
 
   //TODO: Add more members if necessary
+   word_t old_value;
+   char expr[100];   
 
-} WP; */
-
+} WP; 
+*/
 static WP wp_pool[NR_WP] = {};
 static WP *head = NULL, *free_ = NULL;
+
 
 //初始化监视池
 void init_wp_pool() {
@@ -43,124 +47,115 @@ void init_wp_pool() {
 }
 
 /* TODO: Implement the functionality of watchpoint */
-
-
-//构建单个监视点
-/*
-static WP* new_wp() {
-  assert(free_);
-  WP* ret = free_;
-  free_ = free_->next;
-  ret->next = head;
-  head = ret;
-  return ret;
-}
-
-//释放监视点
-static void free_wp(WP *wp) {
-  WP* h = head;
-  if (h == wp) head = NULL;
-  else {
-    while (h && h->next != wp) h = h->next;
-    assert(h);
-    h->next = wp->next;
-  }
-  //头插法
-  wp->next = free_;
-  free_ = wp;
-}
-*/
-
-void new_wp(char *args){
-  if(free_ == NULL)
-  {
-    panic("The number of watchpoints has been Max = %d\r\n",NR_WP);
-  }
- 
-  WP* new_wp = free_;
-  free_ = free_->next;
-  new_wp->next = NULL;
-  //new_wp->str = args;
-  strcpy(new_wp->expr, args);
-  bool success = false;
-  uint32_t val = expr(new_wp->expr,&success);
-  if(success){
-    new_wp->val = val;
-    printf("Watchpoint %d: %s initial value is Decimal: %lu Hexadecimal: 0x%lx\r\n",new_wp->NO,new_wp->expr,new_wp->val,new_wp->val);
-
-    if(head == NULL){
-    head = new_wp;
-    }
-    else{
-      new_wp->next = head; //头插
-      head = new_wp;
-    }
-  }
-  else{
-    printf("You set the watpoint's expression is invalid\r\n");
-    //free_wp(new_wp->NO);
-  }
-  
-
-}
-
-void free_wp(int n){
-  if(head == NULL){
-    printf("Current don't have watchpoint can delete\r\n");
-    return;
-  }
-  WP *free_wp = NULL;
-  if(head->NO == n){
-    free_wp = head;
-    head = head->next;
-    free_wp->next = NULL;
-  }
-  else{
-    WP * itr = head;
-    while (itr->next != NULL)
-    {
-      if(itr->next->NO == n){
-        free_wp = itr->next;
-        itr->next = itr->next->next;
-        free_wp->next = NULL;
-        break;
-      }
-      itr = itr->next;
-    }
-    printf("No match the %d watchpoint\n",n);
-    return;
-  }
-  free_wp->next = free_;
-  free_ = free_wp; //头插
-}
-
-
+//打印监视点
 void display_watchpoint(void){
   WP *wp = head;
   if(wp==NULL){
     printf("Current don't have watchpoints\n");
+    return;
   }
   while(wp != NULL){
-    printf("%d watchpoint expression: %s now value is: %lu 0x%lx\n",wp->NO,wp->expr,wp->val,wp->val);
+    printf("%d watchpoint expression: %s now value is: %u \n",wp->NO,wp->expr,wp->old_value);
     wp = wp->next;
   }
 }
-/*
+
+//新建监视点
+ WP *new_wp(){
+  //若free_中无空闲的监视点，则无法创建新的监视点
+  if(free_ == NULL){
+    printf("Failed to create a monitor. No monitor is available\n"); //表示无空闲的监视点
+    assert(0);
+  }
+  else{
+  WP * new_wp_temp = free_;  //新建节点指向空闲节点
+  free_ = free_->next;  //空闲节点-1
+
+  new_wp_temp->next = head;  //新建节点指向组织监视节点的head
+  head = new_wp_temp;        //将头节点前移，头插法
+  return head;
+  }
+}
+
+//删除监视点
+void free_wp(WP *wp){
+
+  if(wp ==NULL){
+    printf("No watchpoints are using\n");
+    assert(0);
+  }
+  WP *wp_free = NULL;
+
+  if(head == wp){  //存在组织监视点的头监视点，就是要删除的监视点
+    wp_free = head;
+    head = wp_free->next;   //删除组织监视点的头节点
+
+    wp_free->next = free_;
+    free_ = wp_free;      //将释放节点加入空闲节点
+  }
+  else{
+    WP *temp = head;
+    while (temp && temp->next!= wp) //在组织监视点寻找要删除的监视点
+    {
+      temp = temp->next;
+    }
+    temp->next = wp->next;  //找到要删除的节点，将要删除的next节点交给temp的next节点
+    wp->next = free_;       //将要删除的节点指向free
+    free_ = wp;             //free指向头      头插法
+    
+  }
+  
+}
+
+//设置监视点
 void wp_watch(char *expr, word_t res) {
   WP* wp = new_wp();
+  wp->old_value = res;
   strcpy(wp->expr, expr);
-  wp->old = res;
   printf("Watchpoint %d: %s\n", wp->NO, expr);
 }
 
+//删除监视点
 void wp_remove(int no) {
-  assert(no < NR_WP);
-  WP* wp = &wp_pool[no];
-  free_wp(wp);
-  printf("Delete watchpoint %d: %s\n", wp->NO, wp->expr);
-}
-*/
+  WP *wp_delete = head;
+  while (wp_delete && wp_delete->NO != no)
+  {
+    wp_delete = wp_delete->next;
+  }
 
+  if(wp_delete == NULL){
+    printf("The watchpoint does't exist.\n");
+    return;
+  }
+  free_wp(wp_delete); 
+  printf("Deleted success\n"); 
+}
+
+//扫描所有的监视点，当发现表达式的值发生改变，更显表达式的值并让系统进入暂停状态
+bool scan_all_wp(){
+  WP *temp = head;
+  bool flag = false; //当值发生变化时，触发暂停
+
+  while (temp)
+  {
+    bool success;
+    word_t new_value = expr(temp->expr,&success);
+    if(temp->old_value != new_value){
+      printf("%d watchpoint expression has changed: %s",temp->NO, temp->expr);
+      printf("%d old_value is %u",temp->NO, temp->old_value);
+      printf("%d new_value is %u",temp->NO, new_value);
+      temp->old_value = new_value;
+      flag = true; 
+      //nemu_state.state = NEMU_STOP;
+      //return;
+    }else{
+      temp = temp->next;
+    }
+  }
+  return flag;
+}
+
+/*
 void wp_difftest() {
   WP* h = head;
   while (h) {
@@ -176,3 +171,4 @@ void wp_difftest() {
     h = h->next;
   }
 }
+*/

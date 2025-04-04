@@ -1,19 +1,21 @@
 #ifndef WATCHPOINT_H
 #define WATCHPOINT_H
- 
+
 typedef struct watchpoint {
-    // 定义 watchpoint 结构体
   int NO;
   struct watchpoint *next;
-  char expr[100];
-  unsigned long val;
-  /* TODO: Add more members if necessary */
-} WP;
- 
-void display_watchpoint(void);
-//void wp_watch(char *args, word_t res);
-//void wp_remove(int no);
-void new_wp(char *args);
-void free_wp(int n);
+
+  //TODO: Add more members if necessary
+   word_t old_value;
+   char expr[100];   
+
+} WP; 
+WP *new_wp();    //创建新的监视点
+void free_wp(WP *wp); //释放监视点
+
+void display_watchpoint(void); //展示监视点
+void wp_watch(char *args, word_t res);  //设置监视点
+void wp_remove(int no);
+bool scan_all_wp(); //扫描所有的监视点
  
 #endif // WATCHPOINT_H

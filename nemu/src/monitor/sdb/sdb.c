@@ -150,12 +150,12 @@ static int cmd_w(char* args) {
     return 0;
   }
   bool success;
-  expr(args, &success);
+  word_t res = expr(args, &success);
   if (!success) {
     puts("invalid expression");
   } else {
-    //wp_watch(args, res);
-    new_wp(args);
+    wp_watch(args, res);
+    //new_wp(args);
   }
   return 0;
 }
@@ -168,7 +168,7 @@ static int cmd_d(char* args) {
     return 0;
   }
   int no = strtol(arg, NULL, 10);
-  free_wp(no);
+  wp_remove(no);
   return 0;
 }
 
@@ -295,7 +295,7 @@ void init_sdb() {
   /* Compile the regular expressions. */
   init_regex();
   /* test math expression calculation */
-  test_expr();
+  //test_expr();
   /* Initialize the watchpoint pool. */
   init_wp_pool();
 }
