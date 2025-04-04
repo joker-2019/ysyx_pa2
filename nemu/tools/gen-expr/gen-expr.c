@@ -150,7 +150,6 @@ int main(int argc, char *argv[]) {
     sprintf(code_buf, code_format, buf);
     //sprintf(code_buf, code_format, code_1);
 
-    printf('1');
     FILE *fp = fopen("/tmp/.code.c", "w");
     //FILE *fp = fopen("./code.c", "w");
     if (fp == NULL) {

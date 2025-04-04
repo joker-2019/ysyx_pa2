@@ -225,7 +225,7 @@ bool check_parentheses(int p, int q) {
     {
      return false;  
     }
-    if (balance == 0 && i != q) {
+    if (balance == 0 && i < q) {
       // 在q之前括号已经闭合，说明外层括号不完整
       return false;
     }
@@ -287,7 +287,7 @@ int find_major_op(int p, int q) {
       pos = i;
     }
   }
-  printf("pos:%d\n",pos);
+  // printf("pos:%d\n",pos);
   return pos;  // 返回主运算符位置
 }
 
