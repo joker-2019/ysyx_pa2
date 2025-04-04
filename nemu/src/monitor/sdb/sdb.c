@@ -116,7 +116,7 @@ static int cmd_x(char *args) {
 
   // 解析地址（十六进制）
   char *addr_end;
-  unsigned long addr = strtoul(vaddr, &addr_end, 16); // 十六进制解析
+  unsigned long addr = strtol(vaddr, &addr_end, 16); // 十六进制解析
   if (addr_end == vaddr || *addr_end != '\0') {
     printf("Invalid address: '%s'\r\n", vaddr);
     return -1;
@@ -127,26 +127,6 @@ static int cmd_x(char *args) {
     printf("0x%08x\r\n",vaddr_read(addr+i*4,4));
   }
   return 0;
-
-  /*char *n = strtok(NULL," ");
-  //printf("%s\n", n);
-  char *vaddr = strtok(NULL," ");
-  //printf("%s\n", vaddr);
-  if(n == NULL || vaddr == NULL){
-    printf("Usage: x N EXPR\r\n");
-    return 0;
-  }
-  int num;
-  vaddr_t addr;
-  //unsigned int addr;
-  sscanf(n,"%d",&num);
-  sscanf(vaddr,"%x",&addr);
-  for(int i=0;i<num;i++)
-  {
-    printf("0x%08x\r\n",vaddr_read(addr+i*4,4));
-  }
-  return 0;
-  */
   
 }
 

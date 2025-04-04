@@ -19,15 +19,23 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
+#include <memory/paddr.h>
 
 #define INITIAL_TOKENS_SIZE 256
 #define TOKENS_SIZE_INCREMENT 256
 
 enum {
-  TK_NOTYPE = 256, TK_LT, TK_GT, TK_LE, TK_EQ, TK_GE, TK_NEQ, TK_AND, TK_OR, TK_NUM, TK_REG, 
+  TK_NOTYPE = 256, //spaces
+  TK_LT, TK_GT, // <  >
+  TK_LE, TK_GE,  // <=  >= 
+  TK_EQ, TK_NEQ, // ==  !=
+  TK_AND, TK_OR, // && || 
+  TK_NUM, TK_HEX, TK_REG, // 十进制  16进制 register
 
   /* TODO: Add more token types */
-  TK_POS,TK_NEG,TK_DEREF
+  TK_POS,TK_NEG,TK_MULT, TK_DIV,      // + -  *  /
+  TK_LP, TK_RP,    //(    )
+  TK_MINUS,TK_DEREF
 };
 
 static struct rule {
@@ -40,12 +48,12 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
-  {"\\(", '('}, 
-  {"\\)", ')'},
-  {"\\*", '*'}, 
-  {"/", '/'},
-  {"\\+", '+'}, 
-  {"-", '-'},
+  {"\\(", TK_LP}, 
+  {"\\)", TK_RP},
+  {"\\*", TK_MULT}, 
+  {"/", TK_DIV},
+  {"\\+", TK_POS}, 
+  {"-", TK_NEG},
   {"<", TK_LT}, 
   {">", TK_GT}, 
   {"<=", TK_LE}, 
@@ -53,14 +61,16 @@ static struct rule {
   {"==", TK_EQ}, 
   {"!=", TK_NEQ},
   {"&&", TK_AND},
-  {"\\|\\|", TK_OR},
-  {"(0x)?[0-9]+", TK_NUM},
-  {"\\$\\w+", TK_REG}
+  {"\\|\\|", TK_OR},      // 匹配逻辑或运算符 ||（正则中需转义为 \|\|，C字符串需双写反斜杠）
+  {"[0-9]+", TK_NUM},  //匹配十进制
+  {"0x[a-f,A-F,0-9]+",TK_HEX}, //匹配16进制
+  {"\\$[a-z,0-9]+", TK_REG}   // 匹配寄存器
 };
 
 #define NR_REGEX ARRLEN(rules)
 
 static regex_t re[NR_REGEX] = {};
+
 
 /* Rules are used for many times.
  * Therefore we compile them only once before any usage.
@@ -90,11 +100,13 @@ typedef struct result{
 
 } Result;
 
+
 //static Token tokens[32] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 static int tokens_capacity = 0;
-static Token *tokens = NULL;  // Declare as pointer, not array
+static Token *tokens;  // Declare as pointer, not array
 Result eval(int p, int q);
+word_t vaddr_read(vaddr_t addr, int len);
 
 void resize_tokens_array() {
   if (tokens == NULL) {
@@ -136,20 +148,27 @@ static bool make_token(char *e) {
         switch (rules[i].token_type) {
           case TK_NOTYPE : break;  //space
 
-          case TK_NUM:
-            Assert((substr_len < 32),"%s","An out of buffer error occurred\r\n");
-            tokens[nr_token].type = rules[i].token_type;
-            strncpy(tokens[nr_token].str, substr_start, substr_len);
-            tokens[nr_token].str[substr_len] = '\0';
-            nr_token++;
-            break;
+          case TK_EQ: case TK_NEQ: case TK_AND: 
+          
+          case TK_POS: case TK_NEG: case TK_MULT: case TK_DIV:    
+          case TK_LP:  case TK_RP:
+          case TK_NUM: case TK_HEX: case TK_REG:     
+          //Assert((substr_len < 32),"%s","An out of buffer error occurred\r\n");
+          tokens[nr_token].type = rules[i].token_type;
+          strncpy(tokens[nr_token].str, substr_start, substr_len);
+          tokens[nr_token++].str[substr_len] = '\0';
+          break;
 
-            default: //TODO();
+          default: 
+          Log("Unknown token\n");
+              /*
+              //TODO();
               //printf("token_type: %c\n",rules[i].token_type);
               tokens[nr_token].type = rules[i].token_type;
               strncpy(tokens[nr_token].str, substr_start, substr_len);
               tokens[nr_token].str[substr_len] = '\0';  // Ensure null termination
               nr_token++;
+              */
         }
         break;
 
@@ -161,7 +180,8 @@ static bool make_token(char *e) {
       return false;
     }   
   }
-    return true;
+  Log("Final position: %d, string length: %d, nr_token: %d", position, (int)strlen(e), nr_token);
+  return true;
 }
 
 
@@ -170,35 +190,32 @@ word_t expr(char *e, bool *success) {
     *success = false;
     return 0;
   }
-  *success = true;
+
   /* TODO: Insert codes to evaluate the expression. */
   //TODO();
 
-  /*for(int i=0;i<nr_token;i++){
-    if(  i==0 || !(tokens[i-1].type==TK_NUM 
-               || tokens[i-1].type == ')' 
-               || tokens[i-1].type == TK_REG)
-        )
+// 若 * 为第一个 token 或者 * 前一个 token 的类型为二元运算符（或者就是解引用，或者是左括号），那么这个 * 就是指针解引用。
+  for(int i=0;i<nr_token;i++){
+    if(  i==0 || !(tokens[i-1].type==TK_NUM && tokens[i-1].type == TK_RP && tokens[i-1].type == TK_REG && tokens[i-1].type == TK_HEX) )
     {
       switch (tokens[i].type)
       {
-        case '*':
-        tokens[i].type = TK_DEF;
-        break;
-        case '-':
-        tokens[i].type = TK_MINUS;
-        break;
+        case TK_NEG:
+        tokens[i].type = TK_MINUS; break;
+        case TK_MULT:
+        tokens[i].type = TK_DEREF; break;
         default:break;
       }
     }
   }
-  */
+
   Result res = eval(0, nr_token-1);
+  *success = res.is_valid;
   return res.data;
 }
 
 bool check_parentheses(int p, int q) {
-  if (tokens[p].type != '(' || tokens[q].type != ')') {
+  if (tokens[p].type != TK_LP || tokens[q].type != TK_RP) {
     return false;  // 开头和结尾不是括号，直接返回false
   }
 
@@ -224,18 +241,29 @@ bool check_parentheses(int p, int q) {
 
 int get_priority(int type) {
   switch (type) {
+    /*
     case TK_OR:     return 1;  // ||
     case TK_AND:    return 2;  // &&
     case TK_EQ:     // == 
     case TK_NEQ:    return 3;  // !=
-    case '+':       
-    case '-':       return 4;  // + -
-    case '*':       
-    case '/':       return 5;  // * /
-    /*case TK_DEF:    
+    case TK_POS:       
+    case TK_NEG:       return 4;  // + -
+    case TK_MULT:       
+    case TK_DIV:       return 5;  // * /
+    case TK_DEREF:    
     case TK_MINUS:  return 6;  // 一元操作符（负号、解引用）
-    */
+    
     default:        return -1; // 非运算符
+    */
+    case TK_MINUS: case TK_DEREF: return 1; break; 
+		case TK_MULT: case TK_DIV: return 2; break;
+		case TK_POS: case TK_NEG: return 3; break;
+		case TK_GT: case TK_LT: case TK_GE: case TK_LE: return 4; break;
+		case TK_EQ: case TK_NEQ: return 5; break;
+		case TK_AND: return 6; break;
+		case TK_OR: return 7; break;
+		default: return -1;// 非运算符
+
   }
 }
 
@@ -269,10 +297,9 @@ int find_major_op(int p, int q) {
 
 
 
-Result eval(int p, int q) {
-
-  //printf("p:%d,q:%d\n",p,q);
-
+//Result eval(int p, int q) {
+Result eval(int p, int q){
+  
   Result result;
   Result val1;
   Result val2;
@@ -290,11 +317,33 @@ Result eval(int p, int q) {
      * For now this token should be a number.
      * Return the value of the number.
      */
+    if(tokens[p].type != TK_NUM && tokens[p].type != TK_HEX && tokens[p].type != TK_REG) 
+		{
+			result.is_valid = false;
+			//return result;
+		}
     if(tokens[p].type == TK_NUM){
       //printf("tokens[p].str:%s\n",tokens[p].str);
       result.data = strtol(tokens[p].str,NULL,10);
-      //printf("result.data:%d",result.data);
       result.is_valid = true;
+      //return result;
+      //printf("result.data:%d",result.data);
+      //result.is_valid = true;
+    }
+    else if(tokens[p].type == TK_HEX){
+      result.data = strtol(tokens[p].str,NULL,16);
+      result.is_valid = true;
+      //return result;
+    }
+    else if(tokens[p].type == TK_REG){
+      bool success_reg = false;
+      result.data = isa_reg_str2val(tokens[p].str, &success_reg);  //reg
+      result.is_valid = success_reg;
+      if(success_reg == false)
+      {
+        printf("Invalid register name\r\n");
+      }
+      //return result;
     }
     
     return result; 
@@ -307,10 +356,29 @@ Result eval(int p, int q) {
   }
   else {
     op = find_major_op(p,q);
+    if (op < 0) { // 未找到有效运算符
+      //*success = false;
+      result.is_valid = false;
+      return result;
+    }
+    if(tokens[op].type == TK_DEREF)
+    {
+      Result def_res = eval(op+1,q);
+      result.is_valid = def_res.is_valid;
+      result.data = vaddr_read(def_res.data,4);
+      return result;
+    }
+    else if(tokens[op].type == TK_MINUS){
+      Result minus_res = eval(op+1,q);
+      result.is_valid = minus_res.is_valid;
+      result.data = -1 * minus_res.data;
+      return result;
+    }else{
     //printf("op: %d\n",op);
-    val1 = eval(p,op-1);
+    //bool success1, success2;
+    val1 = eval(p,op-1); //左操作数
     //printf("val1:%d\n",val1.data);
-    val2 = eval(op+1,q);
+    val2 = eval(op+1,q); //右操作数
     //printf("val2:%d\n",val2.data);
 
     if(val1.is_valid && val2.is_valid) 
@@ -319,16 +387,17 @@ Result eval(int p, int q) {
         result.is_valid = false;
         return result;
       }
-      switch(tokens[op].type){
-        case '+':    result.data = val1.data +  val2.data;break;
-        case '-':    result.data = val1.data -  val2.data;break;
-        case '*':    result.data = val1.data *  val2.data;break;
-        case '/':
+    switch(tokens[op].type){
+        case TK_POS:  result.data = val1.data +  val2.data;break;
+        case TK_NEG:  result.data = val1.data -  val2.data;break;
+        case TK_MULT: result.data = val1.data *  val2.data;break;
+        case TK_DIV:
          if (val2.data == 0) {
-          result.is_valid = false;  // 检测到分母 = 0
+          //*success = false;  // 检测到分母 = 0
+          result.is_valid = false;
           return result;
         }    
-        result.data = val1.data /  val2.data; break;
+        result.data = val1.data / val2.data; break;//result.data = val1.data /  val2.data; break;
 
         case TK_AND: result.data = val1.data && val2.data;break;
         case TK_OR:  result.data = val1.data || val2.data;break;
@@ -338,4 +407,20 @@ Result eval(int p, int q) {
       } 
     return result;
     }
+    
+    /*if (!success2) { // 右操作数求值失败
+      *success = false;
+      return 0;
+    }
+     if (!success1) { // 左操作数失败，可能为单目运算符
+      switch (tokens[op].type) {
+        case TK_MINUS: return -val2;     // 负号（-5）
+        case TK_POS: return val2;      // 正号（+5，通常省略）
+        case TK_DEREF: return vaddr_read(val2, 4); // 解引用（*ptr）
+        default: *success = false; return 0; // 非法单目运算符
+      }
+    }
+    */
+      
   }
+}
