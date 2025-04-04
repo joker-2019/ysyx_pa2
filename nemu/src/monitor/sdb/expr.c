@@ -226,21 +226,22 @@ bool check_parentheses(int p, int q) {
     } else if (tokens[i].type == TK_RP) {
       balance--;  // 遇到右括号，-1
     }
-
-    if (balance == 0 && i < q) {
+    if (balance != 0)
+    {
+     return false;  
+    }
+    if (balance == 0 && i != q) {
       // 在q之前括号已经闭合，说明外层括号不完整
       return false;
     }
   }
-  if (balance != 0)
-  {
-     return false;  
-  }
+  
   return true; // 如果balance为0，则括号完整包裹
 }
 
 int get_priority(int type) {
   switch (type) {
+    /*
     case TK_OR:     return 1;  // ||
     case TK_AND:    return 2;  // &&
     case TK_EQ:     // == 
@@ -254,8 +255,7 @@ int get_priority(int type) {
     case TK_MINUS:  return 7;  // 一元操作符（负号、解引用）
     
     default:        return -1; // 非运算符
-    
-   /*
+    */ 
     case TK_MINUS: case TK_DEREF: return 1; break; 
 		case TK_MULT: case TK_DIV: return 2; break;
 		case TK_POS: case TK_NEG: return 3; break;
@@ -264,7 +264,6 @@ int get_priority(int type) {
 		case TK_AND: return 6; break;
 		case TK_OR: return 7; break;
 		default: return -1;// 非运算符
-  */
 
   }
 }
