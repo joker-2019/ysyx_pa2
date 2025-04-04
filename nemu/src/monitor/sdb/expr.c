@@ -340,6 +340,7 @@ Result eval(int p, int q){
       // printf("tokens[p].str:%s\n", tokens[p].str);
       // printf("tokens[p].str+1:%s\n", tokens[p].str+1);
       result.data = isa_reg_str2val(tokens[p].str, &success_reg);  //reg
+      printf("result.data:%u",result.data);
       result.is_valid = success_reg;
       if(success_reg == false)
       {

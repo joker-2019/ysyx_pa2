@@ -146,7 +146,7 @@ bool scan_all_wp(){
       printf("%d new_value is %u",temp->NO, new_value);
       temp->old_value = new_value;
       flag = true; 
-      nemu_state.state = NEMU_STOP;
+      // nemu_state.state = NEMU_STOP;
       // return flag;
     }else{
       temp = temp->next;
