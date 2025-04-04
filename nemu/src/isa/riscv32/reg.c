@@ -36,6 +36,7 @@ void isa_reg_display() {
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
+  printf("get in isa\n");
   if(s[0] != '$')
     *success = false;
   //printf("reg: %s\n", s);
