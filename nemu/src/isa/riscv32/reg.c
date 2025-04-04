@@ -37,19 +37,20 @@ void isa_reg_display() {
 
 word_t isa_reg_str2val(const char *s, bool *success) {
   printf("get in isa\n");
-  if(s[0] != '$')
-    *success = false;
-  //printf("reg: %s\n", s);
-  if(!strcmp(s, regs[0])){
-    *success = true;
-    return 0;
+  const char *name = s;
+  // 跳过开头的$符号（如果有）
+  if (name[0] == '$') {
+    name++;
   }
-  for(int i = 1; i < 32; ++i){
-    if(!strcmp(s+1, regs[i])){
+
+  // 遍历所有32个寄存器
+  for (int i = 0; i < 32; ++i) {
+    if (strcmp(name, regs[i]) == 0) {
       *success = true;
-      return cpu.gpr[i];
+      return cpu.gpr[i];  // 返回对应寄存器的值
     }
   }
+
   *success = false;
   return 0;
 }
