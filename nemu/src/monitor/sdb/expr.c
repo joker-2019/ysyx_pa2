@@ -221,9 +221,9 @@ bool check_parentheses(int p, int q) {
 
   int balance = 0;
   for (int i = p; i <= q; i++) {
-    if (tokens[i].type == '(') {
+    if (tokens[i].type == TK_LP) {
       balance++;  // 遇到左括号，+1
-    } else if (tokens[i].type == ')') {
+    } else if (tokens[i].type == TK_RP) {
       balance--;  // 遇到右括号，-1
     }
 
