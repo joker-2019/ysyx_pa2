@@ -45,13 +45,12 @@ word_t isa_reg_str2val(const char *s, bool *success) {
   }
   // printf("print pc value!!!");
    // 优先处理 pc
-   
-   /*
+
   if (strcmp(name, "pc") == 0) {
     *success = true;
     return cpu.pc;  // 假设 pc 存储在 cpu.pc 中
   }
-  */
+  
   // 遍历所有32个寄存器
   for (int i = 0; i < 32; ++i) {
     if (strcmp(name, regs[i]) == 0) {
