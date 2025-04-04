@@ -140,6 +140,7 @@ bool scan_all_wp(){
   {
     bool success;
     word_t new_value = expr(temp->expr,&success);
+    printf("new_value = 0x%08x\n", new_value);  // 32位补零显示，带0x前缀
     if(temp->old_value != new_value){
       printf("%d watchpoint expression has changed: %s",temp->NO, temp->expr);
       printf("%d old_value is %u",temp->NO, temp->old_value);
