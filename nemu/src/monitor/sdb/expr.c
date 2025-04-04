@@ -236,21 +236,21 @@ bool check_parentheses(int p, int q) {
 
 int get_priority(int type) {
   switch (type) {
-    /*
     case TK_OR:     return 1;  // ||
     case TK_AND:    return 2;  // &&
     case TK_EQ:     // == 
     case TK_NEQ:    return 3;  // !=
     case TK_GT: case TK_LT: case TK_GE: case TK_LE: return 4;
-    case TK_POS:       
-    case TK_NEG:       return 5;  // + -
-    case TK_MULT:       
-    case TK_DIV:       return 6;  // * /
+    case '+':       
+    case '-':       return 5;  // + -
+    case '*':       
+    case '/':       return 6;  // * /
     case TK_DEREF:    
     case TK_MINUS:  return 7;  // 一元操作符（负号、解引用）
     
     default:        return -1; // 非运算符
-    */ 
+  
+    /*
     case TK_MINUS: case TK_DEREF: return 1; break; 
 		case '*': case '/': return 2; break;
 		case '+': case '-': return 3; break;
@@ -259,7 +259,7 @@ int get_priority(int type) {
 		case TK_AND: return 6; break;
 		case TK_OR: return 7; break;
 		default: return -1;// 非运算符
-
+    */
   }
 }
 
@@ -287,7 +287,7 @@ int find_major_op(int p, int q) {
       pos = i;
     }
   }
-
+  printf("pos:%d",pos);
   return pos;  // 返回主运算符位置
 }
 
