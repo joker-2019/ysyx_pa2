@@ -142,9 +142,9 @@ bool scan_all_wp(){
     word_t new_value = expr(temp->expr,&success);
     printf("new_value = 0x%08x\n", new_value);  // 32位补零显示，带0x前缀
     if(temp->old_value != new_value){
-      printf("%d watchpoint expression has changed: %s",temp->NO, temp->expr);
-      printf("%d old_value is %u",temp->NO, temp->old_value);
-      printf("%d new_value is %u",temp->NO, new_value);
+      printf("%d watchpoint expression has changed: %s\n",temp->NO, temp->expr);
+      printf("%d old_value is 0x%08x\n",temp->NO, temp->old_value);
+      printf("%d new_value is 0x%08x\n",temp->NO, new_value);
       temp->old_value = new_value;
       flag = true; 
       // nemu_state.state = NEMU_STOP;
