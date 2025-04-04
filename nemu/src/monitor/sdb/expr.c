@@ -62,8 +62,8 @@ static struct rule {
   {"!=", TK_NEQ},
   {"&&", TK_AND},
   {"\\|\\|", TK_OR},      // 匹配逻辑或运算符 ||（正则中需转义为 \|\|，C字符串需双写反斜杠）
-  {"[0-9]+", TK_NUM},  //匹配十进制
   {"0x[a-f,A-F,0-9]+",TK_HEX}, //匹配16进制
+  {"[0-9]+", TK_NUM},  //匹配十进制
   {"\\$[a-z,0-9]+", TK_REG}   // 匹配寄存器
 };
 
@@ -265,7 +265,7 @@ int get_priority(int type) {
 
 int find_major_op(int p, int q) {
   int pos = -1;     // 主运算符的位置
-  int min_pri = 100; // 当前最低优先级（越小优先级越高）
+  int min_pri = 100; // 当前最低优先级
   int balance = 0;  // 括号嵌套深度
 
   for (int i = p; i <= q; i++) {
@@ -371,11 +371,9 @@ Result eval(int p, int q){
       return result;
     }
     //printf("op: %d\n",op);
-    //bool success1, success2;
+
     val1 = eval(p,op-1); //左操作数
-    //printf("val1:%d\n",val1.data);
     val2 = eval(op+1,q); //右操作数
-    //printf("val2:%d\n",val2.data);
 
     if(val1.is_valid && val2.is_valid) 
         result.is_valid= true;
@@ -402,21 +400,6 @@ Result eval(int p, int q){
         default: Log("Invalid Operator\r\n");break;
       } 
     return result;
-  
-    
-    /*if (!success2) { // 右操作数求值失败
-      *success = false;
-      return 0;
-    }
-     if (!success1) { // 左操作数失败，可能为单目运算符
-      switch (tokens[op].type) {
-        case TK_MINUS: return -val2;     // 负号（-5）
-        case TK_POS: return val2;      // 正号（+5，通常省略）
-        case TK_DEREF: return vaddr_read(val2, 4); // 解引用（*ptr）
-        default: *success = false; return 0; // 非法单目运算符
-      }
-    }
-    */
       
   }
 }
