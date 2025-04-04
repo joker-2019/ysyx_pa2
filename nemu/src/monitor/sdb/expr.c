@@ -287,7 +287,7 @@ int find_major_op(int p, int q) {
       pos = i;
     }
   }
-  printf("pos:%d",pos);
+  printf("pos:%d\n",pos);
   return pos;  // 返回主运算符位置
 }
 
