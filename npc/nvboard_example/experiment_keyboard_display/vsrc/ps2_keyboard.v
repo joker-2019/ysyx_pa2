@@ -45,7 +45,7 @@ module ps2_keyboard(
 			end
 			//检测到键盘按键
 			if(sampling) begin
-				if(count == 4'd10) begin //detect data bit number is 10
+				if(count == 4'd10) begin //detect data bit number is 11(0-10)
                 			if ((buffer[0] == 0) &&  // start bit
 						(ps2_data) &&	// // stop bit
 						(^buffer[9:1])) begin // odd  parity
