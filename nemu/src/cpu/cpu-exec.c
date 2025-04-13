@@ -25,7 +25,7 @@
  */
 #define MAX_INST_TO_PRINT 10
 
-// 在文件头部添加如下宏定义
+
 #define ENABLE_WATCHPOINT_HANDLING  // 注释这行即可关闭监视点检查
 
 #ifdef ENABLE_WATCHPOINT_HANDLING

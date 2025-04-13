@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
     }*/
     assert(fp != NULL);
     int64_t result;
-    ret = fscanf(fp, "%ld", &result);//使用 fscanf 从管道中读取程序的输出，将其解析为一个int类型的整数。_ 变量用于捕获 fscanf 的返回值，但在这里没有实际用途，只是为了避免编译器警告。
+    ret = fscanf(fp, "%ld", &result);//使用 fscanf 从管道中读取程序的输出，将其解析为一个int类型的整数。
     pclose(fp);
     //scan_ret = fscanf(fp, "%u", &result); 
     //int code_ret = pclose(fp); // 获取子进程退出状态
