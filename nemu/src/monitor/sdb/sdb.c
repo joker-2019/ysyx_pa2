@@ -18,6 +18,10 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include "memory/vaddr.h"
+#include "watchpoint.h"
+//#include "local-include/reg.h"
+
 
 static int is_batch_mode = false;
 
@@ -44,12 +48,129 @@ static char* rl_gets() {
 
 static int cmd_c(char *args) {
   cpu_exec(-1);
-  return 0;
+  return 1;
 }
 
 
 static int cmd_q(char *args) {
+  nemu_state.state = NEMU_QUIT;
   return -1;
+}
+
+//单步执行
+static int cmd_step(char *args){
+  int step;
+  if (args == NULL){
+    step = 1;
+  }else{
+    char *endptr;
+    step = strtol(args, &endptr, 10); // 十进制解析
+    if (*endptr != '\0' || args == endptr || step <= 0) { // 无效字符或空字符串或者步数小于0,均为非法
+      printf("Invalid step format: '%s'\n", args);
+      return -1;
+    }
+  }
+  cpu_exec(step);
+  return 0;
+}
+
+// 打印寄存器状态
+
+static int cmd_printR(char *args){
+  char *arg = strtok(NULL," ");
+  //printf("%s\n", arg);
+  if(arg == NULL)
+  {
+    printf("Missing parameters, Usage: info r(registers) or info w(watchpoints)\r\n");
+  }else{
+  if(!strcmp(arg, "r")){
+    isa_reg_display();
+  }else if(!strcmp(arg, "w")){
+    //TODO
+    display_watchpoint();
+  }else{
+      printf("Usage: info r(registers) or info w(watchpoints)\r\n");
+    }
+
+  }
+  return 0;
+  
+}
+// 扫描内存
+static int cmd_x(char *args) {
+  char *saveptr;
+  char *n = strtok_r(args, " ", &saveptr);      // 提取参数 N
+  char *vaddr = strtok_r(NULL, " ", &saveptr);  // 提取地址表达式
+
+  // 参数校验
+  if (n == NULL || vaddr == NULL) {
+    printf("Usage: x N EXPR\r\n");
+    return -1;
+  }
+  // 解析 N（正整数）
+  char *n_end;
+  long num = strtol(n, &n_end, 10); // 十进制解析
+  if (num <= 0 || *n_end != '\0') {
+    printf("Invalid count: '%s' (must be positive integer)\r\n", n);
+    return -1;
+  }
+
+  // 解析地址（十六进制）
+  char *addr_end;
+  unsigned long addr = strtol(vaddr, &addr_end, 16); // 十六进制解析
+  if (addr_end == vaddr || *addr_end != '\0') {
+    printf("Invalid address: '%s'\r\n", vaddr);
+    return -1;
+  }
+
+  // 内存访问
+  for (int i = 0; i < num; i++) {
+    printf("0x%08x\r\n",vaddr_read(addr+i*4,4));
+  }
+  return 0;
+  
+}
+
+// Expression evaluation
+static int cmd_p(char *args) {
+  bool success;
+  printf("args:%s",args);
+  word_t res = expr(args, &success);
+  if (!success) {
+    puts("invalid expression");
+  } else {
+    printf("%u\n", res);
+  }
+  return 0;
+}
+
+//设置监视点
+static int cmd_w(char* args) {
+  if (!args) {
+    printf("Usage: w EXPR\n");
+    return 0;
+  }
+  bool success;
+  word_t res = expr(args, &success);
+  if (!success) {
+    puts("invalid expression");
+  } else {
+    wp_watch(args, res);
+    //new_wp(args);
+  }
+  return 0;
+}
+
+//删除监视点
+static int cmd_d(char* args) {
+  char *arg = strtok(NULL, "");
+  if (!arg) {
+    printf("Usage: d N\n");
+    return 0;
+  }
+  int no = strtol(arg, NULL, 10);
+  wp_remove(no);
+  return 0;
 }
 
 static int cmd_help(char *args);
@@ -62,7 +183,12 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
+  { "x", "scan addr",cmd_x},
+  { "info", "print register", cmd_printR},
+  { "si", "print step", cmd_step},
+  {"p", "Expression evaluation", cmd_p},
+  {"w","Usage: w EXPR. Watch for the variation of the result of EXPR, pause at variation point", cmd_w },
+  {"d", "Usage: d N. Delete watchpoint of wp.NO=N", cmd_d},
   /* TODO: Add more commands */
 
 };
@@ -134,10 +260,43 @@ void sdb_mainloop() {
   }
 }
 
+void test_expr() {
+  FILE *fp = fopen("/home/wp/ysyx-workbench/nemu/tools/gen-expr/input", "r");
+  if (fp == NULL) perror("test_expr error");
+ 
+  char *e = NULL;
+  word_t correct_res;
+  size_t len = 0;
+  ssize_t read;
+  bool success = false;
+ 
+  while (true) {
+    if(fscanf(fp, "%u ", &correct_res) == -1) break;
+    read = getline(&e, &len, fp);
+    e[read-1] = '\0';
+    
+    word_t res = expr(e, &success);
+    
+    assert(success);
+    if (res != correct_res) {
+      puts(e);
+      printf("expected: %u, got: %u\n", correct_res, res);
+      assert(0);
+    }
+  }
+ 
+  fclose(fp);
+  if (e) free(e);
+ 
+  Log("expr test pass");
+}
+
+
 void init_sdb() {
   /* Compile the regular expressions. */
   init_regex();
-
+  /* test math expression calculation */
+  test_expr();
   /* Initialize the watchpoint pool. */
   init_wp_pool();
 }

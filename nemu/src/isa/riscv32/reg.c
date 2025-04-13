@@ -15,17 +15,51 @@
 
 #include <isa.h>
 #include "local-include/reg.h"
+#define NR_REGS ARRLEN(regs) //sizeof(regs)/sizeof(regs[0])
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
   "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
   "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
-  "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
+  "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6",
+  "pc"
 };
 
 void isa_reg_display() {
+  //add new code
+  printf("register     Hexadecimal     Decimal\r\n");
+  for (int i = 0; i<32; i++)
+  {
+    /* code */
+     printf("%-13s 0x%-16x%d\r\n",regs[i], cpu.gpr[i], (int32_t)cpu.gpr[i]);
+  }
+  printf("%-13s 0x%-16x%d\r\n","pc", cpu.pc, (int32_t)cpu.pc);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
+  // printf("get in isa\n");
+  const char *name = s;
+  // 跳过开头的$符号（如果有）
+  if (name[0] == '$') {
+    name++;
+  }
+  // printf("print pc value!!!");
+   // 优先处理 pc
+
+  if (strcmp(name, "pc") == 0) {
+    *success = true;
+    return cpu.pc;  // 假设 pc 存储在 cpu.pc 中
+  }
+  
+  // 遍历所有32个寄存器
+  for (int i = 0; i < 32; ++i) {
+    if (strcmp(name, regs[i]) == 0) {
+      *success = true;
+      return cpu.gpr[i];  // 返回对应寄存器的值
+    }
+  }
+
+  *success = false;
   return 0;
 }
+

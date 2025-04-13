@@ -1,22 +1,10 @@
 # Makefile
 
 # Top module name
-# TOPNAME = top
-# TOPNAME = light
-# TOPNAME = mux41
-# TOPNAME = decode38
-# TOPNAME = ALU
-# TOPNAME = LFSR_8bit
-TOPNAME = keyboard_display
+TOPNAME = LFSR_8bit
 
 # NXDC constraint file
-# NXDC_FILES = constr/top.nxdc
-# NXDC_FILES = constr/light.nxdc
-# NXDC_FILES = constr/mux41.nxdc
-# NXDC_FILES = constr/decode38.nxdc
-# NXDC_FILES = constr/ALU.nxdc
-# NXDC_FILES = constr/LFSR_8bit.nxdc
-NXDC_FILES = constr/keyboard_display.nxdc
+NXDC_FILES = constr/LFSR_8bit.nxdc
 FST_FILE = dump.vcd
 
 # Include path for headers
@@ -46,18 +34,7 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 
 # Find Verilog and C++ source files
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-# CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-# VSRCS = $(shell find $(abspath ./vsrc) -name "mux41.v")
-# VSRCS = $(shell find $(abspath ./vsrc) -name "decode38.v")
-# VSRCS = $(shell find $(abspath ./vsrc) -name "keyboard_display.v")
-# VSRCS = $(shell find $(abspath ./vsrc) -name "ALU.v" -o -name "bcd7seg.v" -o -name "ALU_control.v" -o -name "ALU_logic.v")
-# CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "light.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "mux41.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "decode38.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "ALU.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "LFSR_8bit.cpp")
-CSRCS = $(shell find $(abspath ./csrc) -name "keyboard_display.cpp")
+CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
 
 # Include NVBoard rules
