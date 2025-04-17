@@ -1,23 +1,11 @@
 # Makefile
 
 # Top module name
-# TOPNAME = top
-# TOPNAME = light
-# TOPNAME = mux41
-# TOPNAME = decode38
-# TOPNAME = ALU
-# TOPNAME = LFSR_8bit
-TOPNAME = keyboard_display
+TOPNAME = ysyx_22040080_cpu
 
 # NXDC constraint file
 # NXDC_FILES = constr/top.nxdc
-# NXDC_FILES = constr/light.nxdc
-# NXDC_FILES = constr/mux41.nxdc
-# NXDC_FILES = constr/decode38.nxdc
-# NXDC_FILES = constr/ALU.nxdc
-# NXDC_FILES = constr/LFSR_8bit.nxdc
-NXDC_FILES = constr/keyboard_display.nxdc
-FST_FILE = dump.vcd
+FST_FILE = wave.vcd
 
 # Include path for headers
 INC_PATH ?=
@@ -26,6 +14,7 @@ INC_PATH ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
                     -O3 --x-assign fast --x-initial fast --noassert --trace -trace
+
 
 # Build directories
 BUILD_DIR = ./build
@@ -40,28 +29,18 @@ default: $(BIN)
 $(shell mkdir -p $(BUILD_DIR))
 
 # Auto bind pins using NVBoard script
-SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
-$(SRC_AUTO_BIND): $(NXDC_FILES)
-	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+#SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
+# $(SRC_AUTO_BIND): $(NXDC_FILES)
+# 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # Find Verilog and C++ source files
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-# CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-# VSRCS = $(shell find $(abspath ./vsrc) -name "mux41.v")
-# VSRCS = $(shell find $(abspath ./vsrc) -name "decode38.v")
-# VSRCS = $(shell find $(abspath ./vsrc) -name "keyboard_display.v")
-# VSRCS = $(shell find $(abspath ./vsrc) -name "ALU.v" -o -name "bcd7seg.v" -o -name "ALU_control.v" -o -name "ALU_logic.v")
-# CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "light.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "mux41.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "decode38.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "ALU.cpp")
-# CSRCS = $(shell find $(abspath ./csrc) -name "LFSR_8bit.cpp")
-CSRCS = $(shell find $(abspath ./csrc) -name "keyboard_display.cpp")
-CSRCS += $(SRC_AUTO_BIND)
+CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+# CSRCS += $(SRC_AUTO_BIND)
+
 
 # Include NVBoard rules
-include $(NVBOARD_HOME)/scripts/nvboard.mk
+# include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 # Verilator include flags
 INCFLAGS = $(addprefix -I, $(INC_PATH))
@@ -84,8 +63,8 @@ sim: $(BIN)
 	@echo "[SIM] 启动仿真..."
 	@$(BIN)
 
-run: $(BIN)
-	@$^
+run:$(BIN)
+	@$^ +trace
 
 view:$(FST_FILE)
 	gtkwave $(FST_FILE)
