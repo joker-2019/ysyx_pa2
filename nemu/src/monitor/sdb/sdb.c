@@ -178,7 +178,7 @@ static int cmd_help(char *args);
 static struct {
   const char *name;
   const char *description;
-  int (*handler) (char *);
+  int (*handler) (char *); // // 函数指针，指向处理该命令的函数
 } cmd_table [] = {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
@@ -231,7 +231,8 @@ void sdb_mainloop() {
   for (char *str; (str = rl_gets()) != NULL; ) {
     char *str_end = str + strlen(str);
 
-    /* extract the first token as the command */
+    /* 解析输入的命令名（cmd）和参数（args） */
+    /* extract the first token as the command */    
     char *cmd = strtok(str, " ");
     if (cmd == NULL) { continue; }
 
@@ -251,6 +252,7 @@ void sdb_mainloop() {
     int i;
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(cmd, cmd_table[i].name) == 0) {
+         // 调用 handler 函数，并检查返回值， 若小于0则说明系统退出，返回的是-1(q)
         if (cmd_table[i].handler(args) < 0) { return; }
         break;
       }
@@ -296,7 +298,7 @@ void init_sdb() {
   /* Compile the regular expressions. */
   init_regex();
   /* test math expression calculation */
-  test_expr();
+  //test_expr();
   /* Initialize the watchpoint pool. */
   init_wp_pool();
 }

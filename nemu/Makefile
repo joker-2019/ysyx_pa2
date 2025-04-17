@@ -59,3 +59,9 @@ else
 # Include rules to build NEMU
 include $(NEMU_HOME)/scripts/native.mk
 endif
+
+count:
+	@echo "NEMU code lines(discard empty lines)"
+	@find . $ -name "*.c" -o -name "*.h" $ -exec cat {} + | grep -v '^\s*$$' | wc -l
+	#@find . $ -name "*.c" -o -name "*.h" $ -print0 | xargs -0 cat | grep -vE '^[[:space:]]*$$' | wc -l
+	#@find . $ -name "*.c" -o -name "*.h" $ -exec cat {} + | wc -l
