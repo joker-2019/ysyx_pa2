@@ -25,6 +25,8 @@
 enum {
   TYPE_I, TYPE_U, TYPE_S,
   TYPE_N, // none
+  TYPE_J,
+  //TODO
 };
 
 #define src1R() do { *src1 = R(rs1); } while (0)
@@ -32,7 +34,10 @@ enum {
 #define immI() do { *imm = SEXT(BITS(i, 31, 20), 12); } while(0)
 #define immU() do { *imm = SEXT(BITS(i, 31, 12), 20) << 12; } while(0)
 #define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)
+#define immN() do { *imm = 0; } while (0) // N型无立即数
+#define immJ() do { int32_t offset = (BITS(i, 31, 31) << 19) | (BITS(i, 19, 12) << 11) | (BITS(i, 20, 20) << 10) | (BITS(i, 30, 21) << 0); *imm = SEXT(offset, 20) << 1;} while (0)
 
+// TODO 
 static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
   uint32_t i = s->isa.inst.val;
   int rs1 = BITS(i, 19, 15);
@@ -42,6 +47,9 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     case TYPE_I: src1R();          immI(); break;
     case TYPE_U:                   immU(); break;
     case TYPE_S: src1R(); src2R(); immS(); break;
+    case TYPE_N: immN(); break;
+    case TYPE_J: immJ(); break;
+    //TODO
   }
 }
 
@@ -50,19 +58,30 @@ static int decode_exec(Decode *s) {
   word_t src1 = 0, src2 = 0, imm = 0;
   s->dnpc = s->snpc;
 
-#define INSTPAT_INST(s) ((s)->isa.inst.val)
+#define INSTPAT_INST(s) ((s)->isa.inst.val) //提取机器指令
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
   decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
   __VA_ARGS__ ; \
 }
 
   INSTPAT_START();
-  INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc  , U, R(rd) = s->pc + imm);
+  //控制流
+  // 伪指令 j（优先匹配 rd=x0）
+  INSTPAT("??????? ????? ????? ??? 00000 11011 11", j      , J, s->dnpc = s->pc + imm); //通过通过 rd 字段区分
+  INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->pc + 4, s->dnpc = s->pc + imm);  // 跳转并链接   
+  //算术指令
+  INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc  , U, R(rd) = s->pc + imm);  // PC加高位立即数。
+  INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi   , I, R(rd) = src1 + SEXT(imm, 20)); //加立即数。
+  
+  //内存访问
   INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu    , I, R(rd) = Mr(src1 + imm, 1));
-  INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb     , S, Mw(src1 + imm, 1, src2));
 
+  INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb     , S, Mw(src1 + imm, 1, src2));
+  INSTPAT("??????? ????? ????? 010 ????? 01000 11", sw     , S, Mw(src1 + imm, 4, src2));
+  // 系统指令
+  INSTPAT("0000000 00001 00000 000 00000 11001 11", ret    , I, s->dnpc = src1 + imm); //精确匹配ret，执行精确跳转
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
-  INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
+  INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));  //任何想要匹配成功的指令，都要放在泛化指令之前，按照顺序匹配
   INSTPAT_END();
 
   R(0) = 0; // reset $zero to 0
