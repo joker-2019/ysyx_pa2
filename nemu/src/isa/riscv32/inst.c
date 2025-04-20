@@ -38,8 +38,8 @@ enum {
 #define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)
 #define immN() do { *imm = 0; } while (0) // N型无立即数
 #define immJ() do { int32_t offset = (BITS(i, 31, 31) << 19) | (BITS(i, 19, 12) << 11) | (BITS(i, 20, 20) << 10) | (BITS(i, 30, 21) << 0); *imm = SEXT(offset, 20) << 1;} while (0)
-#define immB() do { int32_t offset = (BITS(i, 31, 31) << 12) | (BITS(i, 30, 25) << 5)  | (BITS(i, 11, 8)  << 1)  | (BITS(i, 7,  7 ) << 11); *imm = SEXT(offset,13) << 1;} while (0);
-#define immR() do { *imm = 0; } while (0); //R型指令
+#define immB() do { int32_t offset = (BITS(i, 31, 31) << 12) | (BITS(i, 30, 25) << 5)  | (BITS(i, 11, 8)  << 1)  | (BITS(i, 7,  7 ) << 11); *imm = SEXT(offset,13) << 1;} while (0)
+#define immR() do { *imm = 0; } while (0) //R型指令
 
 
 // TODO 
@@ -99,7 +99,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 101 ????? 11000 11", beg    , B, if (src1 >= src2) s->dnpc = s->pc + imm);//分支指令  大于等于
   INSTPAT("??????? 00000 ????? 110 ????? 11000 11", blez   , B, if(src1 <= src2) s->dnpc = s->pc + imm);//分支指令  小于等于
   INSTPAT("??????? 00000 ????? 000 ????? 11000 11", beqz   , B, if (src1== 0) s->dnpc = s->pc + imm); //等于零分支 伪指令
-  INSTPAT("??????? ????? ????? 001 ????? 11000 11", bne    , B, if (src1 != src2){s->dnpc = s->pc + imm;} else{s->dnpc = s->pc + 4;});
+  INSTPAT("??????? ????? ????? 001 ????? 11000 11", bne    , B, if (src1 != src2) s->dnpc = s->pc + imm);
   // 系统指令
   INSTPAT("0000000 00000 00001 000 00000 11001 11", ret    , I, s->dnpc = src1 + imm); //精确匹配ret，执行精确跳转
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
