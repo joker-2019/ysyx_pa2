@@ -23,7 +23,7 @@
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
-#define MAX_INST_TO_PRINT 10
+#define MAX_INST_TO_PRINT 1000
 
 
 #define ENABLE_WATCHPOINT_HANDLING  // 注释这行即可关闭监视点检查
