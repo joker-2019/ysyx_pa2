@@ -17,8 +17,30 @@
 #include <cpu/difftest.h>
 #include "../local-include/reg.h"
 
+void difftest_regcpy(void *dut, bool direction);
+
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
-  return false;
+  CPU_state dut;
+  //get ref states copy to the dut
+  difftest_regcpy(&dut, DIFFTEST_TO_DUT);
+  //比较通用寄存器
+  for (int i = 0; i < 32; i++)
+  {
+    if(dut.gpr[i] != ref_r->gpr[i]){
+      printf("[DiffTest Error] At PC = 0x%08x: Register x%d mismatch\n", pc, i);
+      printf("  REF: 0x%08x\tDUT: 0x%08x\n", ref_r->gpr[i], dut.gpr[i]);
+      return false;
+    }
+  }
+  //比较PC
+  if(dut.pc != ref_r->pc){
+    printf("[DiffTest Error] At PC = 0x%08x: PC mismatch\n", pc);
+    printf("  REF: 0x%08x\tDUT: 0x%08x\n", ref_r->pc, dut.pc);
+    return false;
+  }
+  
+  
+  return true;
 }
 
 void isa_difftest_attach() {
