@@ -124,8 +124,8 @@ config CC_ASAN
   default n
 endmenu
 
-menu "Testing and Debugging"
-
+#menu "Testing and Debugging"
+menu "Enable differential testing"
 
 config TRACE
   bool "Enable tracer"
