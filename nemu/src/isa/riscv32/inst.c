@@ -37,8 +37,10 @@ enum {
 #define immU() do { *imm = SEXT(BITS(i, 31, 12), 20) << 12; } while(0)
 #define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)
 #define immN() do { *imm = 0; } while (0) // N型无立即数
-#define immJ() do { uint32_t offset = (BITS(i, 31, 31) << 19) | (BITS(i, 19, 12) << 12) | (BITS(i, 20, 20) << 10) | (BITS(i, 30, 21) << 0); *imm = SEXT(offset, 20) << 1;} while (0)
-#define immB() do { uint32_t offset = (BITS(i, 31, 31) << 12) | (BITS(i, 30, 25) << 5)  | (BITS(i, 11, 8)  << 1)  | (BITS(i, 7,  7 ) << 11); *imm = SEXT(offset,13) << 1;} while (0)
+//# define immJ() do { uint32_t offset = (BITS(i, 31, 31) << 19) | (BITS(i, 19, 12) << 12) | (BITS(i, 20, 20) << 10) | (BITS(i, 30, 21) << 0); *imm = SEXT(offset, 20) << 1;} while (0)
+#define immJ() do { *imm = SEXT((BITS(i, 31, 31) << 19) | (BITS(i, 19, 12) << 12) | (BITS(i, 20, 20) << 10) | (BITS(i, 30, 21) << 0), 20) << 1; } while (0)
+//#define immB() do { uint32_t offset = (BITS(i, 31, 31) << 12) | (BITS(i, 30, 25) << 5)  | (BITS(i, 11, 8)  << 1)  | (BITS(i, 7,  7 ) << 11); *imm = SEXT(offset,13) << 1;} while (0)
+# define immB() do {*imm = SEXT((BITS(i, 31, 31) << 12) | (BITS(i, 30, 25) << 5)  | (BITS(i, 11, 8)  << 1)  | (BITS(i, 7,  7) << 11), 13) << 1; } while (0)
 #define immR() do { *imm = 0; } while (0) //R型指令
 
 
