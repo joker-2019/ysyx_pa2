@@ -37,10 +37,9 @@ enum {
 #define immU() do { *imm = SEXT(BITS(i, 31, 12), 20) << 12; } while(0)
 #define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)
 #define immN() do { *imm = 0; } while (0) // N型无立即数
-//# define immJ() do { uint32_t offset = (BITS(i, 31, 31) << 19) | (BITS(i, 19, 12) << 12) | (BITS(i, 20, 20) << 10) | (BITS(i, 30, 21) << 0); *imm = SEXT(offset, 20) << 1;} while (0)
-#define immJ() do { *imm = SEXT((BITS(i, 31, 31) << 19) | (BITS(i, 19, 12) << 12) | (BITS(i, 20, 20) << 10) | (BITS(i, 30, 21) << 0), 20) << 1; } while (0)
-//#define immB() do { uint32_t offset = (BITS(i, 31, 31) << 12) | (BITS(i, 30, 25) << 5)  | (BITS(i, 11, 8)  << 1)  | (BITS(i, 7,  7 ) << 11); *imm = SEXT(offset,13) << 1;} while (0)
-# define immB() do {*imm = SEXT((BITS(i, 31, 31) << 12) | (BITS(i, 30, 25) << 5)  | (BITS(i, 11, 8)  << 1)  | (BITS(i, 7,  7) << 11), 13) << 1; } while (0)
+#define immJ() do { uint32_t offset = (BITS(i, 31, 31) << 19) | (BITS(i, 19, 12) << 12) | (BITS(i, 20, 20) << 10) | (BITS(i, 30, 21) << 0); *imm = SEXT(offset, 20) << 1;} while (0)
+//#define immJ() do { *imm = SEXT((BITS(i, 31, 31) << 19) | (BITS(i, 19, 12) << 12) | (BITS(i, 20, 20) << 10) | (BITS(i, 30, 21) << 0), 20) << 1; } while (0)
+#define immB() do { uint32_t offset = (BITS(i, 31, 31) << 12) | (BITS(i, 30, 25) << 5)  | (BITS(i, 11, 8)  << 1)  | (BITS(i, 7,  7 ) << 11); *imm = SEXT(offset,13) << 1;} while (0)
 #define immR() do { *imm = 0; } while (0) //R型指令
 
 
@@ -78,7 +77,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000000 00000 00001 000 00000 11001 11", ret    , I, s->dnpc = src1 + imm); //精确匹配ret，执行精确跳转
   //控制流  排除auipc,addi, jal, sw, mv, ebreak,
   // 伪指令 j（优先匹配 rd=x0）
-  INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->pc + 4, s->dnpc = s->pc + imm; printf(" "FMT_WORD" \n",imm + s->pc));  // 跳转并链接 
+  INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->pc + 4, s->dnpc = s->pc + imm; printf(" imm:"FMT_WORD", s->pc:"FMT_WORD" \n",imm, s->pc));  // 跳转并链接 
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, R(rd) = s->pc + 4; s->dnpc = (src1 + imm)& ~(word_t)1);  // 新增  
   //算术指令
   INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc  , U, R(rd) = s->pc + imm);  // PC加高位立即数。
