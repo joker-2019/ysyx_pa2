@@ -19,15 +19,29 @@
 #include <memory/paddr.h>
 
 __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
-  assert(0);
+  if (direction == DIFFTEST_TO_DUT) {
+    // 从 REF 的 guest memory 读，写入 buf（host）
+    memcpy(buf, guest_to_host(addr), n);
+  } else {
+    // 从 buf（host）复制，写入 REF 的 guest memory
+    memcpy(guest_to_host(addr), buf, n);
+  }
+  //assert(0);
 }
 
 __EXPORT void difftest_regcpy(void *dut, bool direction) {
-  assert(0);
+  if(direction == DIFFTEST_TO_DUT){
+    memcpy(dut, &cpu, sizeof(CPU_state));
+  }else{
+    // 从 buf（DUT 提供）拷贝寄存器值到 REF
+    memcpy(&cpu, dut, sizeof(CPU_state));
+  }
+  //assert(0);
 }
 
 __EXPORT void difftest_exec(uint64_t n) {
-  assert(0);
+  cpu_exec(n);
+  //assert(0);
 }
 
 __EXPORT void difftest_raise_intr(word_t NO) {
