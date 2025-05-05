@@ -162,20 +162,21 @@ int sprintf(char *out, const char *fmt, ...) {
 
   while (*fmt){
     if(*fmt == '%'){
-      fmt++;
+      fmt++;//跳过 ‘%’
 
       switch(*fmt){
         case('d'): count += print_number(sprintf_output, &buf, va_arg(args, int), 10); break;
         case('s'): count += print_string(sprintf_output, &buf, va_arg(args, const char*)); break;
       }
-    }else{
-      printf_output(NULL, *fmt++);
+      fmt++; //跳过转换字符(d, s, ...)
+    }else {
+      *buf++ = *fmt++;
       count++;
     }
-
       
   }
-   va_end(args);
+  *buf = '\0'; // 添加字符串终止符
+  va_end(args);
   return count;
   // panic("Not implemented");
 }
