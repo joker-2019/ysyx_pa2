@@ -23,7 +23,7 @@
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
-#define MAX_INST_TO_PRINT 10
+#define MAX_INST_TO_PRINT 1000
 
 
 #define ENABLE_WATCHPOINT_HANDLING  // 注释这行即可关闭监视点检查
@@ -72,28 +72,39 @@ static void exec_once(Decode *s, vaddr_t pc) {
   isa_exec_once(s);
   cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
-  char *p = s->logbuf;
-  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-  int ilen = s->snpc - s->pc;
+  char *p = s->logbuf; // s->logbuf存储指令日志的缓冲区
+  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);  //函数snprintf（）向str写入最多大小的字节
+  int ilen = s->snpc - s->pc; //// 指令长度（字节）
   int i;
-  uint8_t *inst = (uint8_t *)&s->isa.inst.val;
+  uint8_t *inst = (uint8_t *)&s->isa.inst.val; // 指令二进制数据
   for (i = ilen - 1; i >= 0; i --) {
-    p += snprintf(p, 4, " %02x", inst[i]);
+    p += snprintf(p, 4, " %02x", inst[i]); // 逆序输出每个字节
   }
-  int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
-  int space_len = ilen_max - ilen;
+  int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4); // x86最长8字节，其他架构4字节
+  int space_len = ilen_max - ilen;  // 计算需要补全的空格数
   if (space_len < 0) space_len = 0;
-  space_len = space_len * 3 + 1;
-  memset(p, ' ', space_len);
-  p += space_len;
+  space_len = space_len * 3 + 1; // 每个缺失字节补3个字符（"   "），再加1个空格
+  memset(p, ' ', space_len);   // 填充空格
+  p += space_len; // 移动指针
 
+/*
+disassemble 函数将指令二进制码转换为可读的汇编格式
+参数说明：
+p：输出缓冲区的起始位置（即空格填充后的位置）。
+s->logbuf + sizeof(s->logbuf) - p：剩余缓冲区大小。
+MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc)：x86 架构使用 s->snpc（因为指令长度动态可变），其他架构使用 s->pc。
+(uint8_t *)&s->isa.inst.val：指令二进制数据。
+ilen：指令长度。
+*/
 #ifndef CONFIG_ISA_loongarch32r
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);  // disassemble 函数将指令二进制码转换为可读的汇编格式
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
 #else
   p[0] = '\0'; // the upstream llvm does not support loongarch32r
 #endif
+//添加到环形缓冲区
+iringbuf_add(pc, inst, p);
 #endif
 }
 

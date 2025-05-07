@@ -5,7 +5,7 @@ TOPNAME = ysyx_22040080_cpu
 
 # NXDC constraint file
 # NXDC_FILES = constr/top.nxdc
-FST_FILE = wave.vcd
+FST_FILE = dump.vcd
 
 # Include path for headers
 INC_PATH ?=
