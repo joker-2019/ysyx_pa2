@@ -5,61 +5,6 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-
-/*
-static int print_int(int num, int base){
-    char buffer[32]; //构建存储字符数组
-    int i = 0, count = 0;
-    int is_uppercase = (base < 0);  // 负数进制表示使用大写
-    unsigned int n = (num < 0) ? -num : num;  // 转换为无符号数处理
-
-      // 处理负号（仅对十进制有效）
-    if (num < 0 && (base == 10 || base == -10)) {
-        putch('-');
-        count++;
-    }
-
-    // 处理零值
-    if (n == 0) {
-        putch('0');
-        return 1;
-    }
-    // 计算进制的绝对值
-    int abs_base = (base < 0) ? -base : base;
-
-    // 检查进制合法性（可选）
-    if (abs_base < 2 || abs_base > 36) {
-        return -1;  // 非法进制，返回错误
-    }
-
-    //处理非0和非负数的值
-    while(n > 0){
-      int digital = n % base;
-       // 转换为字符：0-9直接转换，10+根据大小写规则转换为A-F或a-f
-      if(digital < 10){
-        buffer[i] = digital + '0';
-
-      }else{                              //大于10的数用字母表示
-        if(is_uppercase > 0){
-          //用大写表示10-16(A-F)
-          buffer[i] = 'a' + digital - 10; //正数用小写字母表示
-        }else{
-          buffer[i] = 'A' + digital - 10; //负数用大写字母表示
-        }
-      }
-      i++;
-      n /= base; 
-    }
-
-    // 逆序输出字符数组（正确顺序）
-    for (int j = i - 1; j >= 0; j--) {
-        putch(buffer[j]);
-        count++;
-    }
-    return count;
-}
-*/
-
 // 输出函数类型定义（回调函数）
 typedef void (*output_func)(void*, char);
 

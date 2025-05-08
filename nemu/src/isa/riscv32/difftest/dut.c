@@ -24,8 +24,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   //get ref states copy to the dut
   difftest_regcpy(&dut, DIFFTEST_TO_DUT);
   //比较通用寄存器
-  for (int i = 0; i < 32; i++)
-  {
+  for (int i = 0; i < 32; i++){
     if(dut.gpr[i] != ref_r->gpr[i]){
       printf("[DiffTest Error] At PC = 0x%08x: Register x%d mismatch\n", pc, i);
       printf("  REF: 0x%08x\tDUT: 0x%08x\n", ref_r->gpr[i], dut.gpr[i]);

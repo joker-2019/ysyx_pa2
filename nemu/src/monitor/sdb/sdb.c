@@ -269,7 +269,7 @@ void test_expr() {
   char *e = NULL;
   word_t correct_res;
   size_t len = 0;
-  ssize_t read;
+  size_t read;
   bool success = false;
  
   while (true) {

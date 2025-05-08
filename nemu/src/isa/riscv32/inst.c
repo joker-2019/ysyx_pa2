@@ -134,8 +134,8 @@ static int decode_exec(Decode *s) {
 
   return 0;
 }
-
+// 译码函数
 int isa_exec_once(Decode *s) {
-  s->isa.inst.val = inst_fetch(&s->snpc, 4);
+  s->isa.inst.val = inst_fetch(&s->snpc, 4);  // isa执行取指令操作
   return decode_exec(s);
 }
