@@ -3,9 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdint.h> // 包含Elf32_Word定义
 
 // 全局追踪上下文（静态变量，仅本文件可见）
 static FTraceContext ftrace_ctx = {0};
+static FTraceELFInfo info = {0}; // 静态变量存储解析结果（或使用全局变量monitor_elf_info）
 
 // 初始化追踪模块（解析ELF并设置上下文）
 void ftrace_init(const char* elf_path) {
@@ -13,10 +15,8 @@ void ftrace_init(const char* elf_path) {
     memset(&ftrace_ctx.elf_info, 0, sizeof(FTraceELFInfo));
 
     // 解析ELF文件获取符号表和字符串表
-    if (!parse_elf(elf_path, &ftrace_ctx.elf_info)) {
-        fprintf(stderr, "ftrace: failed to parse ELF file\n");
-        return;
-    }
+    parse_elf(elf_path);
+    
     // 初始化调用深度和缩进字符串（每层4空格，最大16层）
     ftrace_ctx.call_depth = 0;
     for (int i = 0; i < 16; i++) {
@@ -92,63 +92,109 @@ const char* ftrace_find_function_name(FTraceELFInfo* info, vaddr_t addr) {
 }
     
     //解析elf文件
-bool parse_elf(const char* elf_path, FTraceELFInfo* info) {
-    memset(info, 0, sizeof(FTraceELFInfo)); // 初始化指针为NULL
+void parse_elf(const char* elf_path) {
     FILE* fp = fopen(elf_path, "rb");
-    if (!fp) { perror("ftrace: failed to open ELF file"); return false; }
- 
+    if (!fp) { perror("ftrace: failed to open ELF file"); return; }
+
+    memset(&info, 0, sizeof(FTraceELFInfo));
+
+    // 创建并打开log文件（默认与ELF同名，扩展名为.log）
+    char log_path[1024];
+    snprintf(log_path, sizeof(log_path), "%s.log", elf_path);
+    FILE* log_fp = fopen(log_path, "w");
+    if (!log_fp) {
+        perror("ftrace: failed to create log file");
+        fclose(fp);
+        return;
+    }
+    // 记录解析开始
+    fprintf(log_fp, "==== ELF File Parsing Log ====\n");
+    fprintf(log_fp, "File: %s\n\n", elf_path);
+
+    //读取elf文件头
     Elf32_Ehdr ehdr;
     if (fread(&ehdr, 1, sizeof(ehdr), fp) != sizeof(ehdr)) {
-        fclose(fp);
-        return false;
+        fprintf(log_fp, "Error: Failed to read ELF header\n");
+        goto cleanup;
     }
- 
+
+    //检验ELF魔数
     if (memcmp(ehdr.e_ident, ELFMAG, 4) != 0) {
-        fprintf(stderr, "ftrace: not a valid ELF file\n");
-        fclose(fp);
-        return false;
+        fprintf(log_fp, "Error: Not a valid ELF file\n");
+        goto cleanup;
     }
- 
+    // 记录ELF文件头信息
+    fprintf(log_fp, "ELF Header:\n");
+    fprintf(log_fp, "  Magic:   %02x %02x %02x %02x\n", 
+            ehdr.e_ident[EI_MAG0], ehdr.e_ident[EI_MAG1], 
+            ehdr.e_ident[EI_MAG2], ehdr.e_ident[EI_MAG3]);
+    fprintf(log_fp, "  Class:   %s\n", ehdr.e_ident[EI_CLASS] == ELFCLASS32 ? "ELF32" : "ELF64");
+    fprintf(log_fp, "  Data:    %s\n", ehdr.e_ident[EI_DATA] == ELFDATA2LSB ? "Little Endian" : "Big Endian");
+    fprintf(log_fp, "  Type:    0x%04x\n", ehdr.e_type);
+    fprintf(log_fp, "  Machine: 0x%04x\n", ehdr.e_machine);
+    fprintf(log_fp, "  Entry:   0x%08x\n\n", ehdr.e_entry);
+    
     // 遍历段头，分别查找符号表和字符串表（仅处理一次）
+    fprintf(log_fp, "Section Headers:\n");    
     for (int i = 0; i < ehdr.e_shnum; i++) {
         Elf32_Shdr shdr;
         fseek(fp, ehdr.e_shoff + i * ehdr.e_shentsize, SEEK_SET);
-        if (fread(&shdr, 1, sizeof(shdr), fp) != sizeof(shdr)) { continue; }
- 
+        if (fread(&shdr, 1, sizeof(shdr), fp) != sizeof(shdr)) {
+            fprintf(log_fp, "Warning: Failed to read section header %d\n", i);
+            continue; 
+        }
+        // 记录段头信息
+        fprintf(log_fp, "  Section %d:\n", i);
+        fprintf(log_fp, "    Type: 0x%08x\n", shdr.sh_type);
+        fprintf(log_fp, "    Flags: 0x%08x\n", shdr.sh_flags);
+        fprintf(log_fp, "    Address: 0x%08x\n", shdr.sh_addr);
+        fprintf(log_fp, "    Offset: 0x%08x\n", shdr.sh_offset);
+        fprintf(log_fp, "    Size: 0x%08x\n\n", shdr.sh_size);
+
         // 处理符号表段（仅当未找到时处理）
-        if(shdr.sh_type == SHT_SYMTAB && !info->symtab) {
-            info->symtab = malloc(shdr.sh_size);
-            if (!info->symtab) {
-                free(info->strtab); // 释放已分配的字符串表
-                fclose(fp);
-                return false;
+        if(shdr.sh_type == SHT_SYMTAB && !info.symtab) {
+            info.symtab = malloc(shdr.sh_size);
+            if (!info.symtab) {
+                fprintf(log_fp, "Error: Memory allocation failed for symbol table\n");
+                goto cleanup;
             }
             fseek(fp, shdr.sh_offset, SEEK_SET);
-
-            if(fread(info->symtab, 1, shdr.sh_size, fp) != shdr.sh_size) {
-            free(info->symtab);
-            info->symtab = NULL;
+            if(fread(info.symtab, 1, shdr.sh_size, fp) != shdr.sh_size) {
+                free(info.symtab);
+                info.symtab = NULL;
+                goto cleanup;
             }
-            info->symtab_size = shdr.sh_size / shdr.sh_entsize; // 使用sh_entsize计算
+            info.symtab_size = shdr.sh_size / shdr.sh_entsize; // 使用sh_entsize计算
+            fprintf(log_fp, "Symbol Table Found: %u entries\n\n",(unsigned int)info.symtab_size);
             }
             // 处理字符串表段（仅当未找到时处理）
-            else if (shdr.sh_type == SHT_STRTAB && !info->strtab) {
-                info->strtab = malloc(shdr.sh_size);
-                if (!info->strtab) {
-                    free(info->symtab); // 释放已分配的符号表
-                    fclose(fp);
-                    return false;
+            else if (shdr.sh_type == SHT_STRTAB && !info.strtab) {
+                info.strtab = malloc(shdr.sh_size);
+                if (!info.strtab) {
+                    fprintf(log_fp, "Error: Memory allocation failed for string table\n");
+                    goto cleanup;
                 }
-            fseek(fp, shdr.sh_offset, SEEK_SET);
-                if(fread(info->strtab, 1, shdr.sh_size, fp) != shdr.sh_size) {
-                    free(info->strtab);
-                    info->strtab = NULL;
+                fseek(fp, shdr.sh_offset, SEEK_SET);
+                if(fread(info.strtab, 1, shdr.sh_size, fp) != shdr.sh_size) {
+                    fprintf(log_fp, "Error: Failed to read string table\n");
+                    free(info.strtab);
+                    info.strtab = NULL;
+                    goto cleanup;
                 }
-            }
-        // 找到两个表后提前退出（优化）
-        if(info->symtab && info->strtab){break;}
+            fprintf(log_fp, "  String Table Found: %u bytes\n\n", (unsigned int)shdr.sh_size);
+        }
+        // 找到两个表后提前退出
+        if (info.symtab && info.strtab) {
+            fprintf(log_fp, "Both symbol table and string table found. Stopping search.\n");
+            break;
+        }
     }
+             // 记录解析完成
+    fprintf(log_fp, "\n==== ELF Parsing Completed ====\n");
+
+cleanup:
     fclose(fp);
-    return info->symtab && info->strtab; // 仅当两者都有效时返回成功
+    fclose(log_fp);
+  
 }
 

@@ -32,6 +32,6 @@ void ftrace_func_ret(paddr_t pc, paddr_t ret_addr);
 const char* ftrace_find_function_name(FTraceELFInfo* info, vaddr_t addr);
 
 //解析elf文件
-bool parse_elf(const char* elf_path, FTraceELFInfo* info);
+void parse_elf(const char* elf_path);
 
 #endif // __FTRACE_H__

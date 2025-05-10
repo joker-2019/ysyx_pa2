@@ -24,8 +24,7 @@ void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();
 void init_disasm(const char *triple);
-static FTraceELFInfo monitor_elf_info = {0}; // 新增：存储ELF解析结果的结构体
-bool parse_elf(const char *elf_file,FTraceELFInfo* monitor_elf_info); //new add 转换成elf文件  解析ELF文件
+
 static void welcome() {
   Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
   IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
@@ -48,6 +47,8 @@ static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
 static char *file_elf = NULL; // new add elf
+
+void parse_elf(const char *file_elf);
 
 static long load_img() {
   if (img_file == NULL) {
@@ -78,7 +79,7 @@ static int parse_args(int argc, char *argv[]) {
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
     {"help"     , no_argument      , NULL, 'h'},
-    {"file_elf" , required_argument, NULL, 'e'}, // new add
+    {"elf"      , required_argument, NULL, 'e'}, // new add
     {0          , 0                , NULL,  0 },
   };
   int o;
@@ -96,7 +97,7 @@ static int parse_args(int argc, char *argv[]) {
         printf("\t-l,--log=FILE           output log to FILE\n");
         printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
         printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
-        printf("\t-e,--elf_file=FILE      elf file to be parsed\n"); //new add
+        printf("\t-e,--file_elf=FILE      elf file to be parsed\n"); //new add
         printf("\n");
         exit(0);
     }
@@ -126,8 +127,8 @@ void init_monitor(int argc, char *argv[]) {
   init_isa();
   
   /* Initialize elf */
-  if (file_elf != NULL) { // 确保用户提供了ELF文件路径
-    parse_elf(file_elf, &monitor_elf_info); // 修正：传递elf_file和结构体地址
+  if (file_elf != NULL) { 
+    parse_elf(file_elf); // 单参数调用，结果存储到monitor_elf_info
   }
 
   /* Load the image to memory. This will overwrite the built-in image. */
