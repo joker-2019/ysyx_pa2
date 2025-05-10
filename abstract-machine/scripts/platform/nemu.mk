@@ -11,8 +11,30 @@ CFLAGS    += -fdata-sections -ffunction-sections
 LDFLAGS   += -T $(AM_HOME)/scripts/linker.ld \
              --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start
-NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/nemu-log.txt --batch
-NEMUFLAGS += -e $(IMAGE).elf
+NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/nemu-log.txt
+# 解析make命令行选项
+ifdef b
+  BATCH_MODE := 1
+else ifdef batch
+  BATCH_MODE := 1
+else
+  BATCH_MODE := 0
+endif
+
+ifdef e
+  ELF_FILE := $(e)
+else ifdef elf_file
+  ELF_FILE := $(elf_file)
+else
+  ELF_FILE := $(IMAGE).elf  # 默认使用生成的ELF文件
+endif
+
+# 默认配置
+BATCH_MODE ?= 0  # 默认禁用批处理模式
+ELF_FILE ?= $(IMAGE).elf  # 默认ELF文件路径
+
+NEMUFLAGS += $(if $(BATCH_MODE),--batch,)
+NEMUFLAGS += $(if $(ELF_FILE),-e $(ELF_FILE),)
 
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 CFLAGS += -I$(AM_HOME)/am/src/platform/nemu/include
