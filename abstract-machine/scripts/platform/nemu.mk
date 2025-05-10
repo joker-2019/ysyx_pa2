@@ -31,7 +31,6 @@ endif
 
 # 默认配置
 BATCH_MODE ?= 0  # 默认禁用批处理模式
-ELF_FILE ?= $(IMAGE).elf  # 默认ELF文件路径
 
 NEMUFLAGS += $(if $(BATCH_MODE),--batch,)
 NEMUFLAGS += $(if $(ELF_FILE),-e $(ELF_FILE),)
