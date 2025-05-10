@@ -13,7 +13,7 @@ LDFLAGS   += -T $(AM_HOME)/scripts/linker.ld \
 LDFLAGS   += --gc-sections -e _start
 
 # 在NEMUFLAGS中添加-e选项，默认使用$(IMAGE).elf
-ELF_FILE := $(abspath $(IMAGE).elf)
+ELF_FILE := /home/wp/ysyx-workbench/am-kernels/tests/cpu-tests/build/recursion-riscv32-nemu.elf
 NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/nemu-log.txt 
 NEMUFLAGS += --batch
 NEMUFLAGS += -e $(ELF_FILE)  # 新增：传递ELF文件路径给监控程序
