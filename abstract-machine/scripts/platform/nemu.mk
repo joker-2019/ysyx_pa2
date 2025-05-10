@@ -13,10 +13,14 @@ LDFLAGS   += -T $(AM_HOME)/scripts/linker.ld \
 LDFLAGS   += --gc-sections -e _start
 
 # 在NEMUFLAGS中添加-e选项，默认使用$(IMAGE).elf
-ELF_FILE := $(IMAGE).elf
+ELF_FILE := $(abspath $(IMAGE).elf)
 NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/nemu-log.txt 
 NEMUFLAGS += --batch
 NEMUFLAGS += -e $(ELF_FILE)  # 新增：传递ELF文件路径给监控程序
+
+# 补充Difftest参考库路径（必须！）
+DIFF_REF := $(NEMU_HOME)/build/riscv32-nemu-interpreter-so
+NEMUFLAGS += -d "$(DIFF_REF)"
 
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 CFLAGS += -I$(AM_HOME)/am/src/platform/nemu/include
