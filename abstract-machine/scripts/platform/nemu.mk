@@ -15,7 +15,7 @@ LDFLAGS   += --gc-sections -e _start
 # 在NEMUFLAGS中添加-e选项，默认使用$(IMAGE).elf
 NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/nemu-log.txt 
 NEMUFLAGS += -b
-# NEMUFLAGS += -e /home/wp/ysyx-workbench/am-kernels/tests/cpu-tests/build/recursion-riscv32-nemu.elf
+NEMUFLAGS += -e $(IMAGE).elf 
 
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 CFLAGS += -I$(AM_HOME)/am/src/platform/nemu/include
