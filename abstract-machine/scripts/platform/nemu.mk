@@ -15,8 +15,8 @@ NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/nemu-log.txt
 NEMUFLAGS += --batch
 
 # 在NEMUFLAGS中添加-e选项，默认使用$(IMAGE).elf
-ELF ?= $(IMAGE).elf
-NEMUFLAGS += -e $(ELF)  # 新增：传递ELF文件路径给监控程序
+ELF_FILE ?= $(IMAGE).elf
+NEMUFLAGS += -e $(ELF_FILE)  # 新增：传递ELF文件路径给监控程序
 
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 CFLAGS += -I$(AM_HOME)/am/src/platform/nemu/include
