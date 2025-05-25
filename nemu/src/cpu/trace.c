@@ -51,6 +51,7 @@ void ftrace_func_call(paddr_t pc, paddr_t target) {
     ftrace_ctx.call_depth++; // 深度同步增加
 }
 
+
 // 函数返回追踪（带缩进）
 void ftrace_func_ret(paddr_t pc, paddr_t ret_addr) {
     // 边界检查：符号表未初始化或调用深度为0（无调用栈）
