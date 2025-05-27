@@ -106,7 +106,7 @@ ilen：指令长度。
 #endif
 uint32_t inst_val = 0;
 memcpy(&inst_val, inst, ilen);  // 安全地读取实际长度的指令（最多4字节）
-//添加到环形缓冲区
+ //打印环形缓冲区的内容，并打印错误的指令信息//添加到环形缓冲区
 iringbuf_add(pc, inst_val, p);
 #endif
 }
@@ -117,7 +117,12 @@ static void execute(uint64_t n) {
     exec_once(&s, cpu.pc);
     g_nr_guest_inst ++;
     trace_and_difftest(&s, cpu.pc);
-    if (nemu_state.state != NEMU_RUNNING) break;
+    if (nemu_state.state != NEMU_RUNNING){
+      if (nemu_state.state == NEMU_ABORT){
+        printf_inst_error(cpu.pc);
+      }
+      break;
+    } 
     IFDEF(CONFIG_DEVICE, device_update());
   }
 }

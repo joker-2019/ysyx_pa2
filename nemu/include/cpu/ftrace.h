@@ -26,7 +26,7 @@ void ftrace_init(const char* elf_path);
 void ftrace_func_call(paddr_t pc, paddr_t target);
 
 // 函数返回追踪（参数改为虚拟地址，新增缩进支持）
-void ftrace_func_ret(paddr_t pc, paddr_t ret_addr);
+void ftrace_func_ret(paddr_t pc);
 
 // 根据虚拟地址查找函数名（未找到返回"???"，注释明确）
 const char* ftrace_find_function_name(FTraceELFInfo* info, vaddr_t addr);

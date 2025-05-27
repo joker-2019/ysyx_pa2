@@ -84,7 +84,8 @@ static int decode_exec(Decode *s) {
   }); );  // 跳转并链接 
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, R(rd) = s->pc + 4, s->dnpc = (src1 + imm)& ~(word_t)1; IFDEF(CONFIG_ITRACE, {
     if(s->isa.inst.val == 0x00008067){ // 如果是ret指令(jalr x0, x1, 0)
-        ftrace_func_ret(s->pc, s->dnpc);             // 记录函数返回
+        //ftrace_func_ret(s->pc, s->dnpc);             // 记录函数返回
+        ftrace_func_ret(s->pc);             // 记录函数返回
     }else if(rd == 1){                      // 如果目标寄存器是x1(ra)，则是函数调用
          ftrace_func_call(s->pc, s->dnpc);  // 记录函数调用
     }else if(rd == 0 && imm == 0){          // 如果是jr指令(jalr x0, rs1, 0)
