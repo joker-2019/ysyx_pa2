@@ -24,7 +24,7 @@ void parse_elf(const char* elf_path) {
     Elf32_Shdr *shdrs = malloc(sizeof(Elf32_Shdr) * ehdr.e_shnum); // Section headers
     fseek(fp, ehdr.e_shoff, SEEK_SET);  // 定位到节头表在文件中的位置
     //fread(shdrs, ehdr.e_shnum, sizeof(Elf32_Shdr), fp); // 读取整个节头表
-    assert(fread(shdrs, ehdr.e_shnum, sizeof(Elf32_Shdr), fp) == ehdr.e_shnum);
+    assert(fread(shdrs, sizeof(Elf32_Shdr), ehdr.e_shnum, fp) == ehdr.e_shnum); // fread(buf, size, count, fp)  size为读取的大小, count为个数
 
 
     // 用于存储找到的符号表和字符串表
