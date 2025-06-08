@@ -100,7 +100,7 @@ void check_call_or_ret(uint32_t pc) {
                      {
                          printf(" ");
                      }
-                     printf("call [%s@0x%08x]\n", temp->name, temp->addr);
+                     printf("ret [%s@0x%08x]\n", temp->name, temp->addr);
                  }
             }
             break;
