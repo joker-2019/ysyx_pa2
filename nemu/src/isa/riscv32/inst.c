@@ -76,22 +76,9 @@ static int decode_exec(Decode *s) {
 
   //INSTPAT("0000000 00000 00001 000 00000 11001 11", ret    , I, s->dnpc = src1 + imm); //精确匹配ret，执行精确跳转
   //控制流  排除auipc,addi, jal, sw, mv, ebreak,
-  // 伪指令 j（优先匹配 rd=x0）
-  INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->pc + 4, s->dnpc = s->pc + imm;  IFDEF(CONFIG_ITRACE, {
-    if(rd == 1){          // 如果目标寄存器是x1(ra)，则是函数调用
-      ftrace_func_call(s->pc, s->dnpc);
-    }
-  }); );  // 跳转并链接 
-  INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, R(rd) = s->pc + 4, s->dnpc = (src1 + imm)& ~(word_t)1; IFDEF(CONFIG_ITRACE, {
-    if(s->isa.inst.val == 0x00008067){ // 如果是ret指令(jalr x0, x1, 0)
-        //ftrace_func_ret(s->pc, s->dnpc);             // 记录函数返回
-        ftrace_func_ret(s->pc);             // 记录函数返回
-    }else if(rd == 1){                      // 如果目标寄存器是x1(ra)，则是函数调用
-         ftrace_func_call(s->pc, s->dnpc);  // 记录函数调用
-    }else if(rd == 0 && imm == 0){          // 如果是jr指令(jalr x0, rs1, 0)
-         ftrace_func_call(s->pc, s->dnpc);  // 记录其他控制流跳转
-    }
-  }));  // 新增  
+  // 伪指令 j（优先匹配 rd=x0）  check_call_or_ret(s->dnpc); 用于检查跳转pc值是否是调用或者返回
+  INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal, J, R(rd) = s->pc + 4, s->dnpc = s->pc + imm; IFDEF(CONFIG_ITRACE, { check_call_or_ret(s->dnpc); });); // 跳转并链接
+  INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, R(rd) = s->pc + 4, s->dnpc = (src1 + imm)& ~(word_t)1; IFDEF(CONFIG_ITRACE, {check_call_or_ret(s->dnpc); }));  // 新增  
   //算术指令  s->dnpc = (src1 + imm)& ~(word_t)1; 
   INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc  , U, R(rd) = s->pc + imm);  // PC加高位立即数。
   INSTPAT("??????? ????? ????? ??? ????? 01101 11", lui    , U, R(rd) = imm); // 加载高位立即数

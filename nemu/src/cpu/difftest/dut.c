@@ -96,7 +96,6 @@ static void checkregs(CPU_state *ref, vaddr_t pc) {
   if (!isa_difftest_checkregs(ref, pc)) {
     nemu_state.state = NEMU_ABORT;
     nemu_state.halt_pc = pc;
-    printf_inst_error(pc); //打印环形缓冲区的内容，并打印错误的指令信息
     isa_reg_display();
   }
 }
