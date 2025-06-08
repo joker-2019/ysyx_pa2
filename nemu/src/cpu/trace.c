@@ -55,7 +55,7 @@ void parse_elf(const char* elf_path) {
 
     // 计算符号数量
     int sym_count = symtab_hdr->sh_size / symtab_hdr->sh_entsize;
-
+/* 
     // 遍历符号表，提取函数信息并构建链表
     for (int i = 0; i < sym_count; i++) {
         Elf32_Sym *sym = &symtab[i];
@@ -68,7 +68,17 @@ void parse_elf(const char* elf_path) {
             elf_head = node;
         }
     }
-
+*/
+    for (Elf32_Sym *sym = &symtab[0];  sym != &symtab[sym_count]; sym++) {
+        if (ELF32_ST_TYPE(sym->st_info) == STT_FUNC &&sym->st_value >= 0x80000000 &&sym->st_size > 0) {
+            struct FuncSym *node = malloc(sizeof(struct FuncSym));
+            node->name = strdup(strtab + sym->st_name);
+            node->addr = (uint32_t)sym->st_value;
+            node->size = (uint32_t)sym->st_size;
+            node->next = elf_head;
+            elf_head = node;
+        }
+    }
     // 清理
     free(symtab);
     free(strtab);
@@ -84,7 +94,7 @@ void check_call_or_ret(uint32_t pc) {
             }else if(current_func == temp->name){ //在函数内部
             }else {
                  current_func = temp->name;
-                 printf("0x%08x", pc);
+                 printf("0x%08x: ", pc);
                  if (pc == temp->addr){ // 跳转新的函数
                      // TODO call
                      for (int i = 0; i < call_depth; ++i){
