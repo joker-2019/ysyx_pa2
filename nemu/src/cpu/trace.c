@@ -68,7 +68,7 @@ void parse_elf(const char* elf_path) {
             elf_head = node;
         }
     }
-*/
+*/  
     for (Elf32_Sym *sym = &symtab[0];  sym != &symtab[sym_count]; sym++) {
         if (ELF32_ST_TYPE(sym->st_info) == STT_FUNC &&sym->st_value >= 0x80000000 &&sym->st_size > 0) {
             struct FuncSym *node = malloc(sizeof(struct FuncSym));
@@ -96,7 +96,7 @@ void check_call_or_ret(uint32_t pc) {
                  current_func = temp->name;
                  printf("0x%08x: ", pc);
                  if (pc == temp->addr){ // 跳转新的函数
-                     // TODO call
+                     // call
                      for (int i = 0; i < call_depth; ++i){
                          printf(" ");
                      }
@@ -104,7 +104,7 @@ void check_call_or_ret(uint32_t pc) {
                      ++call_depth;
                  }
                  else{
-                     // TODO  ret
+                     // ret
                      --call_depth;
                      for (int i = 0; i < call_depth; ++i)
                      {

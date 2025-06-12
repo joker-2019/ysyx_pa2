@@ -127,9 +127,7 @@ void init_monitor(int argc, char *argv[]) {
   init_isa();
   
   /* Initialize elf */
-  if (file_elf != NULL) { 
-    parse_elf(file_elf); // 单参数调用，结果存储到monitor_elf_info
-  }
+  parse_elf(file_elf); 
 
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
