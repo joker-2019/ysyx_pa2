@@ -13,8 +13,9 @@ struct FuncSym *elf_head; //函数链表头
 
     //解析elf文件
 void parse_elf(const char* elf_path) {
-     FILE *fp = fopen(elf_path, "rb");
-     assert(fp != NULL);
+    return;
+    FILE *fp = fopen(elf_path, "rb");
+    assert(fp != NULL);
     // 读取 ELF 头
     Elf32_Ehdr ehdr; // ELF header
     assert(fread(&ehdr, 1, sizeof(ehdr), fp) == sizeof(ehdr));
