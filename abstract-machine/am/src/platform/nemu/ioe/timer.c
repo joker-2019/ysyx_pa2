@@ -2,15 +2,16 @@
 #include <nemu.h>
 #include <time.h>
 //系统启动时间，用于计算相对时间
-static uint64_t boot_time;
+//static uint64_t boot_time;
 
 void __am_timer_init() {
+  /*
     // 获取当前时间，单位为毫秒
   uint32_t low = inl(RTC_ADDR);     // 低32位
   uint32_t high = inl(RTC_ADDR + 4); // 高32位
   // 将当前初始化时间转换为64位整数
   boot_time = ((uint64_t)high << 32) | low;
-
+*/
 }
 
 void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
