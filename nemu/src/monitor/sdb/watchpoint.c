@@ -18,17 +18,6 @@
 
 #define NR_WP 32
 
-/*
-typedef struct watchpoint {
-  int NO;
-  struct watchpoint *next;
-
-  //TODO: Add more members if necessary
-   word_t old_value;
-   char expr[100];   
-
-} WP; 
-*/
 static WP wp_pool[NR_WP] = {};
 static WP *head = NULL, *free_ = NULL;
 
@@ -156,20 +145,3 @@ bool scan_all_wp(){
   return flag;
 }
 
-/*
-void wp_difftest() {
-  WP* h = head;
-  while (h) {
-    bool _;
-    word_t new = expr(h->expr, &_);
-    if (h->val != new) {
-      printf("Watchpoint %d: %s\n"
-        "Old value = %lu\n"
-        "New value = %u\n"
-        , h->NO, h->expr, h->val, new);
-      h->val = new;
-    }
-    h = h->next;
-  }
-}
-*/

@@ -27,7 +27,7 @@
 #define MAX_INST_TO_PRINT 1000
 
 
-#define ENABLE_WATCHPOINT_HANDLING  // 注释这行即可关闭监视点检查
+// #define ENABLE_WATCHPOINT_HANDLING  // 注释这行即可关闭监视点检查
 
 #ifdef ENABLE_WATCHPOINT_HANDLING
 #define CHECK_WATCHPOINT() do { \
