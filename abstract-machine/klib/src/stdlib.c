@@ -46,9 +46,9 @@ void *malloc(size_t size) {
   addr += size; // 更新分配地址
   
   // 检查是否超过堆的结束地址
-  if (addr > (void *)heap.end) {
+  /* if (addr > (void *)heap.end) {
     return NULL; // 堆空间不足
-  }
+  } */
   // 返回当前分配地址
   return ret;
 #else
