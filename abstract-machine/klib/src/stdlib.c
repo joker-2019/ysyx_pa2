@@ -1,6 +1,9 @@
 #include <am.h>
 #include <klib.h>
 #include <klib-macros.h>
+// 物理内存范围
+#define PHY_MEM_START 0x80000000
+#define PHY_MEM_END   0x87ffffff
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 static unsigned long int next = 1;
@@ -40,15 +43,16 @@ void *malloc(size_t size) {
   if(addr == 0) {
     // Initialize addr to a specific memory location, e.g., 0x80000000
     addr = (void *)heap.start;
+    assert(addr != NULL && addr >= (void *)PHY_MEM_START && addr <= (void *)PHY_MEM_END);
   }
   //此时完成地址初始化，保存当前分配地址作为返回值
   void *ret = (void*)addr;
   addr += size; // 更新分配地址
   
   // 检查是否超过堆的结束地址
-  /* if (addr > (void *)heap.end) {
+  if (addr > (void *)heap.end) {
     return NULL; // 堆空间不足
-  } */
+  }
   // 返回当前分配地址
   return ret;
 #else
