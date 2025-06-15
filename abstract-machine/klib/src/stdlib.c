@@ -41,7 +41,7 @@ void *malloc(size_t size) {
   //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
   if(addr == 0) {
-    // Initialize addr to a specific memory location, e.g., 0x80000000
+    // Initialize addr to a specific memory location
     addr = (void *)heap.start;
     assert(addr != NULL && addr >= (void *)PHY_MEM_START && addr <= (void *)PHY_MEM_END);
   }

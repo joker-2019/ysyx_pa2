@@ -13,7 +13,7 @@ struct FuncSym *elf_head; //函数链表头
 
     //解析elf文件
 void parse_elf(const char* elf_path) {
-    return;
+    return;  
     FILE *fp = fopen(elf_path, "rb");
     assert(fp != NULL);
     // 读取 ELF 头
@@ -31,8 +31,7 @@ void parse_elf(const char* elf_path) {
     // 用于存储找到的符号表和字符串表
     Elf32_Shdr *symtab_hdr = NULL;  // 符号表节头
     Elf32_Shdr *strtab_hdr = NULL;  // 关联的字符串表节头
-    
-    //
+    // 遍历节头表，查找符号表和字符串表
     for (int i = 0; i < ehdr.e_shnum; i++) {
         if (shdrs[i].sh_type == SHT_SYMTAB) {
             symtab_hdr = &shdrs[i];
