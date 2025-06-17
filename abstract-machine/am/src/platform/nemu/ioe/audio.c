@@ -63,7 +63,6 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   // 将音频数据写入 audio-sbuf（起始地址应为 AUDIO_SBUF_ADDR）
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
 
-  // 写入音频数据到缓冲区尾部（环形）
   for (int i = 0; i < len; i++) {
     sbuf[(audio_write_pos + i) % sbuf_size] = buf_start[i];
   }

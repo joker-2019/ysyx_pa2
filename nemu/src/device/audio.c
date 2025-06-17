@@ -34,7 +34,7 @@ static SDL_AudioSpec obtained; // Audio specifications
 
 // Audio callback function
 static void audio_callback(void *userdata, uint8_t *stream, int len) {
-  if(audio_base[reg_count] > 0) { // 如果有样本可用，则继续处理；否则直接返回（输出静音）
+   if(audio_base[reg_count] > 0) { // 如果有样本可用，则继续处理；否则直接返回（输出静音）
     int nread = len < audio_base[reg_count] ? len : audio_base[reg_count]; // Read up to 'len' bytes from the sample buffer
     if (nread > CONFIG_SB_SIZE) nread = CONFIG_SB_SIZE; // 确保读取的样本不超过缓冲区大小
 
@@ -46,7 +46,7 @@ static void audio_callback(void *userdata, uint8_t *stream, int len) {
     }
   } else {
       memset(stream, 0, len);  // 没有样本时，全部填充为0
-  }
+  } 
 }
 
 // Audio I/O handler
