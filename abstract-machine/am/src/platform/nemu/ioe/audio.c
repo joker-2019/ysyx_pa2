@@ -98,7 +98,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     }
 
     // 通知硬件写入了多少数据
-    outl(AUDIO_COUNT_ADDR, chunk);
+    outl(AUDIO_COUNT_ADDR, count + chunk);
     write_ptr += chunk;
   }
 }
