@@ -18,7 +18,7 @@ void __am_audio_init() {
   outl(AUDIO_SAMPLES_ADDR, 1024);      // 设置默认采样数
   outl(AUDIO_SBUF_SIZE_ADDR, 4096);    // 设置音频缓冲区大小
 
-  outl(AUDIO_INIT_ADDR, 1);            // 通知音频控制器初始化
+  outl(AUDIO_INIT_ADDR, 0);            // 通知音频控制器初始化
   outl(AUDIO_COUNT_ADDR, 0);            // 初始时缓冲区数据量为0
 }
 
@@ -63,12 +63,12 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   // 将音频数据写入 audio-sbuf（起始地址应为 AUDIO_SBUF_ADDR）
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
 
-  for (int i = 0; i < len; i++) {
+   for (int i = 0; i < len; i++) {
     sbuf[(audio_write_pos + i) % sbuf_size] = buf_start[i];
   }
 
   // 更新写指针
-  audio_write_pos = (audio_write_pos + len) % sbuf_size;
+  audio_write_pos = (audio_write_pos + len) % sbuf_size; 
 
   // 通知硬件样本增加
   outl(AUDIO_COUNT_ADDR, count + len);
