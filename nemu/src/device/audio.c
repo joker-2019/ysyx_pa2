@@ -34,11 +34,6 @@
 
   // Audio callback function
   static void audio_callback(void *userdata, uint8_t *stream, int len) {
-  // 加锁保护共享资源
-  static SDL_mutex *mutex = NULL;
-  if (!mutex) mutex = SDL_CreateMutex();
-  SDL_LockMutex(mutex);
-
     if(audio_base[reg_count] > 0) { // 如果有样本可用，则继续处理；否则直接返回（输出静音）
       printf("Audio callback called with len: %d, available samples: %d\n", len, audio_base[reg_count]);
       int nread = len < audio_base[reg_count] ? len : audio_base[reg_count]; // Read up to 'len' bytes from the sample buffer
@@ -55,8 +50,7 @@
       printf("Audio callback called with len: %d, but no samples available\n", len);
         memset(stream, 0, len);  // 没有样本时，全部填充为0
     }
-    // 解锁
-    SDL_UnlockMutex(mutex); 
+
   }
 
   // Audio I/O handler

@@ -15,7 +15,7 @@ void __am_audio_init() {
   outl(AUDIO_SAMPLES_ADDR, 1024);      // 设置默认采样数
   outl(AUDIO_SBUF_SIZE_ADDR, 4096);    // 设置音频缓冲区大小
 
-  outl(AUDIO_INIT_ADDR, 0);            // 通知音频控制器初始化
+  outl(AUDIO_INIT_ADDR, 1);            // 通知音频控制器初始化
   outl(AUDIO_COUNT_ADDR, 0);            // 初始时缓冲区数据量为0
 }
 
