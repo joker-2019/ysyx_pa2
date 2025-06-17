@@ -51,10 +51,10 @@ static void audio_callback(void *userdata, uint8_t *stream, int len) {
 
 // Audio I/O handler
 static void audio_io_handler(uint32_t offset, int len, bool is_write) {
-  uint32_t index = offset / sizeof(uint32_t);
+  uint32_t index = offset / sizeof(uint32_t); // Calculate the register index based on the offset
   if(is_write){
     if(index == reg_init && audio_base[reg_init]) {
-      //清楚旧的状态
+      //clean old status
       audio_base[reg_init] = 0; // Reset initialization status
       memset(sbuf, 0, CONFIG_SB_SIZE); // Clear the sample buffer 
       if(dev) SDL_CloseAudioDevice(dev); // Close the audio device if it was previously opened

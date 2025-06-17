@@ -17,14 +17,6 @@ void __am_audio_config(AM_AUDIO_CONFIG_T *cfg) {
     cfg->present = false;
     return;
   }
-  // 读取音频缓冲区大小
-  // 注意: 在实际硬件中，可能需要通过特定的寄存器或方法来获取音频缓冲区的大小
-  // 此处假设AUDIO_SBUF_SIZE_ADDR是一个有效的地址，用于获取音频缓冲区大小
-  // 在NEMU中，AUDIO_SBUF_SIZE_ADDR可能需要根据具体实现进行调整
-  if (AUDIO_SBUF_SIZE_ADDR < MMIO_BASE || AUDIO_SBUF_SIZE_ADDR >= MMIO_BASE + 0x1000) {
-    cfg->present = false;
-    return;
-  }
   uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR); // 读取音频缓冲区大小
 
   *cfg = (AM_AUDIO_CONFIG_T) {
