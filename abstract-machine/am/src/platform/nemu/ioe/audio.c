@@ -10,6 +10,9 @@
 #define AUDIO_INIT_ADDR      (AUDIO_ADDR + 0x10)
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
 
+static void* last_buf = NULL;
+static int last_len = 0;
+
 void __am_audio_init() {
   // 初始化音频控制器
   outl(AUDIO_FREQ_ADDR, 44100);        // 设置默认音频频率
@@ -47,11 +50,20 @@ void __am_audio_status(AM_AUDIO_STATUS_T *stat) {
 void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   uint8_t *buf_start = ctl->buf.start;
   uint8_t *buf_end = ctl->buf.end;
-  int total_len = buf_end - buf_start;
-  uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
 
+  int total_len = buf_end - buf_start;
+  if (total_len <= 0) return;  // 如果没有数据，直接返回
+  if (ctl->buf.start == last_buf && total_len == last_len) {
+    // 相同数据不再重复写入
+    return;
+  }
+  last_buf = ctl->buf.start;
+  last_len = total_len;
+
+  uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR; // 获取音频缓冲区地址
   uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR);  // 总缓冲区大小
-  uint32_t write_ptr = 0;
+
+  uint32_t write_ptr = 0; // 当前写入位置
 
   while (write_ptr < total_len) {
     uint32_t count = inl(AUDIO_COUNT_ADDR);        // 当前已填充样本数
