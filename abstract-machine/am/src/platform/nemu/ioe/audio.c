@@ -9,6 +9,19 @@
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
 
 void __am_audio_init() {
+  // 检查音频控制器是否存在
+  if (!inl(AUDIO_ADDR)) {
+    return;
+  }
+
+  // 初始化音频控制器
+  outl(AUDIO_FREQ_ADDR, 44100);        // 设置默认音频频率
+  outl(AUDIO_CHANNELS_ADDR, 2);        // 设置默认声道数（立体声）
+  outl(AUDIO_SAMPLES_ADDR, 1024);      // 设置默认采样数
+  outl(AUDIO_SBUF_SIZE_ADDR, 4096);    // 设置音频缓冲区大小
+
+  outl(AUDIO_INIT_ADDR, 1);            // 通知音频控制器初始化
+  outl(AUDIO_COUNT_ADDR, 0);            // 初始时缓冲区数据量为0
 }
 
 void __am_audio_config(AM_AUDIO_CONFIG_T *cfg) {
