@@ -59,7 +59,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   uint32_t free_space = sbuf_size - current_count;
   // 如果缓冲区已满或空间不足，等待或丢弃数据（这里简单丢弃）
   if (len > free_space) {
-    printf("音频缓冲区空间不足，丢弃数据\n");
+    printf("音频缓冲区空间不足，丢弃数据");
     len = free_space;
     if (len <= 0) return;
   } 
