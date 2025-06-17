@@ -31,10 +31,11 @@
   static uint32_t *audio_base = NULL; // Base address for audio registers
   static SDL_AudioDeviceID dev = 0; // SDL audio device ID
   static SDL_AudioSpec obtained; // Audio specifications
-
+  static int audio_read_pos = 0; // Position in the sample buffer for reading
+  
   // Audio callback function
   static void audio_callback(void *userdata, uint8_t *stream, int len) {
-    if(audio_base[reg_count] > 0) { // 如果有样本可用，则继续处理；否则直接返回（输出静音）
+    /* if(audio_base[reg_count] > 0) { // 如果有样本可用，则继续处理；否则直接返回（输出静音）
       printf("Audio callback called with len: %d, available samples: %d\n", len, audio_base[reg_count]);
       int nread = len < audio_base[reg_count] ? len : audio_base[reg_count]; // Read up to 'len' bytes from the sample buffer
       if (nread > CONFIG_SB_SIZE) nread = CONFIG_SB_SIZE; // 确保读取的样本不超过缓冲区大小
@@ -49,8 +50,22 @@
     } else {
       printf("Audio callback called with len: %d, but no samples available\n", len);
         memset(stream, 0, len);  // 没有样本时，全部填充为0
-    }
+    } */
+  uint32_t count = audio_base[reg_count];
+  uint32_t sbuf_size = audio_base[reg_sbuf_size];
 
+  int nread = (len < count) ? len : count;
+
+  for (int i = 0; i < nread; i++) {
+    stream[i] = sbuf[(audio_read_pos + i) % sbuf_size];
+  }
+  audio_read_pos = (audio_read_pos + nread) % sbuf_size;
+  audio_base[reg_count] -= nread;
+  if (nread < len) {
+    memset(stream + nread, 0, len - nread); // 剩余部分填0（静音）
+  }
+  // Debug log
+  printf("audio_callback: len = %d, nread = %d, remaining = %d\n", len, nread, audio_base[reg_count]);
   }
 
   // Audio I/O handler
