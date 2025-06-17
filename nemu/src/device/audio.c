@@ -52,20 +52,23 @@ static void audio_callback(void *userdata, uint8_t *stream, int len) {
 // Audio I/O handler
 static void audio_io_handler(uint32_t offset, int len, bool is_write) {
   uint32_t index = offset / sizeof(uint32_t); // Calculate the register index based on the offset
-  if(is_write){
-    if(index == reg_init && audio_base[reg_init]) {
+  if(is_write && index == reg_init && audio_base[reg_init]) {
       //clean old status
       audio_base[reg_init] = 0; // Reset initialization status
       memset(sbuf, 0, CONFIG_SB_SIZE); // Clear the sample buffer 
-      if(dev) SDL_CloseAudioDevice(dev); // Close the audio device if it was previously opened
-
+      audio_base[reg_count] = 0;
+      if(dev){
+        SDL_CloseAudioDevice(dev); // Close the audio device if it was previously opened
+        dev = 0; // Reset the device ID
+      }
+      // Initialize SDL audio subsystem if not already initialized
       if(SDL_WasInit(SDL_INIT_AUDIO) == 0) {
         if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
           Log("SDL音频初始化失败: %s", SDL_GetError());
           return;
         }
-      }
-    }
+      }     
+  
     // Configure audio specifications
     SDL_AudioSpec s = {
       .freq = audio_base[reg_freq], // Set audio frequency
@@ -86,13 +89,14 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
         Log("音频设备不支持请求的格式");
     }
     SDL_PauseAudioDevice(dev, 0); // Start playing audio
-  } else {
-      if(index == reg_count){
-        uint32_t val = audio_base[reg_count];
-        memcpy((void *)(&audio_base[reg_count]), &val, sizeof(uint32_t));
-      }
-    }
   }
+  // 读取 count 寄存器的情况（为 completeness 保留）
+  if (!is_write && index == reg_count) {
+    uint32_t val = audio_base[reg_count];
+    memcpy((void *)(&audio_base[reg_count]), &val, sizeof(uint32_t));
+  }
+} 
+  
 
 
 void init_audio() {

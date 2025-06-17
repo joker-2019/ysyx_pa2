@@ -20,11 +20,6 @@ void __am_audio_init() {
 }
 
 void __am_audio_config(AM_AUDIO_CONFIG_T *cfg) {
-  // 检查音频控制器是否存在
-  if (!inl(AUDIO_ADDR)) {
-    cfg->present = false;
-    return;
-  }
   uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR); // 读取音频缓冲区大小
 
   *cfg = (AM_AUDIO_CONFIG_T) {
@@ -57,10 +52,18 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   
   // 将音频数据写入 audio-sbuf（起始地址应为 AUDIO_SBUF_ADDR）
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
+
+    // 将音频数据拷贝进 sbuf 缓冲区的尾部
+  uint32_t count = inl(AUDIO_COUNT_ADDR);  // 当前已有样本数
+  if (count + len > AUDIO_SBUF_SIZE_ADDR) {
+    // 超出缓冲区大小时，不拷贝，直接丢弃，或可打印警告
+    return;
+  }
+
   for (int i = 0; i < len; i++) {
     sbuf[i] = buf_start[i];
   }
 
-  // 通知声卡新增了 len 字节的数据
-  outl(AUDIO_COUNT_ADDR, len);
+  // 通知硬件样本增加
+  outl(AUDIO_COUNT_ADDR, count + len);
 }
