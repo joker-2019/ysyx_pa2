@@ -8,6 +8,9 @@
 #define AUDIO_INIT_ADDR      (AUDIO_ADDR + 0x10)
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
 
+//全局写指针
+static int audio_write_pos = 0;
+
 void __am_audio_init() {
   // 初始化音频控制器
   outl(AUDIO_FREQ_ADDR, 44100);        // 设置默认音频频率
@@ -49,20 +52,24 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
 
   // 计算缓冲区的大小
   int len = buf_end - buf_start;
-  
+
+  uint32_t count = inl(AUDIO_COUNT_ADDR); // 获取当前缓冲区中的音频样本数
+  uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR); // 获取音频缓冲区大小
+  if (count + len > sbuf_size) {
+    // 如果添加新的音频数据后超过缓冲区大小，则丢弃新数据
+    //Log("audio buffer overflow: drop %d bytes", len);
+    return;
+  }
   // 将音频数据写入 audio-sbuf（起始地址应为 AUDIO_SBUF_ADDR）
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
 
-    // 将音频数据拷贝进 sbuf 缓冲区的尾部
-  uint32_t count = inl(AUDIO_COUNT_ADDR);  // 当前已有样本数
-  if (count + len > AUDIO_SBUF_SIZE_ADDR) {
-    // 超出缓冲区大小时，不拷贝，直接丢弃，或可打印警告
-    return;
+  // 写入音频数据到缓冲区尾部（环形）
+  for (int i = 0; i < len; i++) {
+    sbuf[(audio_write_pos + i) % sbuf_size] = buf_start[i];
   }
 
-  for (int i = 0; i < len; i++) {
-    sbuf[i] = buf_start[i];
-  }
+  // 更新写指针
+  audio_write_pos = (audio_write_pos + len) % sbuf_size;
 
   // 通知硬件样本增加
   outl(AUDIO_COUNT_ADDR, count + len);
