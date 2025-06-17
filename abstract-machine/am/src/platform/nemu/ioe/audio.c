@@ -9,11 +9,6 @@
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
 
 void __am_audio_init() {
-  // 检查音频控制器是否存在
-  if (!inl(AUDIO_ADDR)) {
-    return;
-  }
-
   // 初始化音频控制器
   outl(AUDIO_FREQ_ADDR, 44100);        // 设置默认音频频率
   outl(AUDIO_CHANNELS_ADDR, 2);        // 设置默认声道数（立体声）
