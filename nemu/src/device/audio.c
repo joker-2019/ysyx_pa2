@@ -31,11 +31,10 @@ static uint8_t *sbuf = NULL;
 static uint32_t *audio_base = NULL; // Base address for audio registers
 static SDL_AudioDeviceID dev = 0; // SDL audio device ID
 static SDL_AudioSpec obtained; // Audio specifications
-static int audio_read_pos = 0;
 
 // Audio callback function
 static void audio_callback(void *userdata, uint8_t *stream, int len) {
-/*   if(audio_base[reg_count] > 0) { // 如果有样本可用，则继续处理；否则直接返回（输出静音）
+  if(audio_base[reg_count] > 0) { // 如果有样本可用，则继续处理；否则直接返回（输出静音）
     int nread = len < audio_base[reg_count] ? len : audio_base[reg_count]; // Read up to 'len' bytes from the sample buffer
     if (nread > CONFIG_SB_SIZE) nread = CONFIG_SB_SIZE; // 确保读取的样本不超过缓冲区大小
 
@@ -47,19 +46,7 @@ static void audio_callback(void *userdata, uint8_t *stream, int len) {
     }
   } else {
       memset(stream, 0, len);  // 没有样本时，全部填充为0
-  } */
-  uint32_t count = audio_base[reg_count];
-  uint32_t sbuf_size = audio_base[reg_sbuf_size];
-  int nread = (len < count) ? len : count;
-  for (int i = 0; i < nread; i++) {
-    stream[i] = sbuf[(audio_read_pos + i) % sbuf_size];
   }
-  audio_read_pos = (audio_read_pos + nread) % sbuf_size;
-
-  if (nread < len) {
-    memset(stream + nread, 0, len - nread); // 如果复制的样本不足以填满整个缓冲区（len > nread），则剩余部分填充 0
-  }
-  audio_base[reg_count] -= nread;
 }
 
 // Audio I/O handler
