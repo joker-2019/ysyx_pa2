@@ -43,9 +43,11 @@
       memmove(sbuf, sbuf + nread, CONFIG_SB_SIZE - nread); // 使用 memmove 函数将剩余样本向前移动
       audio_base[reg_count] -= nread; // 更新可用样本数量
       if(len > nread){
+        printf("Audio callback: not enough samples, filling with silence\n");
         memset(stream + nread, 0, len - nread); // 如果复制的样本不足以填满整个缓冲区（len > nread），则剩余部分填充 0
       }
     } else {
+      printf("Audio callback called with len: %d, but no samples available\n", len);
         memset(stream, 0, len);  // 没有样本时，全部填充为0
     } 
   }
