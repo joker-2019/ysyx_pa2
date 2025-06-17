@@ -10,8 +10,6 @@
 #define AUDIO_INIT_ADDR      (AUDIO_ADDR + 0x10)
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
 
-static uint32_t play_total = 0;  // 全局静态变量，累计写入量
-
 void __am_audio_init() {
   // 初始化音频控制器
   outl(AUDIO_FREQ_ADDR, 44100);        // 设置默认音频频率
@@ -86,7 +84,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
 
   while (write_ptr < total_len) {
     uint32_t count = inl(AUDIO_COUNT_ADDR);        // 当前已填充样本数
-    uint32_t free_space = sbuf_size - (play_total - count);
+    uint32_t free_space = sbuf_size - count;
 
     if (free_space == 0) continue;  // 等待直到有空位（或 sleep）
 
@@ -96,11 +94,11 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
 
     // 写入 chunk 个字节到 sbuf
     for (uint32_t i = 0; i < chunk; i++) {
-      sbuf[(play_total + i) % sbuf_size] = buf_start[write_ptr + i];
+      sbuf[(count + i) % sbuf_size] = buf_start[write_ptr + i];
     }
-    play_total += chunk;
+
     // 通知硬件写入了多少数据
-    outl(AUDIO_COUNT_ADDR, play_total);
+    outl(AUDIO_COUNT_ADDR, count + chunk);
     write_ptr += chunk;
   }
 }
