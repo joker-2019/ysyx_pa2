@@ -1,5 +1,7 @@
 #include <am.h>
 #include <nemu.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #define AUDIO_FREQ_ADDR      (AUDIO_ADDR + 0x00)
 #define AUDIO_CHANNELS_ADDR  (AUDIO_ADDR + 0x04)
@@ -50,26 +52,29 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   // 计算缓冲区的大小
   int len = buf_end - buf_start;
 
-/*   // 获取当前样本计数
+  // 获取当前样本计数
   uint32_t current_count = inl(AUDIO_COUNT_ADDR);
+  printf("当前音频样本计数: %u\n", current_count);
   // 计算剩余缓冲区空间
   uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR);
+  printf("音频缓冲区大小: %u\n", sbuf_size);
   uint32_t free_space = sbuf_size - current_count;
+  printf("音频缓冲区剩余空间: %u\n", free_space);
     // 如果缓冲区已满或空间不足，等待或丢弃数据（这里简单丢弃）
   if (len > free_space) {
-    // Log("音频缓冲区空间不足，丢弃数据");
+    printf("音频缓冲区空间不足，丢弃数据");
     len = free_space;
     if (len <= 0) return;
-  } */
+  } 
 
   // 将音频数据写入 audio-sbuf（起始地址应为 AUDIO_SBUF_ADDR）
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
 
    for (int i = 0; i < len; i++) {
-     //sbuf[current_count + i] = buf_start[i]; // 每次递增写入位置
-     sbuf[i] = buf_start[i];
+     sbuf[current_count + i] = buf_start[i]; // 每次递增写入位置
+     // sbuf[i] = buf_start[i];
   } 
 
   // 通知硬件样本增加
-  outl(AUDIO_COUNT_ADDR, len);
+  outl(AUDIO_COUNT_ADDR, current_count + len);
 }
