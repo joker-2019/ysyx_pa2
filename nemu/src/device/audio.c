@@ -40,7 +40,6 @@
       int nread = len < audio_base[reg_count] ? len : audio_base[reg_count]; // Read up to 'len' bytes from the sample buffer
       if (nread > CONFIG_SB_SIZE) nread = CONFIG_SB_SIZE; // 确保读取的样本不超过缓冲区大小
       memcpy(stream, sbuf, nread);  // 将 nread 字节的样本从 sbuf 复制到输出流 stream
-
 /*    // 剩余有效样本数量
       int remain = audio_base[reg_count] - nread;
       // 将剩余样本向前移动
@@ -50,7 +49,7 @@
 
       memmove(sbuf, sbuf + nread, CONFIG_SB_SIZE - nread); // 使用 memmove 函数将剩余样本向前移动
       // 清零缓冲区尾部，避免残留旧数据
-      //memset(sbuf + audio_base[reg_count] - nread, 0, nread);
+      memset(sbuf + audio_base[reg_count] - nread, 0, nread);
       // 清零剩余空间，避免残留脏数据导致杂音
       audio_base[reg_count] -= nread; // 更新可用样本数量
       if(len > nread){
