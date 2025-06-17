@@ -52,7 +52,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   // 计算缓冲区的大小
   int len = buf_end - buf_start;
 
-  // 获取当前样本计数
+/*   // 获取当前样本计数
   uint32_t count  = inl(AUDIO_COUNT_ADDR);
   // 计算剩余缓冲区空间
   uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR);
@@ -63,7 +63,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     len = free_space;
     if (len <= 0) return;
   } 
-
+ */
   // 将音频数据写入 audio-sbuf（起始地址应为 AUDIO_SBUF_ADDR）
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
 
@@ -73,5 +73,5 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   } 
 
   // 通知硬件样本增加
-  outl(AUDIO_COUNT_ADDR, count + len);
+  outl(AUDIO_COUNT_ADDR, len);
 }
