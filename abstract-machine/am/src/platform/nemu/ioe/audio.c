@@ -96,7 +96,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
 
     // 写入 chunk 个字节到 sbuf
     for (uint32_t i = 0; i < chunk; i++) {
-      sbuf[(count + i) % sbuf_size] = buf_start[write_ptr + i];
+      sbuf[(play_total + i) % sbuf_size] = buf_start[write_ptr + i];
     }
     play_total += chunk;
     // 通知硬件写入了多少数据
