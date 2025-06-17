@@ -54,13 +54,10 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
 
   // 获取当前样本计数
   uint32_t current_count = inl(AUDIO_COUNT_ADDR);
-  printf("当前音频样本计数: %d\n", current_count);
   // 计算剩余缓冲区空间
   uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR);
-  printf("音频缓冲区大小: %d\n", sbuf_size);
   uint32_t free_space = sbuf_size - current_count;
-  printf("音频缓冲区剩余空间: %d\n", free_space);
-    // 如果缓冲区已满或空间不足，等待或丢弃数据（这里简单丢弃）
+  // 如果缓冲区已满或空间不足，等待或丢弃数据（这里简单丢弃）
   if (len > free_space) {
     printf("音频缓冲区空间不足，丢弃数据");
     len = free_space;
