@@ -53,13 +53,13 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   int len = buf_end - buf_start;
 
   // 获取当前样本计数
-  uint32_t current_count = inl(AUDIO_COUNT_ADDR);
+  uint32_t count  = inl(AUDIO_COUNT_ADDR);
   // 计算剩余缓冲区空间
   uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR);
-  uint32_t free_space = sbuf_size - current_count;
+  uint32_t free_space = sbuf_size - count ;
   // 如果缓冲区已满或空间不足，等待或丢弃数据（这里简单丢弃）
   if (len > free_space) {
-    printf("音频缓冲区空间不足，丢弃数据");
+    printf("音频缓冲区空间不足，丢弃数据\n");
     len = free_space;
     if (len <= 0) return;
   } 
@@ -68,10 +68,10 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
 
    for (int i = 0; i < len; i++) {
-     sbuf[current_count + i] = buf_start[i]; // 每次递增写入位置
+     sbuf[i] = buf_start[i]; // 每次递增写入位置
      // sbuf[i] = buf_start[i];
   } 
 
   // 通知硬件样本增加
-  outl(AUDIO_COUNT_ADDR, current_count + len);
+  outl(AUDIO_COUNT_ADDR, count + len);
 }
