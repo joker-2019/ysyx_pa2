@@ -67,7 +67,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
 
    for (int i = 0; i < len; i++) {
      //sbuf[current_count + i] = buf_start[i]; // 每次递增写入位置
-     sbuf[ i] = buf_start[i];
+     sbuf[i] = buf_start[i];
   } 
 
   // 通知硬件样本增加
