@@ -68,7 +68,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
 
    for (int i = 0; i < len; i++) {
-     sbuf[i] = buf_start[i]; // 每次递增写入位置
+     sbuf[i] = buf_start[i]; 
      // sbuf[i] = buf_start[i];
   } 
 
