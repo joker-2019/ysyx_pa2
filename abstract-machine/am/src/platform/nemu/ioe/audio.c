@@ -10,9 +10,6 @@
 #define AUDIO_INIT_ADDR      (AUDIO_ADDR + 0x10)
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
 
-static uint32_t write_total = 0;  // 写入总字节数，全局变量
-static uint32_t last_sent = 0;
-
 void __am_audio_init() {
   // 初始化音频控制器
   outl(AUDIO_FREQ_ADDR, 44100);        // 设置默认音频频率
@@ -48,8 +45,7 @@ void __am_audio_status(AM_AUDIO_STATUS_T *stat) {
 }
 
 void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
-
-/*   uint8_t *buf_start = ctl->buf.start;
+  uint8_t *buf_start = ctl->buf.start;
   uint8_t *buf_end = ctl->buf.end;
   int total_len = buf_end - buf_start;
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
@@ -75,39 +71,5 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     // 通知硬件写入了多少数据
     outl(AUDIO_COUNT_ADDR, count + chunk);
     write_ptr += chunk;
-  } */
-  uint8_t *buf_start = ctl->buf.start;
-  uint8_t *buf_end = ctl->buf.end;
-  int total_len = buf_end - buf_start;
-  if (total_len <= 0) return;
-
-  uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
-  uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR);
-  uint32_t write_ptr = 0;
-
-  while (write_ptr < total_len) {
-    uint32_t played = inl(AUDIO_COUNT_ADDR);               // 已播放样本数
-    uint32_t buffered = write_total - played;              // 未播放的样本数
-    uint32_t free_space = sbuf_size - buffered;
-
-    if (free_space == 0) continue;
-
-    uint32_t chunk = total_len - write_ptr;
-    if (chunk > free_space) chunk = free_space;
-
-    for (uint32_t i = 0; i < chunk; i++) {
-      uint32_t pos = (write_total + i) % sbuf_size;
-      sbuf[pos] = buf_start[write_ptr + i];
-    }
-
-    write_total += chunk;
-    write_ptr += chunk;
-
-    // ✅ 只告诉硬件新增了多少数据
-    uint32_t delta = write_total - last_sent;
-    if (delta > 0) {
-      outl(AUDIO_COUNT_ADDR, delta);
-      last_sent = write_total;
-    }
-  }
+  } 
 }
