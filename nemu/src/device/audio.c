@@ -53,7 +53,13 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
     //// Initialize audio device
     if(audio_base[reg_init]){
       SDL_CloseAudioDevice(dev); // Close the audio device if it was already initialized
-
+      // 初始化SDL音频子系统(如果需要)
+      if (SDL_WasInit(SDL_INIT_AUDIO) == 0) {
+          if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+              Log("SDL音频初始化失败: %s", SDL_GetError());
+              return;
+          }
+      }
       // Configure audio specifications
       SDL_AudioSpec s = {};
       s.freq = audio_base[reg_freq]; // Set audio frequency
