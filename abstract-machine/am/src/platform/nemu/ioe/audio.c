@@ -70,5 +70,5 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   } 
 
   // 通知硬件样本增加
-  outl(AUDIO_COUNT_ADDR, len);
+  outl(AUDIO_COUNT_ADDR, current_count + len);
 }
