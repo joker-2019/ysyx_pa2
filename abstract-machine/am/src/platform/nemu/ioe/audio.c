@@ -55,8 +55,12 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   // 计算缓冲区的大小
   int len = buf_end - buf_start;
   
-  // 将音频数据写入音频控制器的缓冲区
+  // 将音频数据写入 audio-sbuf（起始地址应为 AUDIO_SBUF_ADDR）
+  uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
   for (int i = 0; i < len; i++) {
-    outb(AUDIO_ADDR + i, buf_start[i]);
+    sbuf[i] = buf_start[i];
   }
+
+  // 通知声卡新增了 len 字节的数据
+  outl(AUDIO_COUNT_ADDR, len);
 }

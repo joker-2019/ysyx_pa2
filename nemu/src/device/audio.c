@@ -36,8 +36,10 @@ static SDL_AudioSpec obtained; // Audio specifications
 static void audio_callback(void *userdata, uint8_t *stream, int len) {
   if(audio_base[reg_count] > 0) { // 如果有样本可用，则继续处理；否则直接返回（输出静音）
     int nread = len < audio_base[reg_count] ? len : audio_base[reg_count]; // Read up to 'len' bytes from the sample buffer
+    if (nread > CONFIG_SB_SIZE) nread = CONFIG_SB_SIZE; // 确保读取的样本不超过缓冲区大小
+
     memcpy(stream, sbuf, nread);  // 将 nread 字节的样本从 sbuf 复制到输出流 stream
-    memmove(sbuf, sbuf + nread, audio_base[reg_count] - nread); // 使用 memmove 函数将剩余样本向前移动
+    memmove(sbuf, sbuf + nread, CONFIG_SB_SIZE - nread); // 使用 memmove 函数将剩余样本向前移动
     audio_base[reg_count] -= nread; // 更新可用样本数量
     if(len > nread){
       memset(stream + nread, 0, len - nread); // 如果复制的样本不足以填满整个缓冲区（len > nread），则剩余部分填充 0
@@ -49,45 +51,49 @@ static void audio_callback(void *userdata, uint8_t *stream, int len) {
 
 // Audio I/O handler
 static void audio_io_handler(uint32_t offset, int len, bool is_write) {
-  if (offset == reg_init * sizeof(uint32_t) && is_write) {
-    //// Initialize audio device
-    if(audio_base[reg_init]){
-      SDL_CloseAudioDevice(dev); // Close the audio device if it was already initialized
-      // 初始化SDL音频子系统(如果需要)
-      if (SDL_WasInit(SDL_INIT_AUDIO) == 0) {
-          if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
-              Log("SDL音频初始化失败: %s", SDL_GetError());
-              return;
-          }
-      }
-      // Configure audio specifications
-      SDL_AudioSpec s = {};
-      s.freq = audio_base[reg_freq]; // Set audio frequency
-      s.format = AUDIO_S16SYS;
-      s.channels = audio_base[reg_channels]; // Set number of channels
-      s.samples = audio_base[reg_samples]; // Set number of samples in the buffer
-      s.callback = audio_callback;
-      s.userdata = NULL;
+  uint32_t index = offset / sizeof(uint32_t);
+  if(is_write){
+    if(index == reg_init && audio_base[reg_init]) {
+      //清楚旧的状态
+      audio_base[reg_init] = 0; // Reset initialization status
+      memset(sbuf, 0, CONFIG_SB_SIZE); // Clear the sample buffer 
+      if(dev) SDL_CloseAudioDevice(dev); // Close the audio device if it was previously opened
 
-      dev = SDL_OpenAudioDevice(NULL, 0, &s, &obtained, 0); // Open the audio device
-      if (dev == 0) {
-        printf("Failed to open audio device: %s\n", SDL_GetError());
-        return;
-      } else {
-        // 验证获得的参数是否匹配
-        if (obtained.freq != s.freq || obtained.format != s.format || 
-              obtained.channels != s.channels) {
-              Log("音频设备不支持请求的格式");
+      if(SDL_WasInit(SDL_INIT_AUDIO) == 0) {
+        if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+          Log("SDL音频初始化失败: %s", SDL_GetError());
+          return;
         }
-        SDL_PauseAudioDevice(dev, 0); // Start playing audio
       }
-
     }
-  } else if(offset == reg_count * sizeof(uint32_t) && !is_write) {
-    // Return current count of available samples
-    return;
+    // Configure audio specifications
+    SDL_AudioSpec s = {
+      .freq = audio_base[reg_freq], // Set audio frequency
+      .format = AUDIO_S16SYS,
+      .channels = audio_base[reg_channels], // Set number of channels
+      .samples = audio_base[reg_samples], // Set number of samples in the buffer
+      .callback = audio_callback,
+      .userdata = NULL
+    };
+      
+    dev = SDL_OpenAudioDevice(NULL, 0, &s, &obtained, 0); // Open the audio device
+    if (dev == 0) {
+      printf("Failed to open audio device: %s\n", SDL_GetError());
+      return;
+    }
+    // 验证获得的参数是否匹配
+    if (obtained.freq != s.freq || obtained.format != s.format || obtained.channels != s.channels) {
+        Log("音频设备不支持请求的格式");
+    }
+    SDL_PauseAudioDevice(dev, 0); // Start playing audio
+  } else {
+      if(index == reg_count){
+        uint32_t val = audio_base[reg_count];
+        memcpy((void *)(&audio_base[reg_count]), &val, sizeof(uint32_t));
+      }
+    }
   }
-}
+
 
 void init_audio() {
   uint32_t space_size = sizeof(uint32_t) * nr_reg;
