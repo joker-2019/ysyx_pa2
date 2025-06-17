@@ -8,9 +8,6 @@
 #define AUDIO_INIT_ADDR      (AUDIO_ADDR + 0x10)
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
 
-//全局写指针
-static int audio_write_pos = 0;
-
 void __am_audio_init() {
   // 初始化音频控制器
   outl(AUDIO_FREQ_ADDR, 44100);        // 设置默认音频频率
@@ -64,11 +61,8 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   uint8_t *sbuf = (uint8_t *)AUDIO_SBUF_ADDR;
 
    for (int i = 0; i < len; i++) {
-    sbuf[(audio_write_pos + i) % sbuf_size] = buf_start[i];
-  }
-
-  // 更新写指针
-  audio_write_pos = (audio_write_pos + len) % sbuf_size; 
+    sbuf[i] = buf_start[i];
+  } 
 
   // 通知硬件样本增加
   outl(AUDIO_COUNT_ADDR, count + len);
