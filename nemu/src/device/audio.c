@@ -40,13 +40,6 @@
       int nread = len < audio_base[reg_count] ? len : audio_base[reg_count]; // Read up to 'len' bytes from the sample buffer
       if (nread > CONFIG_SB_SIZE) nread = CONFIG_SB_SIZE; // 确保读取的样本不超过缓冲区大小
       memcpy(stream, sbuf, nread);  // 将 nread 字节的样本从 sbuf 复制到输出流 stream
-/*    // 剩余有效样本数量
-      int remain = audio_base[reg_count] - nread;
-      // 将剩余样本向前移动
-      memmove(sbuf, sbuf + nread, remain);
-      memset(sbuf + remain, 0, CONFIG_SB_SIZE - remain);
-      audio_base[reg_count] = remain; */
-
       memmove(sbuf, sbuf + nread, CONFIG_SB_SIZE - nread); // 使用 memmove 函数将剩余样本向前移动
       // 清零缓冲区尾部，避免残留旧数据
       memset(sbuf + audio_base[reg_count] - nread, 0, nread);
@@ -60,25 +53,7 @@
       printf("Audio callback called with len: %d, but no samples available\n", len);
         memset(stream, 0, len);  // 没有样本时，全部填充为0
     } 
-/*   uint32_t count = audio_base[reg_count];
-  printf("audio_callback called with len: %d, available samples: %d\n", len, count);
-  uint32_t sbuf_size = audio_base[reg_sbuf_size];
-  printf("sbuf_size: %d\n", sbuf_size);
-
-  int nread = (len < count) ? len : count;
-    printf("nread: %d\n", nread);
-
-  for (int i = 0; i < nread; i++) {
-    stream[i] = sbuf[(audio_read_pos + i) % sbuf_size];
-  }
-  audio_read_pos = (audio_read_pos + nread) % sbuf_size;
-  audio_base[reg_count] -= nread;
-  if (nread < len) {
-    memset(stream + nread, 0, len - nread); // 剩余部分填0（静音）
-  }
-  // Debug log
-  printf("audio_callback: len = %d, nread = %d, remaining = %d\n", len, nread, audio_base[reg_count]); */
-  }
+}
 
   // Audio I/O handler
   static void audio_io_handler(uint32_t offset, int len, bool is_write) {

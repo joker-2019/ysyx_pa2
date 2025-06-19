@@ -55,7 +55,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR);  // 总缓冲区大小
 
   uint32_t write_ptr = 0; // 当前写入位置
-  printf("Audio play: total_len = %d, sbuf_size = %d\n", total_len, sbuf_size);
+
   while (write_ptr < total_len) {
     uint32_t count = inl(AUDIO_COUNT_ADDR);        // 当前已填充样本数
     uint32_t free_space = sbuf_size - count;
