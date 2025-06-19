@@ -36,7 +36,7 @@
   // Audio callback function
   static void audio_callback(void *userdata, uint8_t *stream, int len) {
      if(audio_base[reg_count] > 0) { // 如果有样本可用，则继续处理；否则直接返回（输出静音）
-      printf("Audio callback called with len: %d, available samples: %d\n", len, audio_base[reg_count]);
+      // printf("Audio callback called with len: %d, available samples: %d\n", len, audio_base[reg_count]);
       int nread = len < audio_base[reg_count] ? len : audio_base[reg_count]; // Read up to 'len' bytes from the sample buffer
       if (nread > CONFIG_SB_SIZE) nread = CONFIG_SB_SIZE; // 确保读取的样本不超过缓冲区大小
       memcpy(stream, sbuf, nread);  // 将 nread 字节的样本从 sbuf 复制到输出流 stream
@@ -46,11 +46,11 @@
       // 清零剩余空间，避免残留脏数据导致杂音
       audio_base[reg_count] -= nread; // 更新可用样本数量
       if(len > nread){
-        printf("Audio callback: not enough samples, filling with silence\n");
+        // printf("Audio callback: not enough samples, filling with silence\n");
         memset(stream + nread, 0, len - nread); // 如果复制的样本不足以填满整个缓冲区（len > nread），则剩余部分填充 0
       }
     } else {
-      printf("Audio callback called with len: %d, but no samples available\n", len);
+      // printf("Audio callback called with len: %d, but no samples available\n", len);
         memset(stream, 0, len);  // 没有样本时，全部填充为0
     } 
 }
