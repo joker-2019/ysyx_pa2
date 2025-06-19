@@ -2,6 +2,7 @@
 #include <nemu.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <klib.h>
 
 #define AUDIO_FREQ_ADDR      (AUDIO_ADDR + 0x00)
 #define AUDIO_CHANNELS_ADDR  (AUDIO_ADDR + 0x04)
@@ -9,6 +10,8 @@
 #define AUDIO_SBUF_SIZE_ADDR (AUDIO_ADDR + 0x0c)
 #define AUDIO_INIT_ADDR      (AUDIO_ADDR + 0x10)
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
+
+static uint32_t audio_rb_pos = 0; // 环形缓冲区写入位置
 
 void __am_audio_init() {
   // 初始化音频控制器
@@ -45,7 +48,7 @@ void __am_audio_status(AM_AUDIO_STATUS_T *stat) {
 }
 
 void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
-  uint8_t *buf_start = ctl->buf.start;
+/*   uint8_t *buf_start = ctl->buf.start;
   uint8_t *buf_end = ctl->buf.end;
 
   int total_len = buf_end - buf_start;
@@ -74,5 +77,47 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     // 通知硬件写入了多少数据
     outl(AUDIO_COUNT_ADDR, count + chunk);
     write_ptr += chunk;
-  } 
+  }  */
+ // static int play_count = 0;
+  // uint32_t len1 = ctl->buf.end - ctl->buf.start;
+  
+  // printf("[AM_PLAY] 第%d次播放请求: 数据长度=%u字节\n", ++play_count, len1);
+  uint8_t *audio_area = (ctl->buf).start;
+  uint32_t audio_rb_size = inl(AUDIO_SBUF_SIZE_ADDR);
+  uint32_t len = (ctl->buf).end - (ctl->buf).start;
+  uint8_t *audio_ringbuff = (uint8_t *)(uintptr_t)AUDIO_SBUF_ADDR;
+  
+  // 检查当前可用空间
+  uint32_t count = inl(AUDIO_COUNT_ADDR);
+  
+  // 如果空间不足，等待直到有足够空间
+  
+  // 更智能的等待策略
+  while (count + len > audio_rb_size) {
+    // 使用指数退避算法
+    static int wait_cycles = 100;
+    for (volatile int i = 0; i < wait_cycles; i++);
+    
+    // 如果连续等待，增加等待时间以减少CPU使用
+    wait_cycles = wait_cycles < 10000 ? wait_cycles * 2 : wait_cycles;
+    
+    count = inl(AUDIO_COUNT_ADDR);
+  }
+  
+  // 写入数据
+  if (audio_rb_pos + len <= audio_rb_size) {
+    // 可以一次性复制
+    memcpy(audio_ringbuff + audio_rb_pos, audio_area, len);
+    audio_rb_pos = (audio_rb_pos + len) & (audio_rb_size - 1);
+  } else {
+    // 需要分两次复制（环形缓冲区环绕）
+    int first_part = audio_rb_size - audio_rb_pos;
+    memcpy(audio_ringbuff + audio_rb_pos, audio_area, first_part);
+    memcpy(audio_ringbuff, audio_area + first_part, len - first_part);
+    audio_rb_pos = len - first_part;
+  }
+  
+  // 更新计数
+  outl(AUDIO_COUNT_ADDR, count + len);
+  // printf("[AM_PLAY] 播放请求完成: count=%u\n", inl(AUDIO_COUNT_ADDR));
 }
