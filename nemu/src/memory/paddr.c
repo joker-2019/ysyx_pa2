@@ -17,6 +17,7 @@
 #include <memory/paddr.h>
 #include <device/mmio.h>
 #include <isa.h>
+#include <cpu/iringbuf.h>
 
 #if   defined(CONFIG_PMEM_MALLOC)
 static uint8_t *pmem = NULL;
@@ -51,13 +52,27 @@ void init_mem() {
 }
 
 word_t paddr_read(paddr_t addr, int len) {
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
+  IFDEF(CONFIG_MTRACE, display_mread(addr, len)); //MTRACE_READ
+  IFDEF(CONFIG_DTRACE, 
+    if (!in_pmem(addr))
+      printf("[DTrace] R @0x%08x (%dB) "
+             ", name = %s\n",
+             addr, len, map->name);
+  );
+  if (likely(in_pmem(addr))) {return pmem_read(addr, len);}
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
   return 0;
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
+  IFDEF(CONFIG_MTRACE, display_mwrite(addr, len, data)); //MTRACE_WRITE
+  IFDEF(CONFIG_DTRACE, 
+    if (!in_pmem(addr))
+      printf("[DTrace] W @0x%08x (%dB) "
+             ", name = %s\n",
+             addr, len, map->name);
+  );  
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);

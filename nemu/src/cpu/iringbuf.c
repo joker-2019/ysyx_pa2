@@ -1,4 +1,4 @@
-#include <iringbuf.h>
+#include <cpu/iringbuf.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -38,5 +38,14 @@ void printf_inst_error(vaddr_t err_pc) {
 
 }
 
+//MTRACE 对访存的结果进行追踪
+void display_mread(paddr_t addr, int len) {
+    printf("MTRACE: READ  addr = 0x%08x, len = %d\n", addr, len);
+    //TODO 若想将访问结果进行存取，可以采用写如日志的方式实现Log("MTRACE: READ  addr = 0x%08x, len = %d, addr, len)
+}
+  
+void display_mwrite(paddr_t addr, int len, word_t data) {
+    printf("MTRACE: WRITE addr = 0x%08x, len = %d, data = 0x%08x\n", addr, len, data);
+}
 
 

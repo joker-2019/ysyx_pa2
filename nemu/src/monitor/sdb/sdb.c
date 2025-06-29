@@ -20,7 +20,6 @@
 #include "sdb.h"
 #include "memory/vaddr.h"
 #include "watchpoint.h"
-//#include "local-include/reg.h"
 
 
 static int is_batch_mode = false;

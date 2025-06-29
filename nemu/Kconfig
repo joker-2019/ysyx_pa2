@@ -151,6 +151,26 @@ config ITRACE_COND
   string "Only trace instructions when the condition is true"
   default "true"
 
+# new add MTRACE start
+config MTRACE
+  depends on TRACE
+  bool "Enable memory tracer"
+  default n
+
+config MTRACE_COND
+  depends on MTRACE
+  string "Only trace memory access when the condition is true"
+  default "true"
+# new add MTRACE end
+
+# Dtrace start
+config DTRACE
+  depends on TRACE
+  bool "Enable device access tracing (DTrace)"
+  default n
+  help
+    Enable basic tracing of device access operations (reads and writes).
+    Output format: [DTrace] <R/W> @<address> (<size>B), name=<device>
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
