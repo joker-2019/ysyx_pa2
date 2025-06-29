@@ -11,8 +11,8 @@ AM_DEVREG( 1, UART_CONFIG,  RD, bool present);
 AM_DEVREG( 2, UART_TX,      WR, char data);
 AM_DEVREG( 3, UART_RX,      RD, char data);
 AM_DEVREG( 4, TIMER_CONFIG, RD, bool present, has_rtc);
-AM_DEVREG( 5, TIMER_RTC,    RD, int year, month, day, hour, minute, second);
-AM_DEVREG( 6, TIMER_UPTIME, RD, uint64_t us);
+AM_DEVREG( 5, TIMER_RTC,    RD, int year, month, day, hour, minute, second); //AM实时时钟(RTC, Real Time Clock), 可读出当前的年月日时分秒.   强调读出的时间与现实时间完全一致
+AM_DEVREG( 6, TIMER_UPTIME, RD, uint64_t us); // AM系统启动时间, 可读出系统启动后的微秒数.  侧重系统启动后经过的时间, 即从0开始计数.
 AM_DEVREG( 7, INPUT_CONFIG, RD, bool present);
 AM_DEVREG( 8, INPUT_KEYBRD, RD, bool keydown; int keycode);
 AM_DEVREG( 9, GPU_CONFIG,   RD, bool present, has_accel; int width, height, vmemsz);
@@ -20,10 +20,10 @@ AM_DEVREG(10, GPU_STATUS,   RD, bool ready);
 AM_DEVREG(11, GPU_FBDRAW,   WR, int x, y; void *pixels; int w, h; bool sync);
 AM_DEVREG(12, GPU_MEMCPY,   WR, uint32_t dest; void *src; int size);
 AM_DEVREG(13, GPU_RENDER,   WR, uint32_t root);
-AM_DEVREG(14, AUDIO_CONFIG, RD, bool present; int bufsize);
-AM_DEVREG(15, AUDIO_CTRL,   WR, int freq, channels, samples);
-AM_DEVREG(16, AUDIO_STATUS, RD, int count);
-AM_DEVREG(17, AUDIO_PLAY,   WR, Area buf);
+AM_DEVREG(14, AUDIO_CONFIG, RD, bool present; int bufsize); //AM声卡控制器信息, 可读出存在标志present以及流缓冲区的大小bufsize
+AM_DEVREG(15, AUDIO_CTRL,   WR, int freq, channels, samples); //AM声卡控制器控制寄存器, 可写入音频采样率freq, 声道数channels, 采样数samples.  注意: 该寄存器的写入操作会影响音频播放的参数设置.
+AM_DEVREG(16, AUDIO_STATUS, RD, int count); //AM声卡控制器状态寄存器, 可读出当前缓冲区中的音频样本数count. 
+AM_DEVREG(17, AUDIO_PLAY,   WR, Area buf); // AM声卡控制器播放寄存器, 可写入音频样本数据buf. 可将[buf.start, buf.end)区间的内容作为音频数据写入流缓冲区. 
 AM_DEVREG(18, DISK_CONFIG,  RD, bool present; int blksz, blkcnt);
 AM_DEVREG(19, DISK_STATUS,  RD, bool ready);
 AM_DEVREG(20, DISK_BLKIO,   WR, bool write; void *buf; int blkno, blkcnt);
