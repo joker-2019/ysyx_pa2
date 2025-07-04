@@ -11,7 +11,7 @@
 #define AUDIO_INIT_ADDR      (AUDIO_ADDR + 0x10)
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
 
-// static uint32_t audio_rb_pos = 0; // 环形缓冲区写入位置
+static uint32_t audio_rb_pos = 0; // 环形缓冲区写入位置
 
 void __am_audio_init() {
   // 初始化音频控制器
@@ -48,7 +48,7 @@ void __am_audio_status(AM_AUDIO_STATUS_T *stat) {
 }
 
 void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
-  uint8_t *buf_start = ctl->buf.start;
+ /*  uint8_t *buf_start = ctl->buf.start;
   uint8_t *buf_end = ctl->buf.end;
 
   int total_len = buf_end - buf_start;
@@ -77,12 +77,12 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     // 通知硬件写入了多少数据
     outl(AUDIO_COUNT_ADDR, count + chunk);
     write_ptr += chunk;
-  } 
+  }  */
   // static int play_count = 0;
   // uint32_t len1 = ctl->buf.end - ctl->buf.start;
   
   // printf("[AM_PLAY] 第%d次播放请求: 数据长度=%u字节\n", ++play_count, len1);
-  /* uint8_t *audio_area = (ctl->buf).start;
+  uint8_t *audio_area = (ctl->buf).start;
   uint32_t audio_rb_size = inl(AUDIO_SBUF_SIZE_ADDR);
   uint32_t len = (ctl->buf).end - (ctl->buf).start;
   uint8_t *audio_ringbuff = (uint8_t *)(uintptr_t)AUDIO_SBUF_ADDR;
@@ -119,5 +119,5 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   
   // 更新计数
   outl(AUDIO_COUNT_ADDR, count + len);
-  // printf("[AM_PLAY] 播放请求完成: count=%u\n", inl(AUDIO_COUNT_ADDR)); */
+  // printf("[AM_PLAY] 播放请求完成: count=%u\n", inl(AUDIO_COUNT_ADDR));
 }
