@@ -9,9 +9,13 @@
 
 uint32_t instr_mem[MEM_SIZE] = {
     // 地址 0x80000000（按小端存储）
-    0x12300093,  // addi x1, x0, 0x123
+    0x12300093,  // addi x1, x0, 0x123 000100100011 00000 000 000 01 0010011
     0x45600113,  // addi x2, x0, 0x456
     0x78900193,  // addi x3, x0, 0x789
+    0x12345097,  // auipc x1, 0x12345  // x1 = PC + (0x12345 << 12) = 0x80000000 + 0x12345000 = 0x92345000
+    0x12345137,  // lui x2, 0x12345  // x2 = 0x12345 << 12 = 0x12345000            
+    0x004001EF,  // jal x3, 0x004   // 跳转到PC+4（下条指令）:0x8000000C, 同时x3 = PC+4 = 0x8000000C  1 1101111
+    0x00018267,  // jalr x4, x3, 0  // 跳转到x3 + 0 = 0x8000000C，形成跳转环
     0x00100073   // ebreak
 }; // 指令内存
 uint32_t data_mem[MEM_SIZE];  // 数据内存
@@ -24,13 +28,16 @@ extern "C" uint32_t imem_read(int pc) {
     //uint32_t index = pc >> 2;
     int index = (pc - 0x80000000) / 4;  // 从0x80000000开始计算
     printf("index : %d\n",index);
-    printf("DEBUG: pc=0x%08x, index=%d, MEM_SIZE=%d\n", pc, index, MEM_SIZE);
+    printf("DEBUG: pc=0x%08x → index=%d → instr=0x%08x\n", 
+           pc, index, instr_mem[index]);
     // 检查地址是否越界
     assert(index < MEM_SIZE && "Instruction memory overflow");
     // 直接返回对应位置的32位指令
     return instr_mem[index];
 }
 
+// 读取数据
+// 注意：RISC-V数据访问通常是按字（4字节）对齐
 extern "C" uint32_t dmem_read(int addr) {
      // 检查地址对齐（假设只支持对齐访问）
     assert((addr & 0x3) == 0 && "Data address misaligned");
@@ -48,6 +55,8 @@ extern "C" uint32_t dmem_read(int addr) {
             byte_ptr[0];          // 最低字节不移位
 }
 
+// 写入数据
+// 注意：RISC-V数据访问通常是按字（4字节）对齐
 extern "C" void dmem_write(int addr, int data) {
     // 对齐检查
     assert((addr & 0x3) == 0 && "Data address misaligned");

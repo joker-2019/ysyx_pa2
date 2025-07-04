@@ -3,25 +3,45 @@ module ysyx_22040080_cpu(
 	input  rst
   
 );
-  reg [31:0] pc;
+  reg [31:0] pc; 
   wire [31:0] alu_result;
   wire [31:0] instruction;
-  wire [4:0] rs1, rd;
+  wire [4:0] rs1, rd, rs2; // rs1 rs2 和 rd 寄存器地址
   wire [2:0] func3;
-  wire [31:0] imm_ext;
+  wire [31:0] imm_ext; // 立即数扩展
   wire [6:0] op;
-  wire [31:0] rs1_data;
+  wire [31:0] rs1_data, rs2_data; // rs1 寄存器数据
   wire wen;
-  wire is_ebreak;
-  wire [2:0] instr_type;
-  wire [4:0] rs2;
+  wire is_ebreak; 
+  wire [2:0] instr_type; // 指令类型
+  wire [31:0] jal_target; //跳转目标
+  wire [31:0] next_pc;
 
 import "DPI-C" function void ebreak_trigger();  // 声明 DPI-C 函数
+
+  // PC更新逻辑：新增分支、jal、jalr判断
+  wire is_jal    = (op == 7'b1101111);
+  wire is_jalr   = (op == 7'b1100111);
+  wire is_branch = (op == 7'b1100011);
+
+  wire branch_taken = is_branch && (
+    (func3 == 3'b000 && rs1_data == rs2_data) ||       // beq
+    (func3 == 3'b001 && rs1_data != rs2_data) ||       // bne
+    (func3 == 3'b100 && $signed(rs1_data) < $signed(rs2_data)) || // blt
+    (func3 == 3'b101 && $signed(rs1_data) >= $signed(rs2_data))   // bge
+  );
+  wire [31:0] branch_target = pc + imm_ext;
+
+  assign next_pc = branch_taken     ? branch_target :
+                   (is_jal || is_jalr) ? jal_target :
+                   pc + 4;
+
 always @(posedge clk) begin
   if(is_ebreak) begin
     ebreak_trigger();
   end
 
+  // 初始化
   if(rst) begin
    pc <= 32'h80000000;
   end
@@ -58,6 +78,8 @@ ysyx_22040080_alu alu(
   .rs1_data(rs1_data),
   .imm_ext(imm_ext),
   .func3(func3),
+  .op(op),
+  .pc(pc),
   .result(alu_result),
   .wen(wen)
 );

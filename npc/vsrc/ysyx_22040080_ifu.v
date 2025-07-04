@@ -13,7 +13,8 @@ always @(posedge clk) begin
 		end
 		else begin
 			$display("pc %x", pc);
-            instruction <= imem_read(pc); // 从 C++ 读取指令
+			instruction <= imem_read(pc); // 从 pc读取指令
+			$display("instruction %x", instruction);
 			//instruction <= pc;
 			//$display("pc %x", pc);
 			

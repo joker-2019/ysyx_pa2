@@ -21,7 +21,7 @@ module ysyx_22040080_idu(
 
     assign rd     = instruction[11:7];
     assign func3  = instruction[14:12];
-    assign op   = instruction[6:0];
+    assign op   = instruction[6:0]; // 操作码
 
 
 	//------------------------------------------
@@ -54,19 +54,19 @@ module ysyx_22040080_idu(
 	reg [31:0] imm;
     always @(*) begin
         case (instr_type)
-            // I型：ADDI/LB/LH/LW
+            // I型：ADDI/LB/LH/LW 符号扩展：复制最高位20次  立即数位：31-20（共12位）
             3'b001: assign imm = {{20{instruction[31]}}, instruction[31:20]};
             
-            // S型：SW/SH/SB
+            // S型：SW/SH/SB  符号扩展：复制最高位20次  高位：31-25，低位：11-7
             3'b010: assign imm = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]};
             
-            // B型：BEQ/BNE
+            // B型：BEQ/BNE 立即数组成 [31], [7], [30:25], [11:8], 最后1位=0
             3'b011: assign imm = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
             
-            // U型：LUI/AUIPC
+            // U型：LUI/AUIPC // 低位补12个0
             3'b100: assign imm = {instruction[31:12], 12'b0};
             
-            // J型：JAL
+            // J型：JAL [31], [19:12], [20], [30:21], 最后1位=0
             3'b101: assign imm = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
             
             default: assign imm = 32'b0;  // R型不需要立即数
