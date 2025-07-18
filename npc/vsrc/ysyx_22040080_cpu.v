@@ -1,6 +1,8 @@
 module ysyx_22040080_cpu(
 	input  clk,
-	input  rst
+	input  rst,
+  output [31:0] trace_pc, // 输出当前PC值
+  output [31:0] trace_instr // 输出当前指令
   
 );
   reg [31:0] pc; 
@@ -58,6 +60,10 @@ ysyx_22040080_ifu ifu(
   .instruction(instruction)
 );
 
+// itrace 用信号输出
+assign trace_pc = pc; // 输出当前PC值
+assign trace_instr = instruction; // 输出当前指令
+
   //译码
 ysyx_22040080_idu idu(
   .instruction(instruction),
@@ -80,6 +86,7 @@ ysyx_22040080_alu alu(
   .func3(func3),
   .op(op),
   .pc(pc),
+  .jal_target(jal_target),
   .result(alu_result),
   .wen(wen)
 );
@@ -93,6 +100,6 @@ RegisterFile regfile(
   .waddr(rd),
   .wdata(alu_result),
   .rdata1(rs1_data),
-  .rdata2() // 未使用，可忽略或接空
+  .rdata2(rs2_data) // 未使用，可忽略或接空
 );
 endmodule

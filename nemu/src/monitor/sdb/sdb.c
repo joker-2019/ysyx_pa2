@@ -185,9 +185,9 @@ static struct {
   { "x", "scan addr",cmd_x},
   { "info", "print register", cmd_printR},
   { "si", "print step", cmd_step},
-  {"p", "Expression evaluation", cmd_p},
-  {"w","Usage: w EXPR. Watch for the variation of the result of EXPR, pause at variation point", cmd_w },
-  {"d", "Usage: d N. Delete watchpoint of wp.NO=N", cmd_d},
+  { "p", "Expression evaluation", cmd_p},
+  { "w","Usage: w EXPR. Watch for the variation of the result of EXPR, pause at variation point", cmd_w },
+  { "d", "Usage: d N. Delete watchpoint of wp.NO=N", cmd_d},
   /* TODO: Add more commands */
 
 };

@@ -6,7 +6,6 @@
 
 #define MEM_SIZE (1024 * 32)
 
-
 uint32_t instr_mem[MEM_SIZE] = {
     // 地址 0x80000000（按小端存储）
     0x12300093,  // addi x1, x0, 0x123 000100100011 00000 000 000 01 0010011
@@ -14,11 +13,17 @@ uint32_t instr_mem[MEM_SIZE] = {
     0x78900193,  // addi x3, x0, 0x789
     0x12345097,  // auipc x1, 0x12345  // x1 = PC + (0x12345 << 12) = 0x80000000 + 0x12345000 = 0x92345000
     0x12345137,  // lui x2, 0x12345  // x2 = 0x12345 << 12 = 0x12345000            
-    0x004001EF,  // jal x3, 0x004   // 跳转到PC+4（下条指令）:0x8000000C, 同时x3 = PC+4 = 0x8000000C  1 1101111
+    0x004001EF,  // jal x3, 0x004   // 跳转到PC+4（下条指令）:0x8000000C, 同时x3 = PC+4 = 0x8000000C 
     0x00018267,  // jalr x4, x3, 0  // 跳转到x3 + 0 = 0x8000000C，形成跳转环
     0x00100073   // ebreak
 }; // 指令内存
+
 uint32_t data_mem[MEM_SIZE];  // 数据内存
+
+// 获取物理内存(data_存储)基地址 通常来说程序运行时关心的是数据的读写情况，比如变量、数组、堆栈等
+extern "C" uint32_t* get_pmem_base() {
+    return (uint32_t*)data_mem;
+}
 
 //读取指令
 extern "C" uint32_t imem_read(int pc) {

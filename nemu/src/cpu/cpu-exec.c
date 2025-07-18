@@ -98,7 +98,7 @@ MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc)：x86 架构使用 s->snpc（因为指令
 ilen：指令长度。
 */
 #ifndef CONFIG_ISA_loongarch32r
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);  // disassemble 函数将指令二进制码转换为可读的汇编格式
+  void (char *str, int size, uint64_t pc, uint8_t *code, int nbyte);  //  函数将指令二进制码转换为可读的汇编格式
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
 #else

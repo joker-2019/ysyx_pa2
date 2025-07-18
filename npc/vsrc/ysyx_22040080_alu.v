@@ -12,53 +12,80 @@ module ysyx_22040080_alu(
 );
 
 // 通用加法器输入信号
-reg [31:0] alu_in1;
-reg [31:0] alu_in2;
-wire [31:0] alu_sum = alu_in1 + alu_in2;
+wire [31:0] alu_in1;
+wire [31:0] alu_in2;
+assign alu_in1 = (op == 7'b0010011) ?	rs1_data :
+																	(op == 7'b0010111) ?	pc :
+																	(op == 7'b1100111) ? rs1_data : // LUI指令的rs1数据
+																	(op == 7'b1101111) ? pc : 32'b0;
+
+assign alu_in2 = imm_ext;
+
+wire [31:0] alu_sum = alu_in1 + alu_in2; // 共享加法器核心
 //ALU 逻辑
 
 //ALU操作
 always @(*) begin
 	// 默认输出
-	alu_in1 <= 0;
-	alu_in2 <= 0;
- result <= 0;
- jal_target <= 0;
- wen <= 1'b0;
+ result = 0;
+ jal_target = 0;
+ wen = 1'b0;
 
-	case(op)
-		// I型指令:ADDI
-		7'b0010011: begin
-			alu_in1 = rs1_data;
-			alu_in2 = imm_ext;
-			result <= alu_sum; //addi
-			wen <= 1'b1; // 写使能
-			end
+	// 跳过未初始化指令(全0), 防止输出无意义错误日志
+	if (op == 7'b0000000 && func3 == 3'b000 && rs1_data == 32'b0 && imm_ext == 32'b0) begin
+		// 不处理，不打印
+		end 
+		else begin
+			case(op)
+			// I型指令:ADDI
+			7'b0010011: begin
+				case(func3)
+				3'b000: begin // ADDI
+					result = alu_sum; // ADDI
+					wen = 1'b1; // 写使能
+				end
+				3'b111: begin // ANDI
+					result = rs1_data & imm_ext; // ANDI
+					wen = 1'b1; // 写使能
+				end
+				3'b110: begin // ORI
+					result = rs1_data | imm_ext; // ORI
+					wen = 1'b1; // 写使能
+				end
+				3'b100: begin // XORI
+					result = rs1_data ^ imm_ext; // XORI
+					wen = 1'b1; // 写使能
+				end
+				// ... 可扩展 SLLI, SRLI, SRAI
+				default:
+					$display("ERROR: Unsupported func3 %b for I-type instruction", func3);
+				endcase
+		end
 
 		// U型指令：AUIPC AUIPC: PC + (立即数 << 12)
 		7'b0010111: begin
-			alu_in1 = pc;
-			alu_in2 = imm_ext;
-			result <= alu_sum;
-			wen <= 1'b1;
+			result = alu_sum;
+			wen = 1'b1;
 			end
 
 		// U型指令：LUI		       
 		7'b0110111: begin
-			result <= imm_ext;
-			wen <= 1'b1;		       
+			result = imm_ext;
+			wen = 1'b1;		       
 			end
 
 		// JAL指令
 		7'b1101111: begin
-			result <= pc + 4;
-			jal_target <= pc + imm_ext;
+			result = pc + 4;
+			jal_target = alu_sum;
+			wen = 1'b1;	
 		end
 
 		// JALR指令
 		7'b1100111: begin
-			result <= pc + 4;
-			jal_target <= (rs1_data + imm_ext) & ~32'b1; // 低位清零
+			result = pc + 4;
+			jal_target = (alu_sum) & ~32'b1; // 低位清零
+			wen = 1'b1;	
 		end
 		
 		// Ebreak 指令
@@ -66,12 +93,10 @@ always @(*) begin
 			 $display("EBREAK at PC: 0x%08h", pc);
 				// 可在此添加中断处理逻辑
 		end
-		default: begin
-			result <= 32'b0;
-			wen <= 1'b0;
+		default: 
 			$display("ERROR: Unsupported opcode %b for func3=000", op);
-			end
-	endcase
+		endcase
 	end
+end
 
 endmodule

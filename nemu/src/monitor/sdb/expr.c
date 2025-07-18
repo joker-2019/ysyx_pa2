@@ -64,7 +64,7 @@ static struct rule {
   {"!=", TK_NEQ},
   {"&&", TK_AND},
   {"\\|\\|", TK_OR},      // 匹配逻辑或运算符 ||（正则中需转义为 \|\|，C字符串需双写反斜杠）
-  {"0x[a-f,A-F,0-9]+",TK_HEX}, //匹配16进制
+  {"0[xX][0-9a-fA-F]+",TK_HEX}, //匹配16进制
   {"[0-9]+", TK_NUM},  //匹配十进制
   {"\\$(\\$0|ra|sp|gp|pc|tp|t[0-6]|s(0|[1-9]|1[0-1])|a[0-7])", TK_REG}  // 匹配寄存器
 };
@@ -252,17 +252,6 @@ int get_priority(int type) {
     case TK_MINUS:  return 7;  // 一元操作符（负号、解引用）
     
     default:        return -1; // 非运算符
-  
-    /*
-    case TK_MINUS: case TK_DEREF: return 1; break; 
-		case '*': case '/': return 2; break;
-		case '+': case '-': return 3; break;
-		case TK_GT: case TK_LT: case TK_GE: case TK_LE: return 4; break;
-		case TK_EQ: case TK_NEQ: return 5; break;
-		case TK_AND: return 6; break;
-		case TK_OR: return 7; break;
-		default: return -1;// 非运算符
-    */
   }
 }
 
@@ -333,7 +322,7 @@ Result eval(int p, int q){
       result.data = strtol(tokens[p].str,NULL,16);
       result.is_valid = true;
       //return result;
-    }
+    } 
     else if(tokens[p].type == TK_REG){
       bool success_reg = false;
       // printf("tokens[p].str:%s\n", tokens[p].str);

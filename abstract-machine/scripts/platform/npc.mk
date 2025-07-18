@@ -21,8 +21,8 @@ image: $(IMAGE).elf
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
-.PHONY: run
-run: image
-	@echo + RUNNING $(IMAGE).bin ON NPC
-	@echo $(AM_HOME)/../npc
-	@cd $(AM_HOME)/../npc && make run $(IMAGE).bin
+	.PHONY: run
+	run: image
+		@echo + RUNNING $(IMAGE).bin ON NPC
+		@echo $(AM_HOME)/../npc
+		@cd $(AM_HOME)/../npc && make run $(IMAGE).bin
