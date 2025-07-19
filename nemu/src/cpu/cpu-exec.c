@@ -88,17 +88,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
   memset(p, ' ', space_len);   // 填充空格
   p += space_len; // 移动指针
 
-/*
-disassemble 函数将指令二进制码转换为可读的汇编格式
-参数说明：
-p：输出缓冲区的起始位置（即空格填充后的位置）。
-s->logbuf + sizeof(s->logbuf) - p：剩余缓冲区大小。
-MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc)：x86 架构使用 s->snpc（因为指令长度动态可变），其他架构使用 s->pc。
-(uint8_t *)&s->isa.inst.val：指令二进制数据。
-ilen：指令长度。
-*/
+
 #ifndef CONFIG_ISA_loongarch32r
-  void (char *str, int size, uint64_t pc, uint8_t *code, int nbyte);  //  函数将指令二进制码转换为可读的汇编格式
+  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
 #else

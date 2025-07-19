@@ -52,6 +52,10 @@ ifeq ($(CONFIG_ITRACE),y)
   LDFLAGS  += $(shell $(LLVM_CONFIG) --libs)
 endif
 
+ifeq ($(CONFIG_FTRACE),y)
+  CSRCS += $(abspath ./csrc/utils/trace.c)
+endif
+
 # Include NVBoard rules
 # include $(NVBOARD_HOME)/scripts/nvboard.mk
 
@@ -77,7 +81,7 @@ sim: $(BIN)
 	@$(BIN)
 
 run:$(BIN)
-	@$^ +trace
+	@$^ +trace $(ARGS)
 
 view:$(FST_FILE)
 	gtkwave $(FST_FILE)

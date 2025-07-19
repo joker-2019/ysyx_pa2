@@ -2,8 +2,8 @@ module ysyx_22040080_cpu(
 	input  clk,
 	input  rst,
   output [31:0] trace_pc, // 输出当前PC值
-  output [31:0] trace_instr // 输出当前指令
-  
+  output [31:0] trace_instr, // 输出当前指令
+  output [31:0] dnpc // jal/jalr指令的目标地址
 );
   reg [31:0] pc; 
   wire [31:0] alu_result;
@@ -77,7 +77,6 @@ ysyx_22040080_idu idu(
   .instr_type(instr_type)
 );
 
-
   //执行
 ysyx_22040080_alu alu(
   .clk(clk),
@@ -90,6 +89,8 @@ ysyx_22040080_alu alu(
   .result(alu_result),
   .wen(wen)
 );
+
+assign dnpc = jal_target; // 如果jal_target为0，则使用next_pc
 
  //寄存器堆实例
 RegisterFile regfile(

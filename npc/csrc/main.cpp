@@ -8,6 +8,7 @@
 #include "monitor/expr.h"
 #include "monitor/watchpoint.h"
 #include "utils/ftrace.h"
+#include "utils/iringbuf.h"
 
 // ANSI 彩色宏定义（可选）
 #define ANSI_NONE          "\33[0m"
@@ -47,10 +48,21 @@ void trace_and_step() {
 
   char asm_buf[128] = {};
   disassemble(asm_buf, sizeof(asm_buf), pc, (uint8_t *)&inst, 4); // 调用 NEMU 提供的反汇编工具
+  // 添加到环形缓冲区
+  iringbuf_add(pc, inst, asm_buf); // 添加指令到环形缓冲区
+  // 当指令出现错误时，打印环形缓冲区的指令 借助实现different test来实现
+  /* difftest(&decode, pc);
+     if (程序状态编程意外终止状态) {
+      printf_inst_error(error_pc); // 打印错误指令
+    } */
   printf("pc:0x%08x:   inst:0x%08x   %s\n", pc, inst, asm_buf);
   
-  // 检查当前指令是调用还是返回
-  check_call_or_ret(pc);
+  // 检查是否为 jal 或 jalr
+  if (strncmp(asm_buf, "jal", 3) == 0 || strncmp(asm_buf, "jalr", 4) == 0) {
+    if (rootp->dnpc != 0) { // 如果 jal/jalr 指令的目标地址不为 0
+      check_call_or_ret(rootp->dnpc); // 检查 jal/jalr 指令
+    }
+  }
 }
 
 void step_and_dump_wave(){
@@ -109,6 +121,7 @@ void print_registers() {
 }
 
 int main(int argc, char **argv) {
+  printf("Welcome to NPC\n");
   // 简单命令行参数解析 -e xxx.elf
   for (int i = 1; i < argc; i++) {  // 
     if (strcmp(argv[i], "-e") == 0 && i + 1 < argc) {
@@ -120,6 +133,7 @@ int main(int argc, char **argv) {
   sim_init();
   if (file_elf) {
     parse_elf(file_elf);  // 加载 ELF 符号
+    printf("ELF symbols loaded from: %s\n", file_elf);
   }
   reset(10);
 
