@@ -59,8 +59,11 @@ void trace_and_step() {
   
   // 检查是否为 jal 或 jalr
   if (strncmp(asm_buf, "jal", 3) == 0 || strncmp(asm_buf, "jalr", 4) == 0) {
+    printf("jal/jalr instruction detected at pc: 0x%08x\n", pc);
     if (rootp->dnpc != 0) { // 如果 jal/jalr 指令的目标地址不为 0
+      printf("jal/jalr target address: 0x%08x\n", rootp->dnpc);
       check_call_or_ret(rootp->dnpc); // 检查 jal/jalr 指令
+      rootp->dnpc = 0; // 重置 jal/jalr 目标地址
     }
   }
 }
