@@ -56,16 +56,6 @@ void trace_and_step() {
       printf_inst_error(error_pc); // 打印错误指令
     } */
   printf("pc:0x%08x:   inst:0x%08x   %s\n", pc, inst, asm_buf);
-  
-  // 检查是否为 jal 或 jalr
-  if (strncmp(asm_buf, "jal", 3) == 0 || strncmp(asm_buf, "jalr", 4) == 0) {
-    printf("jal/jalr instruction detected at pc: 0x%08x\n", pc);
-    if (rootp->dnpc != 0) { // 如果 jal/jalr 指令的目标地址不为 0
-      printf("jal/jalr target address: 0x%08x\n", rootp->dnpc);
-      check_call_or_ret(rootp->dnpc); // 检查 jal/jalr 指令
-      rootp->dnpc = 0; // 重置 jal/jalr 目标地址
-    }
-  }
 }
 
 void step_and_dump_wave(){
