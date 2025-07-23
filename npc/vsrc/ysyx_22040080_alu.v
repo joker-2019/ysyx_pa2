@@ -91,6 +91,7 @@ always @(*) begin
 		// Ebreak 指令
 		7'b1110011: begin
 			 $display("EBREAK at PC: 0x%08h", pc);
+				wen = 1'b0; // 阻止写回
 				// 可在此添加中断处理逻辑
 		end
 		default: 

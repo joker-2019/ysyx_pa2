@@ -6,14 +6,14 @@ module ysyx_22040080_ifu(
 );
 
 //import "DPI-C" function uint32_t imem_read(input uint32_t pc);
-import "DPI-C" function int imem_read(input int pc);	
+import "DPI-C" function int mem_read(input int pc);	
 always @(posedge clk) begin
 		if(rst) begin
 			instruction <=32'b0;
 		end
 		else begin
 			$display("pc %x", pc);
-			instruction <= imem_read(pc); // 从 pc读取指令
+			instruction <= mem_read(pc); // 从 pc读取指令
 			$display("instruction %x", instruction);
 			//instruction <= pc;
 			//$display("pc %x", pc);

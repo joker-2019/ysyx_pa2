@@ -1,9 +1,9 @@
 #ifndef __IRINGBUF_H__
 #define __IRINGBUF_H__
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 
 #define IRINGBUF_SIZE 64  // 环形缓冲区大小

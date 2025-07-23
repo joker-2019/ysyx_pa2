@@ -50,6 +50,7 @@ ifeq ($(CONFIG_ITRACE),y)
   CSRCS += $(abspath ./csrc/utils/disasm.cc)
   CXXFLAGS += $(shell $(LLVM_CONFIG) --cxxflags) -fPIE
   LDFLAGS  += $(shell $(LLVM_CONFIG) --libs)
+		LDFLAGS += -lreadline -lncurses
 endif
 
 ifeq ($(CONFIG_FTRACE),y)
@@ -81,7 +82,7 @@ sim: $(BIN)
 	@$(BIN)
 
 run:$(BIN)
-	@$^ +trace $(ARGS)
+	@$^ $(ARGS) -- +trace
 
 view:$(FST_FILE)
 	gtkwave $(FST_FILE)

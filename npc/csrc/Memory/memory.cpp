@@ -1,12 +1,17 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cassert>
+#include <assert.h>
 #include <stdint.h>
+#include "host.h"
+#include "../utils/autoconf.h"
 
-#define MEM_SIZE (1024 * 32)
+// #define MEM_SIZE (1024 * 32)
+// uint32_t pmem[MEM_SIZE];
+#define PG_ALIGN __attribute((aligned(4096)))
+static uint32_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
-uint32_t instr_mem[MEM_SIZE] = {
+/* uint32_t pmem[MEM_SIZE] = {
     // 地址 0x80000000（按小端存储）
     0x12300093,  // addi x1, x0, 0x123 000100100011 00000 000 000 01 0010011
     0x45600113,  // addi x2, x0, 0x456
@@ -16,34 +21,53 @@ uint32_t instr_mem[MEM_SIZE] = {
     0x004001EF,  // jal x3, 0x004   // 跳转到PC+4（下条指令）:0x8000000C, 同时x3 = PC+4 = 0x8000000C 
     0x00018267,  // jalr x4, x3, 0  // 跳转到x3 + 0 = 0x8000000C，形成跳转环
     0x00100073   // ebreak
-}; // 指令内存
+}; // 指令内存 */
 
-uint32_t data_mem[MEM_SIZE];  // 数据内存
+/* extern "C" uint32_t vaddr_read(uint32_t addr, int len) {
+  // 简化处理：NPC 目前不实现页表映射，虚拟地址 == 物理地址
+  return paddr_read(addr, len);
+} */
 
-// 获取物理内存(data_存储)基地址 通常来说程序运行时关心的是数据的读写情况，比如变量、数组、堆栈等
-extern "C" uint32_t* get_pmem_base() {
-    return (uint32_t*)data_mem;
+void init_mem(){
+    memset(pmem, 0, CONFIG_MSIZE);  // 清空内存
+}
+
+uint32_t *guest_to_host(uint32_t paddr){
+    return pmem + paddr - CONFIG_MBASE;
 }
 
 //读取指令
-extern "C" uint32_t imem_read(int pc) {
+extern "C" uint32_t mem_read(int pc) {
    // 检查地址对齐（RISC-V指令必须4字节对齐）
     assert((pc & 0x3) == 0 && "Instruction address misaligned");
     // 将字节地址转换为字地址（右移2位相当于除以4）
     //uint32_t index = pc >> 2;
-    int index = (pc - 0x80000000) / 4;  // 从0x80000000开始计算
+    int index = (pc - CONFIG_MBASE) / 4;  // 从0x80000000开始计算
     printf("index : %d\n",index);
     printf("DEBUG: pc=0x%08x → index=%d → instr=0x%08x\n", 
-           pc, index, instr_mem[index]);
+           pc, index, pmem[index]);
     // 检查地址是否越界
-    assert(index < MEM_SIZE && "Instruction memory overflow");
+    assert(index < CONFIG_MSIZE && "Instruction memory overflow");
     // 直接返回对应位置的32位指令
-    return instr_mem[index];
+    return pmem[index];
 }
 
+uint32_t phys_mem_read(uint32_t addr) {
+    // 转换为数组索引 (因为每个元素是 4 字节)
+    uint32_t index = (addr - CONFIG_MBASE) / 4;
+    
+    // 检查边界
+    if(index >= CONFIG_MSIZE) {
+        return 0; // 或触发错误
+    }
+    
+    return pmem[index];
+}
+
+/* 
 // 读取数据
 // 注意：RISC-V数据访问通常是按字（4字节）对齐
-extern "C" uint32_t dmem_read(int addr) {
+extern "C" uint32_t dmem_read(long addr) {
      // 检查地址对齐（假设只支持对齐访问）
     assert((addr & 0x3) == 0 && "Data address misaligned");
     // 转换为字地址
@@ -78,7 +102,7 @@ extern "C" void dmem_write(int addr, int data) {
     byte_ptr[3] = (data >> 24) & 0xFF;  // 最高有效字节
 }
 
-/* void load_instructions(const char* file) {
+void load_instructions(const char* file) {
     // 打开文件（二进制只读模式）
     FILE* file = fopen(filename, "rb");
     assert(file != nullptr && "Failed to open instruction file");

@@ -8,10 +8,11 @@
 #include "Vysyx_22040080_cpu.h"
 #include "Vysyx_22040080_cpu___024root.h"
 #include "expr.h"
+#include "../cpu/cpu.h"
 
 #define MAX_TOKENS 256
 
-extern Vysyx_22040080_cpu___024root* rootp;  // 指向 top->rootp
+uint32_t get_reg_val(const char *regname);
 
 enum {
   TK_NOTYPE = 256, //spaces
@@ -228,11 +229,11 @@ bool check_parentheses(int p, int q) {
   return true; // 如果balance为0，则括号完整包裹
 }
 
-uint32_t get_reg_val(const char *regname) {
+/* uint32_t get_reg_val(const char *regname) {
   printf("get_reg_val: %s\n", regname);
   int idx = atoi(regname + 1); // skip 'x'
   return rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[idx];
-}
+} */
 
 uint32_t eval(int p, int q){
 

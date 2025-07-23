@@ -1,25 +1,46 @@
-#include "verilated.h"
-#include "verilated_vcd_c.h"
-#include "Vysyx_22040080_cpu.h"
-#include "Vysyx_22040080_cpu___024root.h"
-#include <stdio.h>
-#include <stdlib.h>
+
+/* 
 #include "Memory/memory.h"
 #include "monitor/expr.h"
 #include "monitor/watchpoint.h"
 #include "utils/ftrace.h"
 #include "utils/iringbuf.h"
+#include "utils/utils.h"
+ */
+#include "verilated.h"
+#include "verilated_vcd_c.h"
+#include "Vysyx_22040080_cpu.h"
+#include "Vysyx_22040080_cpu___024root.h"
 
-// ANSI 彩色宏定义（可选）
+
+
+/* // ANSI 彩色宏定义（可选）
 #define ANSI_NONE          "\33[0m"
 #define ANSI_FG_RED        "\33[1;31m" // 红色
 #define ANSI_FG_GREEN      "\33[1;32m" // 绿色
-#define ANSI_FMT(str, fmt) fmt str ANSI_NONE
+#define ANSI_FMT(str, fmt) fmt str ANSI_NONE */
+
+/* static char* rl_gets() {
+  static char *line_read = NULL;
+
+  if (line_read) {
+    free(line_read);
+    line_read = NULL;
+  }
+
+  line_read = readline("(NPC) ");
+
+  if (line_read && *line_read) {
+    add_history(line_read);
+  }
+
+  return line_read;
+} 
+#define PMEM_BASE 0x80000000 // 假设物理内存基地址为 0x80000000
 
 extern "C" uint32_t* get_pmem_base(); // 获取物理内存基地址
 extern "C" void init_disasm(const char *triple); // 初始化反汇编器
 extern "C" void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte); // 反汇编函数
-#define PMEM_BASE 0x80000000 // 假设物理内存基地址为 0x80000000
 
 const char* reg_names[] = {
   "$0","ra","sp","gp","tp","t0","t1","t2",
@@ -27,6 +48,8 @@ const char* reg_names[] = {
   "a6","a7","s2","s3","s4","s5","s6","s7",
   "s8","s9","s10","s11","t3","t4","t5","t6"
 };
+void init_monitor(int, char *[]);
+
 const char *file_elf = NULL; // ELF 文件路径
 
 VerilatedContext *contextp = NULL;
@@ -51,11 +74,8 @@ void trace_and_step() {
   // 添加到环形缓冲区
   iringbuf_add(pc, inst, asm_buf); // 添加指令到环形缓冲区
   // 当指令出现错误时，打印环形缓冲区的指令 借助实现different test来实现
-  /* difftest(&decode, pc);
-     if (程序状态编程意外终止状态) {
-      printf_inst_error(error_pc); // 打印错误指令
-    } */
   printf("pc:0x%08x:   inst:0x%08x   %s\n", pc, inst, asm_buf);
+
 }
 
 void step_and_dump_wave(){
@@ -112,9 +132,12 @@ void print_registers() {
   printf("x%-2d (%3s): 0x%08x\n", i, reg_names[i], top->rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[i]);
   }
 }
+*/
+void sdb_mainloop(int, char *[]);
 
-int main(int argc, char **argv) {
-  printf("Welcome to NPC\n");
+
+int main(int argc, char *argv[]) {
+/*   printf("Welcome to NPC\n");
   // 简单命令行参数解析 -e xxx.elf
   for (int i = 1; i < argc; i++) {  // 
     if (strcmp(argv[i], "-e") == 0 && i + 1 < argc) {
@@ -133,14 +156,15 @@ int main(int argc, char **argv) {
   uint32_t* pmem = get_pmem_base(); // 获取物理内存基地址
   char cmd[128]; // 用于读取用户输入的命令
 
-  while (!sim_finished){
+  while (!sim_finished) {
     printf("(NPC)");
     if(fgets(cmd, sizeof(cmd), stdin) == NULL) break; // 读取用户输入
+
     if(strcmp(cmd, "si\n") == 0){
       single_cycle(); // 执行单周期
 
     }else if(strncmp(cmd, "info ", 5) == 0){
-      if(strcmp(cmd + 5, "r\n") == 0) {
+      if(strcmp(cmd + 5, "r") == 0) {
       // 打印寄存器状态
       print_registers();
       }
@@ -152,7 +176,7 @@ int main(int argc, char **argv) {
       // 扫描内存
       int addr, len;
       sscanf(cmd + 2, "%i %i", &addr, &len); // 解析地址和长度  %i 可以自动识别 0x 开头的十六进制，也支持十进制
-      for(int i = 0; i < len; i += 4) {
+      for(int i = 0; i < len; i +=4) {
       uint32_t data = *(uint32_t*)&pmem[addr + i - PMEM_BASE];
       printf("0x%08x: 0x%08x\n", addr + i, data);
       }
@@ -193,7 +217,8 @@ int main(int argc, char **argv) {
     step_and_dump_wave();
     //single_cycle();
   }
-  sim_exit();
-  return 0;
+  sim_exit(); */
+sdb_mainloop(argc, argv);
+return 0;
 }
 
