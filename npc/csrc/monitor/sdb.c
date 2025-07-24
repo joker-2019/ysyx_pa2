@@ -97,9 +97,9 @@ static int cmd_x(char *args) {
   }
  
   // 内存访问
-  for (int i = 0; i < num; i += 4) {
+  for (int i = 0; i < num; i ++) {
     // printf("0x%08x\r\n",vaadr_read(addr+i*4,4));
-    uint32_t data = phys_mem_read(addr + i); //待完善修改
+    uint32_t data = phys_mem_read(addr+i*4, 4); //待完善修改
     printf("0x%08x: 0x%08x\n", addr + i, data);
   }
   return 0;

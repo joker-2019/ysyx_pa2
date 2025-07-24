@@ -15,7 +15,7 @@ uint32_t *guest_to_host(uint32_t paddr);
 
 uint32_t mem_read(int pc);
 
-uint32_t phys_mem_read(uint32_t addr);
+uint32_t phys_mem_read(uint32_t addr, int len);
 
 // uint32_t dmem_read(uint32_t addr);
 

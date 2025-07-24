@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "host.h"
 #include "../utils/autoconf.h"
+#include "../utils/iringbuf.h"
+#include "../config/config.h"
 
 // #define MEM_SIZE (1024 * 32)
 // uint32_t pmem[MEM_SIZE];
@@ -52,7 +54,7 @@ extern "C" uint32_t mem_read(int pc) {
     return pmem[index];
 }
 
-uint32_t phys_mem_read(uint32_t addr) {
+uint32_t phys_mem_read(uint32_t addr, int len) {
     // 转换为数组索引 (因为每个元素是 4 字节)
     uint32_t index = (addr - CONFIG_MBASE) / 4;
     
@@ -60,8 +62,13 @@ uint32_t phys_mem_read(uint32_t addr) {
     if(index >= CONFIG_MSIZE) {
         return 0; // 或触发错误
     }
-    
-    return pmem[index];
+
+    #if ENABLE_MTRACE
+    display_mread(addr, len);
+    #endif
+    uint32_t ret = host_read(guest_to_host(addr), len);
+    // return pmem[index];
+    return ret;
 }
 
 /* 

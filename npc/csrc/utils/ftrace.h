@@ -12,8 +12,9 @@ struct FuncSym{
 
 //检查当前是调用还是返回
 void check_call_or_ret(uint32_t pc);
-
 //解析elf文件
 void parse_elf(const char* elf_path);
+
+// void ftrace_trace(uint32_t pc);
 
 #endif // __FTRACE_H__

@@ -23,7 +23,7 @@ void iringbuf_add(vaddr_t pc, uint32_t inst, const char *disasm);
 // 打印所有指令并标记错误地址（出错PC）
 void printf_inst_error(vaddr_t err_pc);
 
-//MTRACE 对访存的结果进行追踪
+// 对访存的结果进行追踪
 void display_mread(paddr_t addr, int len);
 
 void display_mwrite(paddr_t addr, int len, word_t data);

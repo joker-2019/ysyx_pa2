@@ -6,7 +6,6 @@ module ysyx_22040080_cpu(
   output [31:0] dnpc // jal/jalr指令的目标地址
 );
   reg [31:0] pc;
-  reg halted; //终止标识 
   wire [31:0] alu_result;
   wire [31:0] instruction;
   wire [4:0] rs1, rd, rs2; // rs1 rs2 和 rd 寄存器地址
@@ -20,7 +19,7 @@ module ysyx_22040080_cpu(
   wire [31:0] jal_target; //跳转目标
   wire [31:0] next_pc;
 
-import "DPI-C" function void ebreak_trigger();  // 声明 DPI-C 函数
+// import "DPI-C" function void ebreak_trigger();  // 声明 DPI-C 函数
 
   // PC更新逻辑：新增分支、jal、jalr判断
   wire is_jal    = (op == 7'b1101111);
@@ -43,27 +42,20 @@ always @(posedge clk) begin
   // 初始化
   if(rst) begin
    pc <= 32'h80000000;
-   halted <= 0;
-  end else if (is_ebreak && !halted) begin
-    halted <= 1;
-    ebreak_trigger(); //触发结束
-    // 不更新PC
-  end else if(!halted) begin
+  end else
     pc <= next_pc;
-  end
 end
 
-  //取指
+  //取指 else if (is_ebreak && !halted) begin
+  //  halted <= 1;
+  // 不更新PC
+  // end
 ysyx_22040080_ifu ifu(
   .clk(clk),
   .rst(rst),
   .pc(pc),
   .instruction(instruction)
 );
-
-// itrace 用信号输出
-assign trace_pc = halted ? 32'h0 : pc; // 输出当前PC值
-assign trace_instr = halted ? 32'h0 : instruction; // 输出当前指令
 
   //译码
 ysyx_22040080_idu idu(
@@ -104,4 +96,8 @@ RegisterFile regfile(
   .rdata1(rs1_data),
   .rdata2(rs2_data) // 未使用，可忽略或接空
 );
+
+// itrace 用信号输出
+assign trace_pc =  pc; // 输出当前PC值
+assign trace_instr = instruction; // 输出当前指令
 endmodule

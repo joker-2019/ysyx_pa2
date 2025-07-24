@@ -17,11 +17,11 @@ void init_isa();
 
 // 加载镜像
 static long load_img() {
+  printf("img_file: %s\n", img_file);
   if (img_file == NULL) {
     printf("No image is given. Use the default build-in image.\n");
     return 4096; // built-in image size
   }
-  printf("img_file: %s\n", img_file);
   FILE *fp = fopen(img_file, "rb");
   // Assert(fp, "Can not open '%s'", img_file);
   assert(fp);
@@ -29,7 +29,7 @@ static long load_img() {
   fseek(fp, 0, SEEK_END);
   long size = ftell(fp);
 
-  printf("The image is %s, size = %ld", img_file, size);
+  printf("The image is %s, size = %ld\n", img_file, size);
 
   fseek(fp, 0, SEEK_SET);
   int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
@@ -75,20 +75,20 @@ int parse_args(int argc, char *argv[]) {
 
 void init_monitor(int argc, char *argv[]){
 
- parse_args(argc, argv); // 参数解析
+  parse_args(argc, argv); // 参数解析
 
- /* Initialize memory. */
- init_mem();
+  /* Initialize memory. */
+  init_mem();
 
- /* Perform ISA dependent initialization. */
- init_isa();
+  /* Perform ISA dependent initialization. */
+  init_isa();
 
- /* Initialize elf */
- parse_elf(file_elf); 
+  /* Initialize elf */
+  parse_elf(file_elf);
 
- /* Load the image to memory. This will overwrite the built-in image. */
- long img_size = load_img();
+  /* Load the image to memory. This will overwrite the built-in image. */
+  long img_size = load_img();
 
- /* Initialize differential testing. */
- // init_difftest(diff_so_file, img_size, difftest_port);
+  /* Initialize differential testing. */
+  // init_difftest(diff_so_file, img_size, difftest_port);
 }

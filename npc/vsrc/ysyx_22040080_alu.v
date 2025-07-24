@@ -10,7 +10,7 @@ module ysyx_22040080_alu(
 	output reg[31:0] jal_target // 新增：跳转目标地址（用于 jal、jalr）
 	
 );
-
+import "DPI-C" function void ebreak_trigger();  // 声明 DPI-C 函数
 // 通用加法器输入信号
 wire [31:0] alu_in1;
 wire [31:0] alu_in2;
@@ -90,9 +90,9 @@ always @(*) begin
 		
 		// Ebreak 指令
 		7'b1110011: begin
-			 $display("EBREAK at PC: 0x%08h", pc);
-				wen = 1'b0; // 阻止写回
-				// 可在此添加中断处理逻辑
+			$display("EBREAK at PC: 0x%08h", pc);
+			ebreak_trigger(); //触发ebreak指令
+			// 可在此添加中断处理逻辑
 		end
 		default: 
 			$display("ERROR: Unsupported opcode %b for func3=000", op);

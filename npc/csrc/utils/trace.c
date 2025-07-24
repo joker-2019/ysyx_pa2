@@ -71,7 +71,7 @@ void parse_elf(const char* elf_path) {
             elf_head = node;
         }
     }
-*/  
+*/  //头插法
     for (Elf32_Sym *sym = &symtab[0];  sym != &symtab[sym_count]; sym++) {
         if (ELF32_ST_TYPE(sym->st_info) == STT_FUNC &&sym->st_value >= 0x80000000 &&sym->st_size > 0) {
             struct FuncSym *node = (struct FuncSym *)malloc(sizeof(struct FuncSym));
@@ -90,6 +90,8 @@ void parse_elf(const char* elf_path) {
 }
 
 void check_call_or_ret(uint32_t pc) {
+    // static char buf[256];  // 静态缓冲区
+    // buf[0] = '\0';  // 清空
     for (struct FuncSym *temp = elf_head; temp != NULL; temp = temp->next){
         if(pc >= temp->addr && pc < temp->addr + temp->size){
             if(current_func == NULL){ //init
@@ -97,6 +99,8 @@ void check_call_or_ret(uint32_t pc) {
             }else if(current_func == temp->name){ //在函数内部
             }else {
                  current_func = temp->name;
+                 // char indent[64] = {0};
+                 // memset(indent, ' ', call_depth * 2); // 每层缩进两个空格
                  printf("0x%08x: ", pc);
                  if (pc == temp->addr){ // 跳转新的函数
                      // call
@@ -104,21 +108,39 @@ void check_call_or_ret(uint32_t pc) {
                          printf(" ");
                      }
                      printf("call [%s@0x%08x]\n", temp->name, temp->addr);
-                     ++call_depth;
+                    //  snprintf(buf, sizeof(buf), "0x%08x: %scall [%s@0x%08x]", pc, indent, temp->name, temp->addr);
+                    ++call_depth;
                  }
                  else{
                      // ret
-                     --call_depth;
+                    --call_depth;
+                    // if (call_depth < 0) call_depth = 0;  // 防止越界
+                    // memset(indent, ' ', call_depth * 2); 
+                    // snprintf(buf, sizeof(buf), "0x%08x: %sret  [%s]", pc, indent, temp->name);                      
                      for (int i = 0; i < call_depth; ++i)
                      {
                          printf(" ");
                      }
                      printf("ret [%s@0x%08x]\n", temp->name, temp->addr);
+
                  }
             }
             break;
 
         }  
     }
+    // return NULL;  // 没有call/ret事件时返回NULL
 }
+
+// 解析elf文件并打印
+/* void ftrace_trace(uint32_t pc){
+    char *line = check_call_or_ret(pc);
+    if (line != NULL) {
+        FILE *fp = fopen("ftrace_log.txt", "w");  // 以追加模式打开 a
+        if (fp) {
+            fprintf(fp, "%s\n", line);
+            fclose(fp);
+        }
+    }
+} */
 

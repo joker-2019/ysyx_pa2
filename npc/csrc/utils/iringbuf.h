@@ -25,5 +25,10 @@ void iringbuf_add(uint32_t pc, uint32_t inst, const char *disasm);
 // 打印所有指令并标记错误地址（出错PC）
 void printf_inst_error(uint32_t err_pc);
 
+// itrace 执行
+void itrace_exec(uint32_t pc, uint32_t inst);
+
+// mtrace
+void display_mread(uint32_t addr, int len);
 
 #endif // __IRINGBUF_H__

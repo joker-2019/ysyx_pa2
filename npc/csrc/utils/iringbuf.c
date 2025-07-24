@@ -2,6 +2,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include "disasm.h"
+#include <stdbool.h>
+
+void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
 
 IRingBufEntry iringBuf[IRINGBUF_SIZE];
 int head = 0; //队列头
@@ -49,4 +53,20 @@ void display_mwrite(paddr_t addr, int len, word_t data) {
     printf("MTRACE: WRITE addr = 0x%08x, len = %d, data = 0x%08x\n", addr, len, data);
 } */
 
+void itrace_exec(uint32_t pc, uint32_t inst){
+    char asm_buf[128] = {};
+    disassemble(asm_buf, sizeof(asm_buf), pc, (uint8_t *)&inst, 4);
+    iringbuf_add(pc, inst, asm_buf);
 
+    printf("itrace: pc:0x%08x:   inst:0x%08x   %s\n", pc, inst, asm_buf);
+}
+
+//MTRACE 对访存的结果进行追踪
+void display_mread(uint32_t addr, int len) {
+    printf("MTRACE: READ  addr = 0x%08x, len = %d\n", addr, len);
+    //TODO 若想将访问结果进行存取，可以采用写如日志的方式实现Log("MTRACE: READ  addr = 0x%08x, len = %d, addr, len)
+}
+  
+void display_mwrite(uint32_t addr, int len, uint32_t data) {
+    printf("MTRACE: WRITE addr = 0x%08x, len = %d, data = 0x%08x\n", addr, len, data);
+}
