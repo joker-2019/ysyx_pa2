@@ -13,7 +13,7 @@ struct FuncSym *elf_head; //函数链表头
 
     //解析elf文件
 void parse_elf(const char* elf_path) {
-    //return;  
+    return;  
     FILE *fp = fopen(elf_path, "rb");
     assert(fp != NULL);
     // 读取 ELF 头
