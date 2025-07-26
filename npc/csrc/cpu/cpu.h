@@ -8,12 +8,6 @@
 extern "C" {
 #endif
 
-typedef struct {
-  uint32_t gpr[32];  // 32个通用寄存器
-  uint32_t pc;       // 程序计数器
-} CPUstate;
-
-extern CPUstate cpu;       //  全局变量声明
 
 extern bool sim_finished;  //  让 c 命令使用
 

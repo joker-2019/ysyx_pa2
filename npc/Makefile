@@ -50,8 +50,11 @@ ifeq ($(CONFIG_ITRACE),y)
   CSRCS += $(abspath ./csrc/utils/disasm.cc)
   CXXFLAGS += $(shell $(LLVM_CONFIG) --cxxflags) -fPIE
   LDFLAGS  += $(shell $(LLVM_CONFIG) --libs)
-		LDFLAGS += -lreadline -lncurses
+		
 endif
+
+CFLAGS += -I./include -g
+LDFLAGS		+=	-lreadline	-lncurses -ldl
 
 ifeq ($(CONFIG_FTRACE),y)
   CSRCS += $(abspath ./csrc/utils/trace.c)

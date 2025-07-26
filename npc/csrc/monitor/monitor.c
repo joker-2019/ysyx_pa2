@@ -5,6 +5,8 @@
 #include "../utils/ftrace.h"
 #include "../Memory/memory.h"
 #include "assert.h"
+#include "../../include/cpu/difftest.h"
+#include "../isa/riscv32/isa-def.h"
 
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
@@ -90,5 +92,11 @@ void init_monitor(int argc, char *argv[]){
   long img_size = load_img();
 
   /* Initialize differential testing. */
-  // init_difftest(diff_so_file, img_size, difftest_port);
+  difftest_init_nemu();
+
+  /*将镜像同步到REF(nemu) 的内存 需要把 镜像文件（image）load到NPC的物理内存区域（或者RESET_VECTOR）中*/ 
+  difftest_memcpy(CONFIG_MBASE, RESET_VECTOR, img_size, DIFFTEST_TO_REF);
+  
+  // 将寄存器状态同步到 REF
+  difftest_regcpy(&cpu, DIFFTEST_TO_REF);
 }

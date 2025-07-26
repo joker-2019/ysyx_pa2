@@ -8,6 +8,8 @@
   #include "../utils/utils.h"
   #include "../utils/iringbuf.h"
   #include "../config/config.h"
+  #include "../isa/riscv32/isa-def.h"
+  #include "../../include/cpu/difftest.h"
 
   // 外部函数
   extern "C" void init_disasm(const char *triple);
@@ -77,14 +79,27 @@
     
     // if (sim_finished) return; //检查是否已经更新，若更新则执行结束
 
+    // NPC执行一条指令后，让REF(NEMU)执行一条
+    difftest_exec(1);
+    
     // 跟踪 PC/指令（可选）itrace
     uint32_t pc = rootp->trace_pc;
     uint32_t inst = rootp->trace_instr;
-
+    
     // 多个 trace 可以 hook 在这里
   #if ENABLE_ITRACE
     itrace_exec(pc, inst);     // 反汇编 + iringbuf + 打印
   #endif
+  
+    // 把 REF 的寄存器同步回来
+    CPU_state ref_cpu;
+    difftest_regcpy(&ref_cpu, DIFFTEST_TO_DUT);
+    // 比对寄存器
+    if (memcmp(&cpu, &ref_cpu, sizeof(CPU_state)) != 0) {
+        printf("Difftest mismatch at pc = 0x%08x\n", cpu.pc);
+        printf_inst_error(cpu.pc);
+        assert(0);
+    }
 
   #if ENABLE_FTRACE
     if(is_jal(inst) || is_jalr(inst)){
@@ -92,12 +107,6 @@
     }
     
   #endif
-
- /* char asm_buf[128] = {};
-    disassemble(asm_buf, sizeof(asm_buf), pc, (uint8_t *)&inst, 4);
-    iringbuf_add(pc, inst, asm_buf);
-
-    printf("itrace: pc:0x%08x:   inst:0x%08x   %s\n", pc, inst, asm_buf); */
   }
 
   void print_registers() {

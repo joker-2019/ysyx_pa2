@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "../Memory/memory.h"
 #include <string.h>
+#include "../isa/riscv32/isa-def.h"
 
 static const uint32_t img[] = {
     // 地址 0x80000000（按小端存储）
@@ -15,8 +16,6 @@ static const uint32_t img[] = {
     0x00100073  // ebreak
 
 };
-
-CPUstate cpu = {};
 
 static void restart() {
   /* Set the initial program counter. */

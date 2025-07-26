@@ -13,29 +13,9 @@
 #define PG_ALIGN __attribute((aligned(4096)))
 static uint32_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
-/* uint32_t pmem[MEM_SIZE] = {
-    // 地址 0x80000000（按小端存储）
-    0x12300093,  // addi x1, x0, 0x123 000100100011 00000 000 000 01 0010011
-    0x45600113,  // addi x2, x0, 0x456
-    0x78900193,  // addi x3, x0, 0x789
-    0x12345097,  // auipc x1, 0x12345  // x1 = PC + (0x12345 << 12) = 0x80000000 + 0x12345000 = 0x92345000
-    0x12345137,  // lui x2, 0x12345  // x2 = 0x12345 << 12 = 0x12345000            
-    0x004001EF,  // jal x3, 0x004   // 跳转到PC+4（下条指令）:0x8000000C, 同时x3 = PC+4 = 0x8000000C 
-    0x00018267,  // jalr x4, x3, 0  // 跳转到x3 + 0 = 0x8000000C，形成跳转环
-    0x00100073   // ebreak
-}; // 指令内存 */
-
-/* extern "C" uint32_t vaddr_read(uint32_t addr, int len) {
-  // 简化处理：NPC 目前不实现页表映射，虚拟地址 == 物理地址
-  return paddr_read(addr, len);
-} */
 
 void init_mem(){
     memset(pmem, 0, CONFIG_MSIZE);  // 清空内存
-}
-
-uint32_t *guest_to_host(uint32_t paddr){
-    return pmem + paddr - CONFIG_MBASE;
 }
 
 //读取指令
@@ -52,6 +32,11 @@ extern "C" uint32_t mem_read(int pc) {
     assert(index < CONFIG_MSIZE && "Instruction memory overflow");
     // 直接返回对应位置的32位指令
     return pmem[index];
+}
+
+
+uint32_t *guest_to_host(uint32_t paddr){
+    return pmem + paddr - CONFIG_MBASE;
 }
 
 uint32_t phys_mem_read(uint32_t addr, int len) {
