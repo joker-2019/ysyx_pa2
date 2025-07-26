@@ -8,6 +8,12 @@
 extern "C" {
 #endif
 
+typedef struct {
+  uint32_t gpr[32];
+  uint32_t pc;
+} CPU_state;
+
+extern CPU_state cpu;  // 声明cpu为外部变量
 
 extern bool sim_finished;  //  让 c 命令使用
 

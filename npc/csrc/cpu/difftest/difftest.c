@@ -11,7 +11,7 @@ static void (*p_difftest_exec)(uint64_t) = NULL;
 static void (*p_difftest_raise_intr)(word_t) = NULL;
 static void (*p_difftest_init)(int) = NULL;
 
-void difftest_init_nemu(int difftest_port) {
+void difftest_init_nemu() {
  // 加载 NEMU 共享库
   nemu_so = dlopen("/home/wp/ysyx-workbench/nemu/build/riscv32-nemu-interpreter-so", RTLD_LAZY);
  if (!nemu_so) {
@@ -33,7 +33,7 @@ void difftest_init_nemu(int difftest_port) {
  }
     
  // 初始化 NEMU 仿真环境
- p_difftest_init(difftest_port);
+ p_difftest_init(0);
 }
 
 // 封装调用接口

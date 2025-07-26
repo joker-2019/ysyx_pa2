@@ -6,7 +6,7 @@
 #include "../Memory/memory.h"
 #include "assert.h"
 #include "../../include/cpu/difftest.h"
-#include "../isa/riscv32/isa-def.h"
+#include "../cpu/cpu.h"
 
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
@@ -77,7 +77,8 @@ int parse_args(int argc, char *argv[]) {
 
 void init_monitor(int argc, char *argv[]){
 
-  parse_args(argc, argv); // 参数解析
+  /*参数解析*/
+  parse_args(argc, argv);
 
   /* Initialize memory. */
   init_mem();
@@ -95,7 +96,7 @@ void init_monitor(int argc, char *argv[]){
   difftest_init_nemu();
 
   /*将镜像同步到REF(nemu) 的内存 需要把 镜像文件（image）load到NPC的物理内存区域（或者RESET_VECTOR）中*/ 
-  difftest_memcpy(CONFIG_MBASE, RESET_VECTOR, img_size, DIFFTEST_TO_REF);
+  difftest_memcpy(CONFIG_MBASE, guest_to_host(RESET_VECTOR), img_size, DIFFTEST_TO_REF);
   
   // 将寄存器状态同步到 REF
   difftest_regcpy(&cpu, DIFFTEST_TO_REF);

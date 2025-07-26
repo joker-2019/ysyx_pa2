@@ -4,12 +4,12 @@
 #ifndef __ISA_RISCV_H__
 #define __ISA_RISCV_H__
 
-typedef struct {
+/* typedef struct {
   uint32_t gpr[32];  // 32个通用寄存器
   uint32_t pc;       // 程序计数器
 } CPU_state;
 
-extern CPU_state cpu;       //  全局变量声明
+extern CPU_state cpu;       //  全局变量声明 */
 
 
 /* typedef struct {
