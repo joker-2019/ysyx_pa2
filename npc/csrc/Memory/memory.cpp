@@ -25,9 +25,8 @@ extern "C" uint32_t mem_read(int pc) {
     // 将字节地址转换为字地址（右移2位相当于除以4）
     //uint32_t index = pc >> 2;
     int index = (pc - CONFIG_MBASE) / 4;  // 从0x80000000开始计算
-    printf("index : %d\n",index);
-    printf("DEBUG: pc=0x%08x → index=%d → instr=0x%08x\n", 
-           pc, index, pmem[index]);
+    // printf("index : %d\n",index);
+    // printf("DEBUG: pc=0x%08x → index=%d → instr=0x%08x\n", pc, index, pmem[index]);
     // 检查地址是否越界
     assert(index < CONFIG_MSIZE && "Instruction memory overflow");
     // 直接返回对应位置的32位指令

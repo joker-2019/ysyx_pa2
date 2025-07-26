@@ -30,7 +30,7 @@ static int cmd_q(char *args) {
 
 static int cmd_si(char *args) {
  int step;
- printf("args: %s\n", args);
+ // printf("args: %s\n", args);
  if (args == NULL)
  {
    step = 1; // 默认单步执行一条指令
@@ -168,7 +168,7 @@ void sdb_set_batch_mode() {
 // 返回值：0表示继续执行，-1表示退出
 int cmd_dispatch(char *line) {
   size_t len = strlen(line);
-  printf("line: %s\n", line);
+  // printf("line: %s\n", line);
   char *cmd = strtok(line, " ");
   //printf("cmd: %s\n", cmd);
   char *args = cmd + strlen(cmd) + 1;
