@@ -5,19 +5,22 @@ module ysyx_22040080_cpu(
   output [31:0] trace_instr // 输出当前指令
 );
   reg [31:0] pc;
-  reg [31:0] current_pc;     // 新增：当前指令PC寄存器
-  wire [31:0] alu_result;
+  // wire [31:0] alu_result;
   wire [31:0] instruction;
-  wire [4:0] rs1, rd, rs2; // rs1 rs2 和 rd 寄存器地址
+  wire [4:0] rs1, rs2; // rs1 rs2 和 rd 寄存器地址 
   wire [2:0] func3;
   wire [31:0] imm_ext; // 立即数扩展
   wire [6:0] op;
   wire [31:0] rs1_data, rs2_data; // rs1 寄存器数据
-  wire wen;
+  // wire wen;
   wire is_ebreak; 
   wire [2:0] instr_type; // 指令类型
   wire [31:0] jal_target; //跳转目标
-  wire [31:0] next_pc;
+  // wire [31:0] next_pc;
+  reg [31:0] next_pc;
+  reg wen_reg;
+  reg [4:0] rd_reg;
+  reg [31:0] result_reg;
 
 // import "DPI-C" function void ebreak_trigger();  // 声明 DPI-C 函数
 
@@ -32,20 +35,18 @@ module ysyx_22040080_cpu(
     (func3 == 3'b100 && $signed(rs1_data) < $signed(rs2_data)) || // blt
     (func3 == 3'b101 && $signed(rs1_data) >= $signed(rs2_data))   // bge
   );
-  wire [31:0] branch_target = current_pc + imm_ext;
+  wire [31:0] branch_target = pc + imm_ext;
 
   assign next_pc = branch_taken     ? branch_target :
                    (is_jal || is_jalr) ? jal_target :
-                   current_pc + 4;
+                   pc + 4;
 
 always @(posedge clk) begin
   // 初始化
   if(rst) begin 
     pc <= 32'h80000000;
-    current_pc <= 32'h80000000; // 初始化当前PC
   end else 
   pc <= next_pc;
-  current_pc <= pc; // 捕获当前指令PC
 end
 
   //取指 else if (is_ebreak && !halted) begin
@@ -55,8 +56,7 @@ end
 ysyx_22040080_ifu ifu(
   .clk(clk),
   .rst(rst),
-  // .pc(pc),
-  .pc(current_pc),
+  .pc(pc),
   .instruction(instruction)
 );
 
@@ -65,7 +65,8 @@ ysyx_22040080_idu idu(
   .instruction(instruction),
   .rs1(rs1),
   .rs2(rs2),
-  .rd(rd),
+  // .rd(rd),
+  .rd(rd_reg),
   .func3(func3),
   .imm_ext(imm_ext),
   .op(op),
@@ -80,26 +81,33 @@ ysyx_22040080_alu alu(
   .imm_ext(imm_ext),
   .func3(func3),
   .op(op),
-  // .pc(pc),
-  .pc(current_pc),
+  .pc(pc),
   .jal_target(jal_target),
-  .result(alu_result),
-  .wen(wen)
+  // .result(alu_result),
+  // .wen(wen)
+  .wen(wen_reg),
+  .result(result_reg)
 );
 
  //寄存器堆实例
 RegisterFile regfile(
   .clk(clk),
-  .wen(wen),
+  // .wen(wen),
+  .wen(wen_reg),
   .raddr1(rs1),
   .raddr2(5'b0), // 未使用，默认设为 x0
-  .waddr(rd),
-  .wdata(alu_result),
+  // .waddr(rd),
+  .waddr(rd_reg),
+  // .wdata(alu_result),
+  .wdata(result_reg),
   .rdata1(rs1_data),
   .rdata2(rs2_data) // 未使用，可忽略或接空
 );
 
 // itrace 用信号输出
-assign trace_pc =  current_pc; // 输出当前PC值
+assign trace_pc =  pc; // 输出当前PC值
 assign trace_instr = instruction; // 输出当前指令
+always @(posedge clk) begin
+    $display("CPU WriteBack: wen=%b, rd=%d, wdata=0x%08h", wen_reg, rd_reg, result_reg);
+end
 endmodule

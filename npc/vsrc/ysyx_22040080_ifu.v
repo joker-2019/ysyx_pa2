@@ -12,10 +12,7 @@ always @(posedge clk) begin
 			instruction <=32'b0;
 		end
 		else begin
-			instruction <= mem_read(pc); // 从 pc读取指令
-			// $display("instruction %x", instruction);
-			//$display("pc %x", pc);
-			
+			instruction <= mem_read(pc); // 从 pc读取指令		
     end
 end
 

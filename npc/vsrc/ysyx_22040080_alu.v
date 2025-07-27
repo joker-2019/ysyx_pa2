@@ -66,6 +66,7 @@ always @(*) begin
 		7'b0010111: begin
 			result = alu_sum;
 			wen = 1'b1;
+			// $display("AUIPC: PC=0x%8h, IMM=0x%8h, Result=0x%8h", pc, imm_ext, result);
 			end
 
 		// U型指令：LUI		       
@@ -95,7 +96,7 @@ always @(*) begin
 			// 可在此添加中断处理逻辑
 		end
 		default: 
-			$display("ERROR: Unsupported opcode %b for func3=000", op);
+			$display("ERROR: Unsupported opcode %b", op);
 		endcase
 	end
 end

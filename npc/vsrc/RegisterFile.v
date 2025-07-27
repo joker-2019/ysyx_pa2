@@ -19,5 +19,6 @@ module RegisterFile (
     always @(posedge clk) begin
         if (wen && waddr != 0)
             rf[waddr] <= wdata;
+            $display("RegFile Write: x%0d <= 0x%08h", waddr, wdata);  // <-- 加上这个打印
     end
 endmodule
