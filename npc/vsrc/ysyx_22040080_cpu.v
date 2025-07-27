@@ -2,10 +2,10 @@ module ysyx_22040080_cpu(
 	input  clk,
 	input  rst,
   output [31:0] trace_pc, // 输出当前PC值
-  output [31:0] trace_instr, // 输出当前指令
-  output [31:0] dnpc // jal/jalr指令的目标地址
+  output [31:0] trace_instr // 输出当前指令
 );
   reg [31:0] pc;
+  reg [31:0] current_pc;     // 新增：当前指令PC寄存器
   wire [31:0] alu_result;
   wire [31:0] instruction;
   wire [4:0] rs1, rd, rs2; // rs1 rs2 和 rd 寄存器地址
@@ -32,18 +32,20 @@ module ysyx_22040080_cpu(
     (func3 == 3'b100 && $signed(rs1_data) < $signed(rs2_data)) || // blt
     (func3 == 3'b101 && $signed(rs1_data) >= $signed(rs2_data))   // bge
   );
-  wire [31:0] branch_target = pc + imm_ext;
+  wire [31:0] branch_target = current_pc + imm_ext;
 
   assign next_pc = branch_taken     ? branch_target :
                    (is_jal || is_jalr) ? jal_target :
-                   pc + 4;
+                   current_pc + 4;
 
 always @(posedge clk) begin
   // 初始化
-  if(rst) begin
-   pc <= 32'h80000000;
-  end else
-    pc <= next_pc;
+  if(rst) begin 
+    pc <= 32'h80000000;
+    current_pc <= 32'h80000000; // 初始化当前PC
+  end else 
+  pc <= next_pc;
+  current_pc <= pc; // 捕获当前指令PC
 end
 
   //取指 else if (is_ebreak && !halted) begin
@@ -53,7 +55,8 @@ end
 ysyx_22040080_ifu ifu(
   .clk(clk),
   .rst(rst),
-  .pc(pc),
+  // .pc(pc),
+  .pc(current_pc),
   .instruction(instruction)
 );
 
@@ -77,13 +80,12 @@ ysyx_22040080_alu alu(
   .imm_ext(imm_ext),
   .func3(func3),
   .op(op),
-  .pc(pc),
+  // .pc(pc),
+  .pc(current_pc),
   .jal_target(jal_target),
   .result(alu_result),
   .wen(wen)
 );
-
-assign dnpc = jal_target; // 如果jal_target为0，则使用next_pc
 
  //寄存器堆实例
 RegisterFile regfile(
@@ -98,6 +100,6 @@ RegisterFile regfile(
 );
 
 // itrace 用信号输出
-assign trace_pc =  pc; // 输出当前PC值
+assign trace_pc =  current_pc; // 输出当前PC值
 assign trace_instr = instruction; // 输出当前指令
 endmodule
