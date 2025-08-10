@@ -18,6 +18,7 @@ void putch(char ch) {
 }
 
 void halt(int code) {
+  asm volatile("ebreak");  // 发出 ebreak 指令中止仿真
   while (1);
 }
 

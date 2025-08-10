@@ -14,7 +14,7 @@ LDFLAGS   += --gc-sections -e _start
 
 # 在NEMUFLAGS中添加-e选项，默认使用$(IMAGE).elf
 NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/nemu-log.txt 
-NEMUFLAGS += -b
+# NEMUFLAGS += -b
 NEMUFLAGS += -e $(IMAGE).elf 
 
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
