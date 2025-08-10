@@ -8,6 +8,7 @@
 #include "watchpoint.h"
 #include "readline/readline.h"
 #include <readline/history.h>
+#include "verilated.h"
 
 static int is_batch_mode = false;
 
@@ -15,7 +16,7 @@ void init_monitor(int argc, char *argv[]);
 
 // 命令函数
 static int cmd_c(char *args) {
- while (!sim_finished) {
+ while (!contextp->gotFinish()) {
   exec_once();
  }
  printf("Simulation finished (via ebreak)\n");
@@ -100,7 +101,7 @@ static int cmd_x(char *args) {
   for (int i = 0; i < num; i ++) {
     // printf("0x%08x\r\n",vaadr_read(addr+i*4,4));
     uint32_t data = phys_mem_read(addr+i*4, 4); //待完善修改
-    printf("0x%08x: 0x%08x\n", addr + i, data);
+    printf("0x%08x: 0x%08x\n", addr + i * 4, data);
   }
   return 0;
 }
@@ -223,16 +224,16 @@ void init_sdb() {
 // 直到用户输入退出命令或发生错误
 int sdb_mainloop(int argc, char *argv[]) {
 
-  init_monitor(argc, argv);     // 初始化监视器中的内容
-
-  init_sdb();          // 初始化 SDB
-
   sim_init();          // 初始化模拟器
+
+  init_monitor(argc, argv);     // 初始化监视器中的内容
 
   reset(10);          // 重置模拟器状态
 
+  init_sdb();          // 初始化 SDB
+
   char *line = NULL;
-  while (!sim_finished) {
+  while (!contextp->gotFinish()) {
     line = rl_gets();
     if (strlen(line) > 0){
       int success = cmd_dispatch(line);

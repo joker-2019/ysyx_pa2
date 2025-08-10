@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../../include/cpu/difftest.h"
+#include <assert.h>
+// #include "../cpu.h"
 
 // 动态库句柄和函数指针
 static void* nemu_so = NULL;
@@ -10,6 +12,8 @@ static void (*p_difftest_regcpy)(void*, bool) = NULL;
 static void (*p_difftest_exec)(uint64_t) = NULL;
 static void (*p_difftest_raise_intr)(word_t) = NULL;
 static void (*p_difftest_init)(int) = NULL;
+
+// extern void update_register(void);
 
 void difftest_init_nemu() {
  // 加载 NEMU 共享库
@@ -32,8 +36,8 @@ void difftest_init_nemu() {
  exit(1);
  }
     
- // 初始化 NEMU 仿真环境
- p_difftest_init(0);
+ p_difftest_init(0); // 初始化 NEMU 仿真环境
+ 
 }
 
 // 封装调用接口
@@ -63,3 +67,23 @@ void difftest_close() {
         nemu_so = NULL;
     }
 }
+
+void check_difftest_memcpy(paddr_t addr, void *buf, size_t n) {
+    uint8_t *npc_mem = (uint8_t *)buf;
+    uint8_t nemu_mem[n];
+
+    // 从NEMU中读取内存数据
+    p_difftest_memcpy(addr, nemu_mem, n, DIFFTEST_TO_DUT);
+
+    // 逐字节比对
+    for (size_t i = 0; i < n; i++) {
+        if (npc_mem[i] != nemu_mem[i]) {
+            printf("[DiffTest Mem Mismatch] addr = 0x%08x npc = 0x%02x nemu = 0x%02x\n",
+                   addr + i, npc_mem[i], nemu_mem[i]);
+            assert(0);
+        }
+    }
+    printf("[DiffTest] Memory Check Passed! Addr = 0x%08x, Size = %d\n", addr, n);
+}
+
+

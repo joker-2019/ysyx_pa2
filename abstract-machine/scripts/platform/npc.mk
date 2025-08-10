@@ -12,7 +12,7 @@ CFLAGS	+= -fdata-sections -ffunction-sections
 LDFLAGS	+= -T $(AM_HOME)/scripts/linker.ld \
 	   					--defsym=_pmem_start=0x80000000 \
 	--defsym=_entry_offset=0x0 
-LDFLAGS	+= --gc-sections -e _start 123456
+LDFLAGS	+= --gc-sections -e _start
 
 
 # 默认加载的 elf 镜像路径

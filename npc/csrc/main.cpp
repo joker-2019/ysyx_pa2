@@ -12,8 +12,6 @@
 #include "Vysyx_22040080_cpu.h"
 #include "Vysyx_22040080_cpu___024root.h"
 
-
-
 /* // ANSI 彩色宏定义（可选）
 #define ANSI_NONE          "\33[0m"
 #define ANSI_FG_RED        "\33[1;31m" // 红色
@@ -135,7 +133,6 @@ void print_registers() {
 */
 void sdb_mainloop(int, char *[]);
 
-
 int main(int argc, char *argv[]) {
 /*   printf("Welcome to NPC\n");
   // 简单命令行参数解析 -e xxx.elf
@@ -218,6 +215,7 @@ int main(int argc, char *argv[]) {
     //single_cycle();
   }
   sim_exit(); */
+
 sdb_mainloop(argc, argv);
 return 0;
 }

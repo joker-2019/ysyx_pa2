@@ -8,104 +8,82 @@
 #include "../utils/iringbuf.h"
 #include "../config/config.h"
 
-// #define MEM_SIZE (1024 * 32)
-// uint32_t pmem[MEM_SIZE];
 #define PG_ALIGN __attribute((aligned(4096)))
-static uint32_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
-
+uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
 void init_mem(){
-    memset(pmem, 0, CONFIG_MSIZE);  // 清空内存
+    memset(pmem, 0, sizeof(pmem));  // 清空内存
 }
 
-//读取指令
 extern "C" uint32_t mem_read(int pc) {
-   // 检查地址对齐（RISC-V指令必须4字节对齐）
+    if (pc == 0){
+        return 0;
+    }
     assert((pc & 0x3) == 0 && "Instruction address misaligned");
-    // 将字节地址转换为字地址（右移2位相当于除以4）
-    //uint32_t index = pc >> 2;
-    int index = (pc - CONFIG_MBASE) / 4;  // 从0x80000000开始计算
-    // printf("index : %d\n",index);
-    // printf("DEBUG: pc=0x%08x → index=%d → instr=0x%08x\n", pc, index, pmem[index]);
-    // 检查地址是否越界
-    assert(index < CONFIG_MSIZE && "Instruction memory overflow");
-    // 直接返回对应位置的32位指令
-    return pmem[index];
+    uint32_t offset = pc - CONFIG_MBASE;
+    assert(offset + 4 <= CONFIG_MSIZE && "Instruction memory overflow");
+    // 读取4字节，解释为uint32_t（小端对齐）
+    uint32_t inst;
+    memcpy(&inst, pmem + offset, 4);
+    // printf("DEBUG: pc=0x%08x → index=%d → instr=0x%08x\n", pc, offset, inst);
+    return inst;
 }
 
-
-uint32_t *guest_to_host(uint32_t paddr){
-    return pmem + paddr - CONFIG_MBASE;
+uint8_t *guest_to_host(uint32_t paddr){
+    return pmem + (paddr - CONFIG_MBASE);
 }
+
 
 uint32_t phys_mem_read(uint32_t addr, int len) {
     // 转换为数组索引 (因为每个元素是 4 字节)
-    uint32_t index = (addr - CONFIG_MBASE) / 4;
-    
-    // 检查边界
-    if(index >= CONFIG_MSIZE) {
-        return 0; // 或触发错误
-    }
+    // uint32_t index = (addr - CONFIG_MBASE) / 4;
+    uint32_t offset = addr - CONFIG_MBASE; // 按照字节寻址(uint8_t)
+    assert(offset + len <= CONFIG_MSIZE && "phys_mem_read overflow");
 
+/*     // 检查边界
+    if(index >= CONFIG_MSIZE) {
+    // if(index >= MEM_SIZE) {
+        return 0; // 或触发错误
+    } */
+    #if ENABLE_MTRACE
+    display_mread(addr, len);
+    #endif
+    
+    uint32_t ret = host_read(guest_to_host(addr), len);
+    // return pmem[index];  
+    return ret;
+}
+
+extern "C" uint32_t lw_mem_read(int addr, int len) {
+    uint32_t offset = addr - CONFIG_MBASE; // 按照字节寻址(uint8_t)
+    assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
     #if ENABLE_MTRACE
     display_mread(addr, len);
     #endif
     uint32_t ret = host_read(guest_to_host(addr), len);
-    // return pmem[index];
+    /* uint32_t data = 0;
+    uint8_t *host_addr = guest_to_host(addr);
+    for (int i = 0; i < len; i++) {
+        data |= host_addr[i] << (8 * i);  // 小端组合
+    } */
     return ret;
-}
-
-/* 
-// 读取数据
-// 注意：RISC-V数据访问通常是按字（4字节）对齐
-extern "C" uint32_t dmem_read(long addr) {
-     // 检查地址对齐（假设只支持对齐访问）
-    assert((addr & 0x3) == 0 && "Data address misaligned");
-    // 转换为字地址
-    uint32_t word_addr = addr >> 2;
-    // 检查地址范围
-    assert(word_addr < MEM_SIZE && "Data memory overflow");
-     // 将目标字转换为字节数组指针（便于按字节处理）
-    uint8_t* byte_ptr = reinterpret_cast<uint8_t*>(&data_mem[word_addr]);
-
-    // 按小端格式组合字节（最低有效字节在低地址）
-    return (byte_ptr[3] << 24) |  // 最高字节左移24位
-           (byte_ptr[2] << 16) |  // 次高字节左移16位
-           (byte_ptr[1] << 8)  |  // 次低字节左移8位
-            byte_ptr[0];          // 最低字节不移位
 }
 
 // 写入数据
 // 注意：RISC-V数据访问通常是按字（4字节）对齐
-extern "C" void dmem_write(int addr, int data) {
-    // 对齐检查
-    assert((addr & 0x3) == 0 && "Data address misaligned");
-    // 地址转换
-    uint32_t word_addr = addr >> 2;
-    // 越界检查
-    assert(word_addr < MEM_SIZE && "Data memory overflow");
-    // 获取目标字的字节指针
-    uint8_t* byte_ptr = reinterpret_cast<uint8_t*>(&data_mem[word_addr]);
-    // 按小端格式分解数据到内存
-    byte_ptr[0] = (data >> 0)  & 0xFF;  // 最低有效字节
-    byte_ptr[1] = (data >> 8)  & 0xFF;  // 次低字节
-    byte_ptr[2] = (data >> 16) & 0xFF;  // 次高字节
-    byte_ptr[3] = (data >> 24) & 0xFF;  // 最高有效字节
-}
+extern "C" void sw_mem_write(int addr, int len, int data) {
+    uint32_t offset = addr - CONFIG_MBASE;
+   assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
 
-void load_instructions(const char* file) {
-    // 打开文件（二进制只读模式）
-    FILE* file = fopen(filename, "rb");
-    assert(file != nullptr && "Failed to open instruction file");
-    // 计算最大可读取字节数（避免溢出）
-    size_t max_bytes = MEM_SIZE * sizeof(uint32_t);
-    // 读取整个文件内容到指令存储器
-    size_t bytes_read = fread(instr_mem, 1, max_bytes, file);
-    
-    // 检查是否超出容量（文件大小超过存储器容量时报错）
-    assert(bytes_read <= max_bytes && "Instruction file too large");
-    
-    // 关闭文件
-    fclose(file);
-} */
+    #if ENABLE_MTRACE
+    display_mwrite(addr, len, data);
+    #endif
+
+    // 写入data到物理内存 (小端存储)
+    // memcpy(pmem + offset, &data, len);
+    uint8_t *host_addr = guest_to_host(addr);
+    for (int i = 0; i < len; i++) {
+        host_addr[i] = (data >> (8 * i)) & 0xFF;  //  按字节写入（小端）
+    }
+}
 

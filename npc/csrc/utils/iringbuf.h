@@ -31,4 +31,6 @@ void itrace_exec(uint32_t pc, uint32_t inst);
 // mtrace
 void display_mread(uint32_t addr, int len);
 
+void display_mwrite(uint32_t addr, int len, uint32_t data);
+
 #endif // __IRINGBUF_H__
