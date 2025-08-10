@@ -7,6 +7,13 @@ TOPNAME = ysyx_22040080_cpu
 # NXDC_FILES = constr/top.nxdc
 FST_FILE = dump.vcd
 
+# LLVM config
+LLVM_CONFIG ?= llvm-config
+
+# Detect config flags
+CONFIG_ITRACE ?= y
+CONFIG_FTRACE ?= y
+
 # Include path for headers
 INC_PATH ?=
 
@@ -38,6 +45,20 @@ VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 # CSRCS += $(SRC_AUTO_BIND)
 
+# LLVM disassembler support
+ifeq ($(CONFIG_ITRACE),y)
+  CSRCS += $(abspath ./csrc/utils/disasm.cc)
+  CXXFLAGS += $(shell $(LLVM_CONFIG) --cxxflags) -fPIE
+  LDFLAGS  += $(shell $(LLVM_CONFIG) --libs)
+		
+endif
+
+CFLAGS += -I./include -g
+LDFLAGS		+=	-lreadline	-lncurses -ldl
+
+ifeq ($(CONFIG_FTRACE),y)
+  CSRCS += $(abspath ./csrc/utils/trace.c)
+endif
 
 # Include NVBoard rules
 # include $(NVBOARD_HOME)/scripts/nvboard.mk
@@ -64,7 +85,7 @@ sim: $(BIN)
 	@$(BIN)
 
 run:$(BIN)
-	@$^ +trace
+	@$^ $(ARGS) -- +trace
 
 view:$(FST_FILE)
 	gtkwave $(FST_FILE)

@@ -8,7 +8,8 @@ module ysyx_22040080_idu(
 	output [2:0] func3,
 	output [31:0] imm_ext, //符号扩展后的立即数
 	output [6:0] op,	// 操作符
-	
+    output [6:0] func7, //R型指令
+	output [4:0] shamt,
 	//ebreak指令检测
 	output is_ebreak,
 
@@ -16,24 +17,15 @@ module ysyx_22040080_idu(
 	
 );
 	// 直接从 instruction 中解码字段
-    assign rs1    = instruction[19:15];
-	assign rs2   = instruction[24:20];     // R/S/B型指令的rs2
-
-    assign rd     = instruction[11:7];
-    assign func3  = instruction[14:12];
-    assign op   = instruction[6:0];
-
-
-	//------------------------------------------
-    // 指令类型识别（R/I/S/B/U/J型）
-    //------------------------------------------
-    wire is_r_type = (op == 7'b0110011);  // R型指令（ADD等）
-    wire is_i_type = (op == 7'b0010011 ||  // I型（ADDI）
-                      op == 7'b0000011);   // LOAD
-    wire is_s_type = (op == 7'b0100011);   // S型（SW）
-    wire is_b_type = (op == 7'b1100011);   // B型（BEQ）
-    wire is_u_type = (op == 7'b0110111);   // U型（LUI）
-    wire is_j_type = (op == 7'b1101111);   // J型（JAL）
+    assign rs1 = instruction[19:15];
+	assign rs2 = instruction[24:20];     // R/S/B型指令的rs2
+    assign func7 = instruction[31:25];  // R型指令func7解码
+    assign rd = instruction[11:7];
+    assign func3 = instruction[14:12];
+    assign op = instruction[6:0]; // 操作码
+    wire is_shift_imm = (op == 7'b0010011) &&    // I-Type 
+                        (func3[1:0] == 2'b01);   // func3=001/101
+    assign shamt = is_shift_imm ? instruction[24:20] : 5'b0;
 
     assign instr_type = 
     (op == 7'b0110011) ? 3'b000 : // R-type (add/sub/sll/srl...)
@@ -54,27 +46,26 @@ module ysyx_22040080_idu(
 	reg [31:0] imm;
     always @(*) begin
         case (instr_type)
-            // I型：ADDI/LB/LH/LW
-            3'b001: assign imm = {{20{instruction[31]}}, instruction[31:20]};
+            // I型：ADDI/LB/LH/LW 符号扩展：复制最高位20次  立即数位：31-20（共12位）
+            3'b001: imm = {{20{instruction[31]}}, instruction[31:20]};
             
-            // S型：SW/SH/SB
-            3'b010: assign imm = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]};
+            // S型：SW/SH/SB  符号扩展：复制最高位20次  高位：31-25，低位：11-7
+            3'b010: imm = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]};
             
-            // B型：BEQ/BNE
-            3'b011: assign imm = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+            // B型：BEQ/BNE 立即数组成 [31], [7], [30:25], [11:8], 最后1位=0
+            3'b011: imm = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
             
-            // U型：LUI/AUIPC
-            3'b100: assign imm = {instruction[31:12], 12'b0};
+            // U型：LUI/AUIPC // 低位补12个0
+            3'b100: imm = {instruction[31:12], 12'b0};
             
-            // J型：JAL
-            3'b101: assign imm = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
+            // J型：JAL [31], [19:12], [20], [30:21], 最后1位=0
+            3'b101: imm = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
             
-            default: assign imm = 32'b0;  // R型不需要立即数
+            default: imm = 32'b0;  // R型不需要立即数
         endcase
     end
 
 	// 符号扩展立即数 (I-type)
-    // assign imm_ext = {{20{instruction[31]}}, instruction[31:20]};
 	assign imm_ext = imm;
 
     //------------------------------------------
@@ -83,6 +74,5 @@ module ysyx_22040080_idu(
     assign is_ebreak = (op == 7'b1110011) &&   // SYSTEM操作码
                        (func3 == 3'b000) &&    // EBREAK的func3
                        (instruction[31:20] == 12'b000000000001); // EBREAK特征码
-
 
 endmodule
