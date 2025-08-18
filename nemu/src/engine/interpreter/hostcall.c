@@ -49,3 +49,25 @@ void invalid_inst(vaddr_t thispc) {
 
   set_nemu_state(NEMU_ABORT, thispc, -1);
 }
+
+// 读取 CSR 寄存器
+word_t csr_read(uint32_t csr_addr) {
+  switch (csr_addr) {
+    case 0x341: return cpu.sr.mepc;   // 示例：mepc 的 CSR 地址为 0x341
+    case 0x342: return cpu.sr.mcause; // 示例：mcause 的 CSR 地址为 0x342
+    case 0x305: return cpu.sr.mtvec;   // mtvec 地址 0x305（补充常用 CSR）
+    // 其他 CSR 寄存器...
+    default: panic("Unsupported CSR read: 0x%x", csr_addr);
+  }
+}
+
+// 写入 CSR 寄存器
+void csr_write(uint32_t csr_addr, word_t value) {
+  switch (csr_addr) {
+    case 0x341: cpu.sr.mepc = value; break;
+    case 0x342: cpu.sr.mcause = value; break;
+    case 0x305: cpu.sr.mtvec = value; break;   // mtvec 地址 0x305（补充常用 CSR）
+    // 其他 CSR 寄存器...
+    default: panic("Unsupported CSR write: 0x%x", csr_addr);
+  }
+}
