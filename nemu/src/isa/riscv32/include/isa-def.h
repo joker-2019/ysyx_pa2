@@ -18,9 +18,20 @@
 
 #include <common.h>
 
+
+//SR系统寄存器结构体
+typedef struct{
+  vaddr_t mepc;    // 保存异常发生时的 PC
+  word_t mcause;   // 异常原因码（如中断号、异常类型）
+  vaddr_t mtvec;   // 异常向量表基地址（异常处理程序入口）
+  word_t mtval;    // 异常附加信息（如错误地址、指令码等）
+  // 可扩展其他系统寄存器
+} riscv_system_regs;
+
 typedef struct {
-  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
-  vaddr_t pc;
+  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)]; // GPR通用寄存器
+  vaddr_t pc; // PC
+  riscv_system_regs sr; //SR系统寄存器
 } MUXDEF(CONFIG_RV64, riscv64_CPU_state, riscv32_CPU_state);
 
 // decode
