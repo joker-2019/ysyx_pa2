@@ -24,6 +24,7 @@ typedef struct{
   word_t mcause;   // 异常原因码（如中断号、异常类型）
   vaddr_t mtvec;   // 异常向量表基地址（异常处理程序入口）
   word_t mtval;    // 异常附加信息（如错误地址、指令码等）
+  word_t mstatus;  // 机器态状态寄存器（0x300）
   // 可扩展其他系统寄存器
 } riscv_system_regs;
 
