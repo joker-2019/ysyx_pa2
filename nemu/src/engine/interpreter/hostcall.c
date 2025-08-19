@@ -53,11 +53,12 @@ void invalid_inst(vaddr_t thispc) {
 // 读取 CSR 寄存器
 word_t csr_read(uint32_t csr_addr) {
   switch (csr_addr) {
+    case 0xc: return cpu.sr.mtvec;
+    case 0x305: return cpu.sr.mtvec;   // mtvec 地址 0x305（异常向量表基地址）
     case 0x300: return cpu.sr.mstatus;  // 机器态状态寄存器
     case 0x341: return cpu.sr.mepc;   // mepc 的 CSR 地址为 0x341 保存异常发生时的 PC
     case 0x342: return cpu.sr.mcause; // mcause 的 CSR 地址为 0x342 异常原因码
     case 0x343: return cpu.sr.mtval;  // 异常附加信息
-    case 0x305: return cpu.sr.mtvec;   // mtvec 地址 0x305（异常向量表基地址）
     // 其他 CSR 寄存器...
     default: panic("Unsupported CSR read: 0x%x", csr_addr);
   }
@@ -66,11 +67,13 @@ word_t csr_read(uint32_t csr_addr) {
 // 写入 CSR 寄存器
 void csr_write(uint32_t csr_addr, word_t value) {
   switch (csr_addr) {
+    case 0xc: cpu.sr.mtvec = value; break;
+    case 0x305: cpu.sr.mtvec = value; break;   // mtvec 地址 0x305（补充常用 CSR）
     case 0x300: cpu.sr.mstatus =value; break;
     case 0x341: cpu.sr.mepc = value; break;
     case 0x342: cpu.sr.mcause = value; break;
     case 0x343: cpu.sr.mtval = value; break;
-    case 0x305: cpu.sr.mtvec = value; break;   // mtvec 地址 0x305（补充常用 CSR）
+   
     // 其他 CSR 寄存器...
     default: panic("Unsupported CSR write: 0x%x", csr_addr);
   }

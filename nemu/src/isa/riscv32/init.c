@@ -32,6 +32,13 @@ static void restart() {
 
   /* The zero register is always 0. */
   cpu.gpr[0] = 0;
+
+  /**/
+  cpu.sr.mstatus = 0x1800;  
+  cpu.sr.mepc = 0;
+  cpu.sr.mcause = 0;
+  cpu.sr.mtvec = RESET_VECTOR;  // 确保异常向量地址有效
+  cpu.sr.mtval = 0;
 }
 
 void init_isa() {
