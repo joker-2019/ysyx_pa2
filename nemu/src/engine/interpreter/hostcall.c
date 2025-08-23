@@ -19,10 +19,6 @@
 #include <cpu/difftest.h>
 #include <cpu/decode.h>
 
-#define MSTATUS_MIE   (1 << 3)
-#define MSTATUS_MPIE  (1 << 7)
-#define MSTATUS_MPP   (3 << 11)
-
 void set_nemu_state(int state, vaddr_t pc, int halt_ret) {
   difftest_skip_ref();
   nemu_state.state = state;
@@ -74,11 +70,7 @@ void csr_write(uint32_t csr_addr, word_t value) {
   switch (csr_addr) {
     // case 0xc: cpu.sr.mtvec = value; break;
     case 0x305: cpu.sr.mtvec = value; break;   // mtvec 地址 0x305（补充常用 CSR）
-    case 0x300: 
-      // 只更新允许写的位：MIE, MPIE, MPP
-      uint32_t mask = MSTATUS_MIE | MSTATUS_MPIE | MSTATUS_MPP;
-      cpu.sr.mstatus = (cpu.sr.mstatus & ~mask) | (value & mask);
-      break;
+    case 0x300: cpu.sr.mstatus =value; break;
     case 0x341: cpu.sr.mepc = value; break;
     case 0x342: cpu.sr.mcause = value; break;
     case 0x343: cpu.sr.mtval = value; break;
@@ -94,19 +86,25 @@ word_t do_mret(Decode *s, word_t MSTATUS, vaddr_t MEPC){
   word_t mstatus = csr_read(MSTATUS);
   word_t mepc   = csr_read(MEPC);
   // 2. 修改中断位
-  word_t mpie = (mstatus >> 7) & 1; 
+  word_t mpie = (mstatus >> 7) & 1;  // 原MPIE（bit7）
+   word_t old_mie = (mstatus >> 3) & 1;  // 原MIE（bit3）—— 新增：保存中断前的MIE
   // word_t mpp  = (mstatus >> 11) & 0x3;
 
   // 3. MIE = MPIE
   if (mpie)
-    mstatus |= MSTATUS_MIE;  // (1 << 3);
+    mstatus |=  (1 << 3);
   else
-    mstatus &= ~MSTATUS_MIE; //(1 << 3);
+    mstatus &= ~(1 << 3);
 
-  // MPIE = 1
-  mstatus |= MSTATUS_MPIE; // (1 << 7);
+  // 4. 关键修正：MPIE = 原MIE（而非固定为1）
+  if (old_mie) {
+    mstatus |= (1 << 7);
+  } else {
+    mstatus &= ~(1 << 7);
+  }
+
   // MPP = 0 (回到 U 模式，如果实现了用户态)
-  mstatus &= ~MSTATUS_MPP; //(3 << 11);
+  mstatus &= ~(3 << 11);
   csr_write(MSTATUS, mstatus);
 
    // 7. 切换特权级为MPP的值
