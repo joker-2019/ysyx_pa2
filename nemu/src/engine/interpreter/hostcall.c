@@ -83,15 +83,14 @@ void csr_write(uint32_t csr_addr, word_t value) {
 }
 
   //返回中断现场
-word_t do_mret(Decode *s, word_t MSTATUS, vaddr_t MEPC){
+word_t do_mret(Decode *s, vaddr_t MEPC){
   // 1. 取出mstatus相关位
-  word_t mstatus = csr_read(MSTATUS);
+  // word_t mstatus = csr_read(MSTATUS);
   word_t mepc   = csr_read(MEPC);
-  // 2. 修改中断位
+/*   // 2. 修改中断位
   word_t mpie = (mstatus >> 7) & 1;  // 原MPIE（bit7）
    word_t old_mie = (mstatus >> 3) & 1;  // 原MIE（bit3）—— 新增：保存中断前的MIE
   // word_t mpp  = (mstatus >> 11) & 0x3;
-
   // 3. MIE = MPIE
   if (mpie)
     mstatus |=  (1 << 3);
@@ -110,6 +109,6 @@ word_t do_mret(Decode *s, word_t MSTATUS, vaddr_t MEPC){
   csr_write(MSTATUS, mstatus);
 
    // 7. 切换特权级为MPP的值
-  //  s->priv = mpp;
+  //  s->priv = mpp; */
   return mepc; // return exception occurred pc address
   }
