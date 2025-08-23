@@ -87,7 +87,7 @@ word_t do_mret(Decode *s, word_t MSTATUS, vaddr_t MEPC){
   word_t mepc   = csr_read(MEPC);
   // 2. 修改中断位
   word_t mpie = (mstatus >> 7) & 1; 
-  word_t mpp  = (mstatus >> 11) & 0x3;
+  // word_t mpp  = (mstatus >> 11) & 0x3;
 
   // 3. MIE = MPIE
   if (mpie)
@@ -99,9 +99,9 @@ word_t do_mret(Decode *s, word_t MSTATUS, vaddr_t MEPC){
   mstatus |= (1 << 7);
   // MPP = 0 (回到 U 模式，如果实现了用户态)
   mstatus &= ~(3 << 11);
-  csr_write(0x300, mstatus);
-  
+  csr_write(MSTATUS, mstatus);
+
    // 7. 切换特权级为MPP的值
-   s->priv = mpp;
+  //  s->priv = mpp;
   return mepc; // return exception occurred pc address
   }
