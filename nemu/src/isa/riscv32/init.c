@@ -34,10 +34,7 @@ static void restart() {
   cpu.gpr[0] = 0;
 
   /**/
-  cpu.sr.mstatus = 0x1800;  
-  cpu.sr.mepc = 0;
-  cpu.sr.mcause = 0;
-  cpu.sr.mtval = 0;
+  cpu.sr.mstatus = 0x1800;
 }
 
 void init_isa() {
