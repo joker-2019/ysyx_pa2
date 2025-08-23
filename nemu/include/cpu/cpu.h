@@ -17,6 +17,7 @@
 #define __CPU_CPU_H__
 
 #include <common.h>
+#include <cpu/decode.h>
 
 void cpu_exec(uint64_t n);
 
@@ -28,5 +29,6 @@ void invalid_inst(vaddr_t thispc);
 
 word_t csr_read(uint32_t csr_addr);
 void csr_write(uint32_t csr_addr, word_t value);
+word_t do_mret(Decode *s, word_t MSTATUS, vaddr_t MEPC);
 
 #endif

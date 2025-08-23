@@ -17,6 +17,7 @@
 #include <cpu/ifetch.h>
 #include <isa.h>
 #include <cpu/difftest.h>
+#include <cpu/decode.h>
 
 void set_nemu_state(int state, vaddr_t pc, int halt_ret) {
   difftest_skip_ref();
@@ -78,3 +79,29 @@ void csr_write(uint32_t csr_addr, word_t value) {
     default: panic("Unsupported CSR write: 0x%x", csr_addr);
   }
 }
+
+  //返回中断现场
+word_t do_mret(Decode *s, word_t MSTATUS, vaddr_t MEPC){
+  // 1. 取出mstatus相关位
+  word_t mstatus = csr_read(MSTATUS);
+  word_t mepc   = csr_read(MEPC);
+  // 2. 修改中断位
+  word_t mpie = (mstatus >> 7) & 1; 
+  word_t mpp  = (mstatus >> 11) & 0x3;
+
+  // 3. MIE = MPIE
+  if (mpie)
+    mstatus |=  (1 << 3);
+  else
+    mstatus &= ~(1 << 3);
+
+  // MPIE = 1
+  mstatus |= (1 << 7);
+  // MPP = 0 (回到 U 模式，如果实现了用户态)
+  mstatus &= ~(3 << 11);
+  csr_write(0x300, mstatus);
+  
+   // 7. 切换特权级为MPP的值
+   s->priv = mpp;
+  return mepc; // return exception occurred pc address
+  }

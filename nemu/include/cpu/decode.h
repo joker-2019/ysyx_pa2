@@ -24,6 +24,7 @@ typedef struct Decode {
   vaddr_t dnpc; // dynamic next pc
   ISADecodeInfo isa;
   IFDEF(CONFIG_ITRACE, char logbuf[128]);
+  int priv; //特权级别 当前特权级（0=U，3=M 等）  
 } Decode;
 
 // --- pattern matching mechanism ---
