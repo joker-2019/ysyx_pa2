@@ -42,6 +42,10 @@ enum {
 #define immB() do { uint32_t offset = (BITS(i, 31, 31) << 12) | (BITS(i, 7,  7 ) << 11) | (BITS(i, 30, 25) << 5)  | (BITS(i, 11, 8)  << 1); *imm = SEXT(offset, 13);} while (0)
 #define immR() do { *imm = 0; } while (0) //R型指令
 
+#define MSTATUS 0x300
+#define MTVEC 0x305
+#define MEPC 0x341
+#define MCAUSE 0x342
 
 // TODO 
 static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
@@ -117,6 +121,8 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 001 ????? 0000011",  lh     , I, R(rd) = (int32_t)(int16_t)Mr(src1 + imm, 2)); //有符号取半字，要进行扩展为32位的值
   INSTPAT("??????? ????? ????? 101 ????? 0000011",  lhu    , I, R(rd) = Mr(src1 + imm, 2)); // 无符号取半字，扩展为无符号32位
   INSTPAT("??????? ????? ????? 001 ????? 01000 11", sh     , S, Mw(src1 + imm, 2, src2)); //存半字
+  INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, word_t t = csr_read(imm); csr_write(imm, src1); R(rd) = t); // 控制状态寄存器读后写
+  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, word_t t = csr_read(imm); csr_write(imm, t | src1); R(rd) = t); // 控制状态寄存器读后置位
 
   //分支指令 在分支指令中，无论跳转或不跳转，都必须设置 s->dnpc，否则执行逻辑出错！
   INSTPAT("??????? ????? ????? 101 ????? 11000 11", bge    , B, s->dnpc = ((int32_t)src1 >= (int32_t)src2) ? s->pc + imm : s->pc + 4);//有符号数比较 分支指令  大于等于
@@ -127,10 +133,12 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 100 ????? 11000 11", blt    , B, s->dnpc = (int32_t)src1 < (int32_t)src2 ? s->pc + imm : s->pc + 4); //有符号小于时的分支
   
   
-  // 系统指令  
-
-  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
-  INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));  //任何想要匹配成功的指令，都要放在泛化指令之前，按照顺序匹配
+  // 系统指令  特权指令
+  // INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc = isa_raise_intr(11, s->pc)); // 11 /* Machine ECALL */
+  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, s->dnpc = isa_raise_intr(3, s->pc));   // R(10) is $a0
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc = do_mret(s, MEPC));
+  INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc)); // 任何想要匹配成功的指令，都要放在泛化指令之前，按照顺序匹配
   INSTPAT_END();
 
   // 0x80000090
