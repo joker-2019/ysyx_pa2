@@ -3,7 +3,7 @@
 #include <klib.h>
 
 static Context* (*user_handler)(Event, Context*) = NULL;
-#define CONTEXT_SIZE ((NR_REGS + 3) * 4)
+#define CONTEXT_SIZE ((32 + 3) * 4)
 Context* __am_irq_handle(Context *c) {
   if (user_handler) {
     Event ev = {0};
@@ -32,6 +32,7 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
+  return NULL;
   printf("Context boosting!\n");
   printf("Context Size: %d\n", CONTEXT_SIZE);
   Context *ctx = (Context *)(kstack.end - CONTEXT_SIZE);
