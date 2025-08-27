@@ -52,7 +52,7 @@ void invalid_inst(vaddr_t thispc) {
 }
 
 // 读取 CSR 寄存器
-vaddr_t csr_read(vaddr_t csr_addr) {
+word_t csr_read(vaddr_t csr_addr) {
   switch (csr_addr) {
     // case 0xc: return cpu.sr.mtvec;
     case 0x305:
@@ -93,8 +93,8 @@ void csr_write(vaddr_t csr_addr, word_t value) {
 }
 
   //返回中断现场
-vaddr_t do_mret(Decode *s, vaddr_t MEPC){
-  vaddr_t mepc = csr_read(MEPC);
+word_t do_mret(Decode *s, vaddr_t MEPC){
+  word_t mepc = csr_read(MEPC);
 /*   // 2. 修改中断位
 // 1. 取出mstatus相关位
 // word_t mstatus = csr_read(MSTATUS);
