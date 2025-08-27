@@ -83,8 +83,8 @@ void csr_write(uint32_t csr_addr, word_t value) {
 }
 
   //返回中断现场
-word_t do_mret(Decode *s, vaddr_t MEPC){
-  word_t mepc   = csr_read(MEPC);
+word_t do_mret(Decode *s, word_t MEPC){
+  word_t mepc = csr_read(MEPC);
 /*   // 2. 修改中断位
 // 1. 取出mstatus相关位
 // word_t mstatus = csr_read(MSTATUS);
