@@ -57,7 +57,7 @@ word_t csr_read(uint32_t csr_addr) {
     // case 0xc: return cpu.sr.mtvec;
     case 0x305: return cpu.sr.mtvec;   // mtvec 地址 0x305（异常向量表基地址）
     case 0x300:
-      printf("Reading mstatus CSR (0x300): 0x%x\n", cpu.sr.mstatus);
+      // printf("Reading mstatus CSR (0x300): 0x%x\n", cpu.sr.mstatus);
       return cpu.sr.mstatus;          // 机器态状态寄存器
     case 0x341: return cpu.sr.mepc;   // mepc 的 CSR 地址为 0x341 保存异常发生时的 PC
     case 0x342: return cpu.sr.mcause; // mcause 的 CSR 地址为 0x342 异常原因码
@@ -84,10 +84,10 @@ void csr_write(uint32_t csr_addr, word_t value) {
 
   //返回中断现场
 word_t do_mret(Decode *s, vaddr_t MEPC){
-  // 1. 取出mstatus相关位
-  // word_t mstatus = csr_read(MSTATUS);
   word_t mepc   = csr_read(MEPC);
 /*   // 2. 修改中断位
+// 1. 取出mstatus相关位
+// word_t mstatus = csr_read(MSTATUS);
   word_t mpie = (mstatus >> 7) & 1;  // 原MPIE（bit7）
    word_t old_mie = (mstatus >> 3) & 1;  // 原MIE（bit3）—— 新增：保存中断前的MIE
   // word_t mpp  = (mstatus >> 11) & 0x3;
