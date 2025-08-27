@@ -19,6 +19,9 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
    * Then return the address of the interrupt/exception vector.
    */
+  printf("NO: %d\n", NO);
+  printf("epc: %x\n", epc);
+  printf("cpu.sr.mtvec:%x\n", cpu.sr.mtvec);
   cpu.sr.mepc = epc;  // 发生异常的指令地址
   cpu.sr.mcause = NO; // 异常号
   return cpu.sr.mtvec; // 返回向量的入口(地址入口位置)
