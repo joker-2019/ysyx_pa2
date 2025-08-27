@@ -34,7 +34,7 @@ static void restart() {
   cpu.gpr[0] = 0;
 
   /**/
-  // cpu.sr.mstatus = 0x1800;
+  cpu.sr.mstatus = 0x1800;
 }
 
 void init_isa() {
