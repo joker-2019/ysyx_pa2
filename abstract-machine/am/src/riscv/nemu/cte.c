@@ -32,6 +32,7 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
+  return NULL;
   printf("Context boosting!\n");
   printf("Context Size: %d\n", CONTEXT_SIZE);
   Context *ctx = (Context *)(kstack.end - CONTEXT_SIZE);
