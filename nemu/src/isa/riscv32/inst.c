@@ -139,7 +139,11 @@ static int decode_exec(Decode *s) {
   // 系统指令  特权指令
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   // INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, CSRs[MEPC]=s->pc; CSRs[MCAUSE]=11; s->dnpc =CSRs[MTVEC]); // 11 /* Machine ECALL */
-  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc = isa_raise_intr(11, s->pc)); // 11 /* Machine ECALL */
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N, s->dnpc = isa_raise_intr(11, s->pc);
+  #ifdef CONFIG_ETRACE
+    printf("etrace pc:%lx", s->dnpc);
+  #endif
+  ); // 11 /* Machine ECALL */
   // INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, s->dnpc = isa_raise_intr(3, s->pc));
   INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc = do_mret(s, MEPC));
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc)); // 任何想要匹配成功的指令，都要放在泛化指令之前，按照顺序匹配
