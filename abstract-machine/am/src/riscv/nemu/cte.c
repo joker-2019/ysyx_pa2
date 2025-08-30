@@ -5,7 +5,9 @@
 static Context* (*user_handler)(Event, Context*) = NULL;
 #define CONTEXT_SIZE ((32 + 3) * 4)
 Context* __am_irq_handle(Context *c) {
-  if (user_handler) {
+  printf("c->mcause: %d", c->mcause);
+  if (user_handler)
+  {
     Event ev = {0};
     switch (c->mcause) {
       case 11:
