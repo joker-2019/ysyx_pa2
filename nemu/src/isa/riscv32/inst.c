@@ -141,7 +141,7 @@ static int decode_exec(Decode *s) {
   // INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, CSRs[MEPC]=s->pc; CSRs[MCAUSE]=11; s->dnpc =CSRs[MTVEC]); // 11 /* Machine ECALL */
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N, s->dnpc = isa_raise_intr(11, s->pc);
   #ifdef CONFIG_ETRACE
-    printf("etrace pc:%lx", s->dnpc);
+    printf("etrace pc:%0x", s->dnpc);
   #endif
   ); // 11 /* Machine ECALL */
   // INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, s->dnpc = isa_raise_intr(3, s->pc));
