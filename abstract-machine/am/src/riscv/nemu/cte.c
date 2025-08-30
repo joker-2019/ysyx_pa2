@@ -12,9 +12,9 @@ Context* __am_irq_handle(Context *c) {
       case 11:
         printf("c->mcause: %d\n", c->mcause);
         ev.event = EVENT_YIELD;
-        printf("entry c->mepc: %0x\n", c->mepc);
+        printf("entry c->mepc: %d\n", c->mepc);
         printf("args c->gpr[10]: %d\n", c->gpr[10]);
-        printf("args c.size: %d\n", sizeof(c));
+        printf("size c.size: %d\n", sizeof(c));
         c->mepc += 4;
         break;
       default:
