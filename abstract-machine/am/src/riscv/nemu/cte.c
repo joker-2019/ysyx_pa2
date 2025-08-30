@@ -5,15 +5,15 @@
 static Context* (*user_handler)(Event, Context*) = NULL;
 #define CONTEXT_SIZE ((32 + 3) * 4)
 Context* __am_irq_handle(Context *c) {
-  printf("c->mcause: %d\n", c->mcause);
+  // printf("c->mcause: %d\n", c->mcause);
   if (user_handler)
   {
     Event ev = {0};
     switch (c->mcause) {
       case 11:
-        printf("c->mcause: %d\n", c->mcause);
+        // printf("c->mcause: %d\n", c->mcause);
         ev.event = EVENT_YIELD;
-        printf("c->mepc: %x\n", c->mepc);
+        // printf("c->mepc: %x\n", c->mepc);
         c->mepc += 4;
         break;
       default:
@@ -31,7 +31,7 @@ Context* __am_irq_handle(Context *c) {
 extern void __am_asm_trap(void);
 
 bool cte_init(Context*(*handler)(Event, Context*)) {
-  printf("cte_init booting!\n");
+  // printf("cte_init booting!\n");
   // initialize exception entry
   asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
   
