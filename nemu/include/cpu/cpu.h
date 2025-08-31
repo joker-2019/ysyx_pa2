@@ -27,8 +27,8 @@ void invalid_inst(vaddr_t thispc);
 #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
 #define INV(thispc) invalid_inst(thispc)
 
-word_t csr_read(uint32_t csr_addr);
-void csr_write(uint32_t csr_addr, word_t value);
+word_t csr_read(vaddr_t csr_addr);
+void csr_write(vaddr_t csr_addr, word_t value);
 word_t do_mret(Decode *s, vaddr_t MEPC);
 
 #endif

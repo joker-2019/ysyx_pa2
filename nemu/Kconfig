@@ -163,6 +163,12 @@ config MTRACE_COND
   default "true"
 # new add MTRACE end
 
+# etrace
+config ETRACE
+  depends on TRACE
+  bool "Enable exception tracer(Etrace)"
+  default y
+
 # Dtrace start
 config DTRACE
   depends on TRACE
