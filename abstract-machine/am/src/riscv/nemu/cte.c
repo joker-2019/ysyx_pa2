@@ -3,7 +3,7 @@
 #include <klib.h>
 
 static Context* (*user_handler)(Event, Context*) = NULL;
-#define CONTEXT_SIZE ((32 + 3) * 4)
+#define CONTEXT_SIZE ((32 + 3 + 1) * 32)
 Context* __am_irq_handle(Context *c) {
   if (user_handler)
   {
@@ -32,7 +32,7 @@ Context* __am_irq_handle(Context *c) {
 extern void __am_asm_trap(void);
 
 bool cte_init(Context*(*handler)(Event, Context*)) {
-  // printf("cte_init booting!\n");
+  printf("cte_init booting!\n");
   // initialize exception entry
   asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
   
