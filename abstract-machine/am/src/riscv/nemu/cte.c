@@ -43,10 +43,10 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  // return NULL;
   printf("Context boosting!\n");
   printf("Context Size: %d\n", CONTEXT_SIZE);
   Context *ctx = (Context *)(kstack.end - CONTEXT_SIZE); //定义上下文结构体的大小
+  ctx->mstatus = 0x1800;
   ctx->mepc = (uintptr_t)entry; // 异常入口地址
   printf("ctx->mepc : %0x\n", ctx->mepc);
   ctx->gpr[10] = (uintptr_t)arg; // a0寄存器（x10）用于传递函数参数arg（符合RISC-V调用约定）
