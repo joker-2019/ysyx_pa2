@@ -39,11 +39,13 @@ f(30) f(31)
 
 .align 3
 .globl __am_asm_trap
+  # 为当前(被中断的)上下文在栈上开空间并保存通用寄存器（不含 x2(sp)）
 __am_asm_trap:
   addi sp, sp, -CONTEXT_SIZE
 
   MAP(REGS, PUSH)
 
+  # 保存 CSR 到当前上下文块（基址为 sp）
   csrr t0, mcause
   csrr t1, mstatus
   csrr t2, mepc
@@ -57,15 +59,19 @@ __am_asm_trap:
   or t1, t1, a0
   csrw mstatus, t1
 
-  mv a0, sp
-  jal __am_irq_handle
+  mv a0, sp  
+  jal __am_irq_handle  # 调用：__am_irq_handle(Context *cur) -> 返回 Context *next (放在 a0)
 
+  mv sp, a0  # sp = next 的上下文基址（Context*）
+  # 从 new context 恢复 CSR（mstatus, mepc）
   LOAD t1, OFFSET_STATUS(sp)
   LOAD t2, OFFSET_EPC(sp)
   csrw mstatus, t1
   csrw mepc, t2
 
+  # 从 new context 恢复通用寄存器（不含 x2）
   MAP(REGS, POP)
 
+   # 将 sp 弹回到常规栈顶：sp = sp + CONTEXT_SIZE
   addi sp, sp, CONTEXT_SIZE
   mret
