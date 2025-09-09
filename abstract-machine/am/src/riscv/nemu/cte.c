@@ -45,7 +45,7 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   // printf("Context boosting!\n"); 
   // printf("Context Size: %d\n", CONTEXT_SIZE);
-  Context *ctx = (Context *)(kstack.end - CONTEXT_SIZE); //定义上下文结构体的大小
+  Context *ctx = (Context *)(kstack.end - 1); //定义上下文结构体的大小
   ctx->mstatus = 0x1800;
   ctx->mepc = (uintptr_t)entry; // 异常入口地址
   // printf("ctx->mepc : %0x\n", ctx->mepc);
