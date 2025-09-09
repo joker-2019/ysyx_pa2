@@ -50,8 +50,6 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   ctx->mepc = (uintptr_t)entry; // 异常入口地址
   // printf("ctx->mepc : %0x\n", ctx->mepc);
   ctx->gpr[10] = (uintptr_t)arg; // a0寄存器（x10）用于传递函数参数arg（符合RISC-V调用约定）
-  printf("ctx->gpr[0] : 0x%08x\n", ctx->gpr[0]);
-  printf("ctx->gpr[5] : 0x%08x\n", ctx->gpr[5]);
   ctx->gpr[2] = (uintptr_t)ctx;//sp 在汇编代码中被单独定义  addi sp, sp, -CONTEXT_SIZE  ; 将栈指针向下移动，预留保存上下文的空间
   return ctx;
 }
