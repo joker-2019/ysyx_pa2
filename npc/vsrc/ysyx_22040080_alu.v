@@ -16,8 +16,13 @@ module ysyx_22040080_alu(
  output reg [31:0] mem_wdata,    // SW写入内存数据
  output reg [31:0] mem_rdata,    // LW读取内存数据
  output	reg is_load,      // LW指令标志
- output	reg is_store     // SW指令标志
+ output	reg is_store,     // SW指令标志
 
+		// CSR
+ input 					[31:0] csr_rdata,
+	output reg			  			csr_wen,
+ // output reg [11:0] csr_addr,
+ output reg [31:0] csr_wdata
 );
 
 // import "DPI-C" function void phys_mem_write(input int addr, input int len, input int data);
@@ -48,7 +53,6 @@ always @(*) begin
 	// 跳过未初始化指令(全0), 防止输出无意义错误日志
 	if (!(op == 7'b0000000 && func3 == 3'b000 && rs1_data == 32'b0 && imm_ext == 32'b0)) begin
 		case(op)
-
 			// I型指令:ADDI
 			7'b0010011: begin
 				case(func3)
@@ -123,31 +127,6 @@ always @(*) begin
 				mem_addr = rs1_data + imm_ext;
 				is_load = 1'b1;
 				wen = 1'b1;
-				/* case (func3)
-					3'b001: begin
-						mem_addr = rs1_data + imm_ext;
-						is_load = 1'b1;
-						wen = 1'b1;
-					end
-					3'b101: begin //lhu指令
-						mem_addr = rs1_data + imm_ext;
-						is_load = 1'b1;
-						wen = 1'b1;
-				
-					end
-					3'b010: begin
-						mem_addr = rs1_data + imm_ext;
-						is_load = 1'b1;  // 标志为load指令
-						wen = 1'b1;
-					end
-					3'b100: begin //lbu 取无符号字节
-						mem_addr = rs1_data + imm_ext;
-						is_load = 1'b1;
-						wen = 1'b1;
-					end
-					default:
-						$display("ERROR: Unsupported func3 %b for LW instruction", func3);
-				endcase */
 				end
 			
 			//SW 指令
@@ -155,14 +134,6 @@ always @(*) begin
 				mem_addr = rs1_data + imm_ext; // 存储地址 = rs1 + offset
 				mem_wdata = rs2_data;
 				is_store = 1;
-				/* 	case(func3)
-						3'b010: begin
-							mem_addr = rs1_data + imm_ext; // 存储地址 = rs1 + offset
-							mem_wdata = rs2_data;
-							is_store = 1;
-						end
-						default: $display("ERROR: Unsupported func3 %b for SW", func3);
-					endcase */
 				end
 
 			// Branch指令 (BEQ, BNE, BLT, BGE)
@@ -175,7 +146,7 @@ always @(*) begin
 		7'b0010111: begin
 				result = alu_sum;
 				wen = 1'b1;
-				$display("AUIPC: PC=0x%8h, IMM=0x%8h, Result=0x%8h", pc, imm_ext, result);
+				// $display("AUIPC: PC=0x%8h, IMM=0x%8h, Result=0x%8h", pc, imm_ext, result);
 				end
 
 		// U型指令：LUI		       
@@ -199,7 +170,18 @@ always @(*) begin
 			// $display("jalr_target=0x%8h, Result=0x%8h", jal_target, result);
 			wen = 1'b1;	
 			end
-		
+		7'b1110011: begin // SYSTEM 指令
+			case (func3)
+				3'b001: begin
+					// csr_addr = imm_ext[11:0];// CSR地址（通常来自指令[31:20]，这里imm_ext已解码）
+					csr_wdata = rs1_data;    // 写入CSR的新值
+					result = csr_rdata;      // 将写入的值传递到rd
+					csr_wen = 1'b1;          // 使能写CSR
+				end
+				default: ;
+			endcase
+		end
+
 		default: begin
 			$display("ERROR: Unsupported opcode %b", op);
 			end

@@ -97,15 +97,6 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
             if (*fmt == 'l') { long_flag = 1; fmt++; }
             switch (*fmt) {
                 case 'd': {
-                    /* int num = va_arg(args_copy, int);
-                    char num_buf[32];
-                    number_to_str(num_buf, num);
-                    char *p = num_buf;
-                    while (*p) {
-                        *buf++ = *p++;
-                        count++;
-                    }
-                    break; */
                     if (long_flag) {
                         long num = va_arg(ap, long);
                         char num_buf[32];

@@ -21,13 +21,20 @@ module ysyx_22040080_cpu(
   wire [31:0] next_pc;
   wire jump_flag;
   // wire branch_taken;
-  // reg [31:0] next_pc;
   wire [31:0] mem_addr;     // 访存地址
   wire [31:0] mem_wdata;    // SW写入内存数据
   wire [31:0] mem_rdata;    // LW读取内存数据
   wire        is_load;      // LW指令标志
   wire        is_store;     // SW指令标志
   reg [31:0] load_data;
+  // CSR
+  wire        csr_wen;
+  wire [11:0] csr_addr;
+  wire [31:0] csr_wdata;
+  wire [31:0] csr_rdata;
+  wire [31:0] mcycle, mcycleh;
+  wire [63:0] mcycle_full;
+
 
 // import "DPI-C" function void ebreak_trigger();  // 声明 DPI-C 函数
 import "DPI-C" function int lw_mem_read(input int addr, input int len);
@@ -47,9 +54,12 @@ import "DPI-C" function void sw_mem_write(input int addr, input int data, input 
     (func3 == 3'b111 && $unsigned(rs1_data) >= $unsigned(rs2_data))  // BGEU
   );
            
-assign next_pc = (branch_taken || is_jal || is_jalr) ? jal_target : pc + 4;
-// assign load_data = is_load ? lw_mem_read(mem_addr, 4) : alu_result; //组合逻辑，直接加载数据
-
+  assign next_pc = (branch_taken || is_jal || is_jalr) ? jal_target : pc + 4;
+  assign csr_addr = (op == 7'b1110011) ? imm_ext[11:0] : 12'b0; // CSR地址（通常来自指令[31:20]，这里imm_ext已解码）
+  // 顶层直接读取CSR数据
+  assign csr_rdata = (csr_addr == 12'hB00) ? mcycle_full[31:0] :
+                      (csr_addr == 12'hB80) ? mcycle_full[63:32] :
+                      32'b0;
 // ----------------------
 //  LOAD 数据读取逻辑
 // ----------------------
@@ -87,13 +97,13 @@ always @(posedge clk) begin
   if(is_store) begin
     case (func3)
       3'b000: begin //sb 存2字节
-      sw_mem_write(mem_addr, 1, mem_wdata);
+        sw_mem_write(mem_addr, 1, mem_wdata);
       end 
       3'b001: begin // SH: 存 2 字节
         sw_mem_write(mem_addr, 2, mem_wdata);
       end
       3'b010: begin //sw 存4字节
-      sw_mem_write(mem_addr, 4, mem_wdata);
+        sw_mem_write(mem_addr, 4, mem_wdata);
       end
       default: $display("ERROR: Unsupported store func3 %b", func3);
     endcase   
@@ -126,7 +136,7 @@ ysyx_22040080_idu idu(
   .instr_type(instr_type)
 );
 
-  //执行
+//执行
 ysyx_22040080_alu alu(
   .clk(clk),
   .rs1_data(rs1_data),
@@ -145,9 +155,26 @@ ysyx_22040080_alu alu(
   .mem_wdata(mem_wdata), // 新增: SW写入内存数据
   .mem_rdata(mem_rdata),
   .is_load(is_load),     // 新增: LW标志
-  .is_store(is_store)    // 新增: SW标志
+  .is_store(is_store),   // 新增: SW标志
+  // 新增CSR端口
+  .csr_wen(csr_wen),
+  // .csr_addr(csr_addr),
+  .csr_rdata(csr_rdata),
+  .csr_wdata(csr_wdata)
 );
 
+// CSR模块实例化
+ysyx_22040080_csr csr(
+  .clk(clk),
+  .rst(rst),
+  .wen(csr_wen),
+  .addr(csr_addr),
+  .wdata(csr_wdata),
+  // .rdata(csr_rdata),
+  .mcycle(mcycle),
+  .mcycleh(mcycleh),
+  .mcycle_full(mcycle_full)
+);
 
  //寄存器堆实例
 RegisterFile regfile(

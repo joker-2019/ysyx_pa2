@@ -78,12 +78,12 @@ void check_difftest_memcpy(paddr_t addr, void *buf, size_t n) {
     // 逐字节比对
     for (size_t i = 0; i < n; i++) {
         if (npc_mem[i] != nemu_mem[i]) {
-            printf("[DiffTest Mem Mismatch] addr = 0x%08x npc = 0x%02x nemu = 0x%02x\n",
+            printf("[DiffTest Mem Mismatch] addr = 0x%08lx npc = 0x%02x nemu = 0x%02x\n",
                    addr + i, npc_mem[i], nemu_mem[i]);
             assert(0);
         }
     }
-    printf("[DiffTest] Memory Check Passed! Addr = 0x%08x, Size = %d\n", addr, n);
+    printf("[DiffTest] Memory Check Passed! Addr = 0x%08x, Size = %ld\n", addr, n);
 }
 
 

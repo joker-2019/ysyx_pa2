@@ -46,17 +46,19 @@ CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*
 # CSRCS += $(SRC_AUTO_BIND)
 
 # LLVM disassembler support
-ifeq ($(CONFIG_ITRACE),y)
+ifeq ($(CONFIG_ITRACE), y)
   CSRCS += $(abspath ./csrc/utils/disasm.cc)
   CXXFLAGS += $(shell $(LLVM_CONFIG) --cxxflags) -fPIE
   LDFLAGS  += $(shell $(LLVM_CONFIG) --libs)
 		
 endif
 
+# CFLAGS += -I./include -g
+#  rv64imac 对应 64 位架构，带乘法、原子操作等；lp64 是 64 位 ABI
 CFLAGS += -I./include -g
 LDFLAGS		+=	-lreadline	-lncurses -ldl
 
-ifeq ($(CONFIG_FTRACE),y)
+ifeq ($(CONFIG_FTRACE), y)
   CSRCS += $(abspath ./csrc/utils/trace.c)
 endif
 
