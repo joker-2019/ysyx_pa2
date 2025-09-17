@@ -14,7 +14,7 @@ module ysyx_22040080_alu(
 
 	output reg [31:0] mem_addr,     // 访存地址
  output reg [31:0] mem_wdata,    // SW写入内存数据
- output reg [31:0] mem_rdata,    // LW读取内存数据
+ // output reg [31:0] mem_rdata,    // LW读取内存数据
  output	reg is_load,      // LW指令标志
  output	reg is_store,     // SW指令标志
 
@@ -46,10 +46,13 @@ always @(*) begin
 
 	mem_addr    = 32'b0;
  mem_wdata   = 32'b0;
- mem_rdata   = 32'b0;
+ // mem_rdata   = 32'b0;
  is_load     = 1'b0;
  is_store    = 1'b0;
 
+ // CSR
+	csr_wen = 1'b0;
+	csr_wdata = 32'b0;
 	// 跳过未初始化指令(全0), 防止输出无意义错误日志
 	if (!(op == 7'b0000000 && func3 == 3'b000 && rs1_data == 32'b0 && imm_ext == 32'b0)) begin
 		case(op)
@@ -177,6 +180,7 @@ always @(*) begin
 					csr_wdata = rs1_data;    // 写入CSR的新值
 					result = csr_rdata;      // 将写入的值传递到rd
 					csr_wen = 1'b1;          // 使能写CSR
+					wen = 1'b1;
 				end
 				default: ;
 			endcase

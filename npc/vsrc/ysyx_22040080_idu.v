@@ -11,7 +11,7 @@ module ysyx_22040080_idu(
     output [6:0] func7, //R型指令
 	output [4:0] shamt,
 	//ebreak指令检测
-	output is_ebreak,
+	// output is_ebreak,
 
 	output [2:0]  instr_type // 新增指令类型标识
 	
@@ -71,8 +71,9 @@ module ysyx_22040080_idu(
     //------------------------------------------
     // ebreak检测（SYSTEM指令）
     //------------------------------------------
-    assign is_ebreak = (op == 7'b1110011) &&   // SYSTEM操作码
+    /*assign is_ebreak = (op == 7'b1110011) &&   // SYSTEM操作码
                        (func3 == 3'b000) &&    // EBREAK的func3
                        (instruction[31:20] == 12'b000000000001); // EBREAK特征码
+    */
 
 endmodule

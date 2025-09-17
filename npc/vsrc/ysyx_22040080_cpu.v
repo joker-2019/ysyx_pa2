@@ -15,7 +15,7 @@ module ysyx_22040080_cpu(
   wire [6:0] op;
   wire [31:0] rs1_data, rs2_data; // rs1 寄存器数据
   wire wen;
-  wire is_ebreak; 
+  // wire is_ebreak; 
   wire [2:0] instr_type; // 指令类型
   wire [31:0] jal_target; //跳转目标
   wire [31:0] next_pc;
@@ -23,7 +23,7 @@ module ysyx_22040080_cpu(
   // wire branch_taken;
   wire [31:0] mem_addr;     // 访存地址
   wire [31:0] mem_wdata;    // SW写入内存数据
-  wire [31:0] mem_rdata;    // LW读取内存数据
+  // wire [31:0] mem_rdata;    // LW读取内存数据
   wire        is_load;      // LW指令标志
   wire        is_store;     // SW指令标志
   reg [31:0] load_data;
@@ -132,7 +132,7 @@ ysyx_22040080_idu idu(
   .imm_ext(imm_ext),
   .op(op),
   .shamt(shamt),
-  .is_ebreak(is_ebreak),
+  // .is_ebreak(is_ebreak),
   .instr_type(instr_type)
 );
 
@@ -153,7 +153,7 @@ ysyx_22040080_alu alu(
   // .branch_taken(branch_taken).
   .mem_addr(mem_addr),   // 新增: 访存地址
   .mem_wdata(mem_wdata), // 新增: SW写入内存数据
-  .mem_rdata(mem_rdata),
+  // .mem_rdata(mem_rdata),
   .is_load(is_load),     // 新增: LW标志
   .is_store(is_store),   // 新增: SW标志
   // 新增CSR端口
