@@ -203,8 +203,8 @@ always @(*) begin
 					wen = 1'b1;
 				end
 				3'b010: begin // CSRRS
-					result = csr_rdata;
 					csr_wdata = rs1_data | csr_rdata; // CSRS: 将rs1与csr_rdata按位相与后写回csr
+					result = csr_rdata;
 					csr_wen= 1'b1;
 					wen = 1'b1;
 				end
