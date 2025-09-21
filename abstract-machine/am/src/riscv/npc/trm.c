@@ -1,5 +1,6 @@
 #include <am.h>
 #include <klib-macros.h>
+#include <stdio.h> 
 
 extern char _heap_start;
 int main(const char *args);
@@ -23,6 +24,12 @@ void halt(int code) {
 }
 
 void _trm_init() {
+  unsigned int vendorid, marchid;
+  asm volatile("csrr %0, mvendorid" : "=r"(vendorid));
+  asm volatile("csrr %0, marchid"   : "=r"(marchid));
+
+  printf("mvendorid = %u\n", vendorid);
+  printf("marchid  = %u\n", marchid);  
   int ret = main(mainargs);
   halt(ret);
 }
