@@ -32,8 +32,17 @@ module ysyx_22040080_cpu(
   wire [11:0] csr_addr;
   wire [31:0] csr_wdata;
   wire [31:0] csr_rdata;
-  wire [31:0] mcycle, mcycleh;
+  wire [31:0] mcycle, mcycleh, mvendorid, marchid;
   wire [63:0] mcycle_full;
+  // exception
+  wire [31:0] mepc; // 发生异常的地址
+  wire [31:0] mcause; // 异常号 机器模式异常号为11
+  wire [31:0] mtvec; // 异常跳转地址
+  wire [31:0] mstatus; // 处于那种状态，M代表机器模式 U代表user
+  wire        trap_valid;      // ecall
+  wire        is_mret;     // mret
+  wire [31:0] trap_mepc;
+  wire [31:0] trap_mcause;
 
 
 // import "DPI-C" function void ebreak_trigger();  // 声明 DPI-C 函数
@@ -57,8 +66,14 @@ import "DPI-C" function void sw_mem_write(input int addr, input int data, input 
   assign next_pc = (branch_taken || is_jal || is_jalr) ? jal_target : pc + 4;
   assign csr_addr = (op == 7'b1110011) ? imm_ext[11:0] : 12'b0; // CSR地址（通常来自指令[31:20]，这里imm_ext已解码）
   // 顶层直接读取CSR数据
-  assign csr_rdata = (csr_addr == 12'hB00) ? mcycle_full[31:0] :
+  assign csr_rdata =  (csr_addr == 12'hB00) ? mcycle_full[31:0] :
                       (csr_addr == 12'hB80) ? mcycle_full[63:32] :
+                      (csr_addr == 12'hF11) ? mvendorid : // "ysyx"
+                      (csr_addr == 12'hF12) ? marchid : // "25040104"
+                      (csr_addr == 12'h341) ? mepc :
+                      (csr_addr == 12'h342) ? mcause :
+                      (csr_addr == 12'h305) ? mtvec :
+                      (csr_addr == 12'h300) ? mstatus :
                       32'b0;
 // ----------------------
 //  LOAD 数据读取逻辑
@@ -89,9 +104,12 @@ always @(posedge clk) begin
   // 初始化
   if(rst) begin 
     pc <= 32'h80000000;
-  end else begin
+  end else if(trap_valid) begin
+    pc <= mtvec;
+  end else if(is_mret) begin 
+    pc <= mepc;
+  end else begin 
     pc <= next_pc;
-    // $display("PC=0x%8h", pc);
   end
   // 只支持 SW (一次写4字节)
   if(is_store) begin
@@ -160,7 +178,12 @@ ysyx_22040080_alu alu(
   .csr_wen(csr_wen),
   // .csr_addr(csr_addr),
   .csr_rdata(csr_rdata),
-  .csr_wdata(csr_wdata)
+  .csr_wdata(csr_wdata),
+  // exception
+  .trap_valid(trap_valid),
+  .is_mret(is_mret),
+  .trap_mepc(trap_mepc),
+  .trap_mcause(trap_mcause)
 );
 
 // CSR模块实例化
@@ -173,7 +196,17 @@ ysyx_22040080_csr csr(
   // .rdata(csr_rdata),
   .mcycle(mcycle),
   .mcycleh(mcycleh),
-  .mcycle_full(mcycle_full)
+  .mcycle_full(mcycle_full),
+  .mvendorid(mvendorid),
+  .marchid(marchid),
+  // exception
+  .mepc(mepc),
+  .mcause(mcause),
+  .mstatus(mstatus),
+  .mtvec(mtvec),
+  .trap_mepc(trap_mepc),
+  .trap_mcause(trap_mcause),
+  .trap_valid(trap_valid)
 );
 
  //寄存器堆实例

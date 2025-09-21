@@ -22,7 +22,14 @@ module ysyx_22040080_alu(
  input 					[31:0] csr_rdata,
 	output reg			  			csr_wen,
  // output reg [11:0] csr_addr,
- output reg [31:0] csr_wdata
+ output reg [31:0] csr_wdata,
+
+	//exception
+	output	reg trap_valid,
+	output	reg is_mret, 
+	output reg [31:0] trap_mepc,
+	output reg [31:0] trap_mcause
+
 );
 
 // import "DPI-C" function void phys_mem_write(input int addr, input int len, input int data);
@@ -53,6 +60,11 @@ always @(*) begin
  // CSR
 	csr_wen = 1'b0;
 	csr_wdata = 32'b0;
+	// exception
+	trap_valid = 1'b0;
+	trap_mepc = 32'b0;
+	trap_mcause = 32'b0;
+	is_mret = 1'b0;
 	// 跳过未初始化指令(全0), 防止输出无意义错误日志
 	if (!(op == 7'b0000000 && func3 == 3'b000 && rs1_data == 32'b0 && imm_ext == 32'b0)) begin
 		case(op)
@@ -173,16 +185,31 @@ always @(*) begin
 			// $display("jalr_target=0x%8h, Result=0x%8h", jal_target, result);
 			wen = 1'b1;	
 			end
-		7'b1110011: begin // SYSTEM 指令
+		7'b1110011: begin // SYSTEM 指令  
 			case (func3)
-				3'b001: begin
+				3'b000: begin 
+					if(imm_ext[11:0] == 12'h000) begin // ecall
+						 trap_valid  = 1'b1; 
+							trap_mepc = pc;	// 保存异常发生地址
+							trap_mcause = 32'd11;
+					end else if(imm_ext[11:0] == 12'h302) //mret
+							is_mret = 1'b1; //顶层应从 CSR 的 mepc 恢复 PC
+				end
+				3'b001: begin	// CSRRW
 					// csr_addr = imm_ext[11:0];// CSR地址（通常来自指令[31:20]，这里imm_ext已解码）
 					csr_wdata = rs1_data;    // 写入CSR的新值
 					result = csr_rdata;      // 将写入的值传递到rd
 					csr_wen = 1'b1;          // 使能写CSR
 					wen = 1'b1;
 				end
-				default: ;
+				3'b010: begin // CSRRS
+					result = csr_rdata;
+					csr_wdata = rs1_data | csr_rdata; // CSRS: 将rs1与csr_rdata按位相与后写回csr
+					csr_wen= 1'b1;
+					wen = 1'b1;
+				end
+				// 额外添加ecall, mret,等特权指令
+				default: $display("ERROR: Unsupported SYSTEM instruction %b for R-type", func3);
 			endcase
 		end
 
