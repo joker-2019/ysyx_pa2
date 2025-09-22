@@ -8,7 +8,7 @@
   typedef struct { __VA_ARGS__; } AM_##reg##_T;
 
 AM_DEVREG( 1, UART_CONFIG,  RD, bool present);
-AM_DEVREG( 2, UART_TX,      WR, char data);
+AM_DEVREG( 2, _TX,      WR, char data);
 AM_DEVREG( 3, UART_RX,      RD, char data);
 AM_DEVREG( 4, TIMER_CONFIG, RD, bool present, has_rtc);
 AM_DEVREG( 5, TIMER_RTC,    RD, int year, month, day, hour, minute, second); //AM实时时钟(RTC, Real Time Clock), 可读出当前的年月日时分秒.   强调读出的时间与现实时间完全一致
