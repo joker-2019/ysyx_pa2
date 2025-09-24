@@ -74,6 +74,7 @@ import "DPI-C" function void sw_mem_write(input int addr, input int data, input 
                       (csr_addr == 12'h342) ? mcause :
                       (csr_addr == 12'h305) ? mtvec :
                       (csr_addr == 12'h300) ? mstatus :
+                      // (csr_addr == 12'hB00) ? mcycle :
                       32'b0;
 // ----------------------
 //  LOAD 数据读取逻辑

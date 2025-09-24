@@ -142,6 +142,7 @@ void exec_once() {
   if (check_regs(&cpu, &ref_cpu)) {
     printf("Difftest mismatch at pc = 0x%08x\n", cpu.pc);
     printf_inst_error(cpu.pc);
+    contextp->gotFinish(true);
     // assert(0);
   }else{
     printf("Difftest PASS\n");
