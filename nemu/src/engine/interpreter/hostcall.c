@@ -94,12 +94,12 @@ void csr_write(vaddr_t csr_addr, word_t value) {
       cpu.sr.mepc = value; break;
     case 0x342: cpu.sr.mcause = value; break;
     case 0x343: cpu.sr.mtval = value; break;
-    case 0xF11:
+    /*  case 0xF11:
       cpu.sr.mvendorid = value;
       printf("writing mvendorid CSR (0xF11) 0x%x\n", value);
       break; // 厂商 ID
     case 0xF12:
-      cpu.sr.marchid = value;
+      cpu.sr.marchid = value; */
        printf("Write marchid CSR (0xF12): 0x%x\n", value);
       break; // 架构 ID
 

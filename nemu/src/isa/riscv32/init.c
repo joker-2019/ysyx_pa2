@@ -35,8 +35,8 @@ static void restart() {
 
   /**/
   cpu.sr.mstatus = 0x1800;
-  cpu.sr.mvendorid = 0x79737978; // 厂商 ID
-  cpu.sr.marchid = 0x78797368; // 架构 ID
+  // cpu.sr.mvendorid = 0x79737978; // 厂商 ID
+  // cpu.sr.marchid = 0x78797368; // 架构 ID
 }
 
 void init_isa() {
