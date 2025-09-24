@@ -29,6 +29,7 @@ static const uint32_t img [] = {
 static void restart() {
   /* Set the initial program counter. */
   cpu.pc = RESET_VECTOR;
+  printf("nemu start pc is 0x%x", cpu.pc);
 
   /* The zero register is always 0. */
   cpu.gpr[0] = 0;
