@@ -29,7 +29,6 @@ always @(posedge clk) begin
     mepc <= 32'b0;
     mcause  <= 32'b0;
     mstatus <= 32'h00001800;
-    // mtvec <= 32'h80000000; 
   end else begin
      mcycle_full <= mcycle_full + 1; //每个时钟周期+1
      if(wen) begin

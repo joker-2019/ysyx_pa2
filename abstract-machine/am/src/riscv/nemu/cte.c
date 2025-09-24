@@ -32,7 +32,7 @@ Context* __am_irq_handle(Context *c) {
 extern void __am_asm_trap(void);
 
 bool cte_init(Context*(*handler)(Event, Context*)) {
-  printf("cte_init booting!\n");
+  // printf("cte_init booting!\n");
   // initialize exception entry
   asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
   
@@ -43,8 +43,8 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  printf("Context boosting!\n"); 
-  printf("Context Size: %d\n", CONTEXT_SIZE);
+  // printf("Context boosting!\n"); 
+  // printf("Context Size: %d\n", CONTEXT_SIZE);
   Context *ctx = (Context *)(kstack.end - CONTEXT_SIZE); //定义上下文结构体的大小
   ctx->mstatus = 0x1800;
   ctx->mepc = (uintptr_t)entry; // 异常入口地址
