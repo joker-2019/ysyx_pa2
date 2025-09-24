@@ -24,7 +24,7 @@ always @(posedge clk) begin
   if(rst) begin
     mcycle_full <= 64'b0; //初始化寄存器mcycle
     mvendorid <= 32'h79737978; // ysyx
-    marchid <= 32'h17E14E8; // 2025040104
+    marchid <= 32'h78797368; // 2025040104
     // exception
     mepc <= 32'b0;
     mcause  <= 32'b0;

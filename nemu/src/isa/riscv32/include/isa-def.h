@@ -25,6 +25,9 @@ typedef struct{
   vaddr_t mtvec;   // 异常向量表基地址（异常处理程序入口）
   word_t mtval;    // 异常附加信息（如错误地址、指令码等）
   word_t mstatus;  // 机器态状态寄存器（0x300）
+  word_t mvendorid; // 厂商 ID (0xF11)
+  word_t marchid;  // 架构 ID (0xF12)
+  word_t mcycle;  // CPU 时钟计数器
   // 可扩展其他系统寄存器
 } riscv_system_regs;
 
