@@ -29,15 +29,13 @@ static const uint32_t img [] = {
 static void restart() {
   /* Set the initial program counter. */
   cpu.pc = RESET_VECTOR;
-  printf("nemu start pc is 0x%x\n", cpu.pc);
+  // printf("nemu start pc is 0x%x\n", cpu.pc);
 
   /* The zero register is always 0. */
   cpu.gpr[0] = 0;
 
   /**/
   cpu.sr.mstatus = 0x1800;
-  cpu.sr.mvendorid = 0x79737978; // 厂商 ID
-  cpu.sr.marchid = 0x78797368; // 架构 ID
 }
 
 void init_isa() {
