@@ -40,6 +40,15 @@ const char* reg_names[] = {
   "s8","s9","s10","s11","t3","t4","t5","t6"
 };
 
+extern "C" void get_csr_info(
+  uint32_t *mstatus,
+  uint32_t *mepc,
+  uint32_t *mcause,
+  uint32_t *mtvec,
+  uint32_t *mvendorid,
+  uint32_t *marchid
+);
+
 void step_and_dump_wave() {
   top->eval();
   tfp->dump(contextp->time());
@@ -92,9 +101,24 @@ extern "C" void update_register(CPU_state *cpu){
   // printf("get reg infomation done!\n");
   regs[0] = 0; //rf[0]在初始化的时候已经赋值为0了
   for (int i = 0; i < 32; i++) {
-    cpu->gpr[i] = regs[i];
+    cpu->gpr[i] = regs[i]; 
   }
   cpu->pc = CONFIG_MBASE;
+
+  // 读取 CSR
+  uint32_t mstatus, mepc, mcause, mtvec, mvendorid, marchid;
+  svScope csr_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.csr");
+  assert(csr_scope);
+  svScope prev_scope2 = svSetScope(csr_scope);
+  get_csr_info(&mstatus, &mepc, &mcause, &mtvec, &mvendorid, &marchid);
+  svSetScope(prev_scope2);
+
+  cpu->sr.mstatus   = mstatus;
+  cpu->sr.mepc      = mepc;
+  cpu->sr.mcause    = mcause;
+  cpu->sr.mtvec     = mtvec;
+  cpu->sr.mvendorid = mvendorid;
+  cpu->sr.marchid   = marchid;
   printf("[DiffTest Init] Registers fully synchronized from RTL.\n");
 }
 
@@ -161,6 +185,31 @@ bool check_regs(CPU_state *dut, CPU_state *ref) {
     }
     if (dut->pc != ref->pc) {
         printf("PC Mismatch: DUT = 0x%08x, REF = 0x%08x\n", dut->pc, ref->pc);
+        return true;
+    }
+     // 新增：对比 CSR 寄存器
+    if (dut->sr.mepc != ref->sr.mepc) {
+        printf("CSR Mismatch: mepc | DUT=0x%08x, REF=0x%08x\n", dut->sr.mepc, ref->sr.mepc);
+        return true;
+    }
+    if (dut->sr.mcause != ref->sr.mcause) {
+        printf("CSR Mismatch: mcause | DUT=0x%08x, REF=0x%08x\n", dut->sr.mcause, ref->sr.mcause);
+        return true;
+    }
+    if (dut->sr.mstatus != ref->sr.mstatus) {
+        printf("CSR Mismatch: mstatus | DUT=0x%08x, REF=0x%08x\n", dut->sr.mstatus, ref->sr.mstatus);
+        return true;
+    }
+    if (dut->sr.mtvec != ref->sr.mtvec) {
+        printf("CSR Mismatch: mtvec | DUT=0x%08x, REF=0x%08x\n", dut->sr.mtvec, ref->sr.mtvec);
+        return true;
+    }
+    if (dut->sr.mvendorid != ref->sr.mvendorid) {
+        printf("CSR Mismatch: mvendorid | DUT=0x%08x, REF=0x%08x\n", dut->sr.mvendorid, ref->sr.mvendorid);
+        return true;
+    }
+    if (dut->sr.marchid != ref->sr.marchid) {
+        printf("CSR Mismatch: marchid | DUT=0x%08x, REF=0x%08x\n", dut->sr.marchid, ref->sr.marchid);
         return true;
     }
     return false;

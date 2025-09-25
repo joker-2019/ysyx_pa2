@@ -53,30 +53,34 @@ void invalid_inst(vaddr_t thispc) {
 
 // 读取 CSR 寄存器
 word_t csr_read(vaddr_t csr_addr) {
-  switch (csr_addr) {
-    // case 0xc: return cpu.sr.mtvec;
-    case 0x305:
-      // printf("Reading mtvec CSR (0x305): 0x%x\n", cpu.sr.mtvec); 
-      return cpu.sr.mtvec;   // mtvec 地址 0x305（异常向量表基地址）
-    case 0x300:
-      // printf("Reading mstatus CSR (0x300): 0x%x\n", cpu.sr.mstatus);
-      return cpu.sr.mstatus;          // 机器态状态寄存器
-    case 0x341: 
-      // printf("Reading mepc CSR (0x341): 0x%x\n", cpu.sr.mepc);
-      return cpu.sr.mepc;   // mepc 的 CSR 地址为 0x341 保存异常发生时的 PC
-    case 0x342: return cpu.sr.mcause; // mcause 的 CSR 地址为 0x342 异常原因码
-    case 0x343: return cpu.sr.mtval;  // 异常附加信息
-    case 0xF11: // return cpu.sr.mvendorid; // 厂商 ID
-      printf("reading mvendorid CSR 0x%x\n", cpu.sr.mvendorid);
-      return cpu.sr.mvendorid;
-      
-    case 0xF12:
-      printf("reading marchid CSR 0x%x\n", cpu.sr.marchid);
-      return cpu.sr.marchid; // 架构 ID   
-    // 其他 CSR 寄存器...
-    default:
-      panic("Unsupported CSR read: 0x%x", csr_addr);
-    }
+  csr_addr &= 0xfff;
+  printf("csr_read: csr_addr=0x%x\n", csr_addr);
+  switch (csr_addr)
+  {
+  // case 0xc: return cpu.sr.mtvec;
+  case 0x305:
+    // printf("Reading mtvec CSR (0x305): 0x%x\n", cpu.sr.mtvec);
+    return cpu.sr.mtvec; // mtvec 地址 0x305（异常向量表基地址）
+  case 0x300:
+    // printf("Reading mstatus CSR (0x300): 0x%x\n", cpu.sr.mstatus);
+    return cpu.sr.mstatus; // 机器态状态寄存器
+  case 0x341:
+    // printf("Reading mepc CSR (0x341): 0x%x\n", cpu.sr.mepc);
+    return cpu.sr.mepc; // mepc 的 CSR 地址为 0x341 保存异常发生时的 PC
+  case 0x342:
+    return cpu.sr.mcause; // mcause 的 CSR 地址为 0x342 异常原因码
+  case 0x343:
+    return cpu.sr.mtval; // 异常附加信息
+  case 0xF11:            // return cpu.sr.mvendorid; // 厂商 ID
+    printf("reading mvendorid CSR 0x%x\n", cpu.sr.mvendorid);
+    return cpu.sr.mvendorid;
+  case 0xF12:
+    printf("reading marchid CSR 0x%x\n", cpu.sr.marchid);
+    return cpu.sr.marchid; // 架构 ID
+  // 其他 CSR 寄存器...
+  default:
+    panic("Unsupported CSR read: 0x%x", csr_addr);
+  }
 }
 
 // 写入 CSR 寄存器
@@ -99,8 +103,9 @@ void csr_write(vaddr_t csr_addr, word_t value) {
       printf("writing mvendorid CSR (0xF11) 0x%x\n", value);
       break; // 厂商 ID
     case 0xF12:
-      cpu.sr.marchid = value; */
+      cpu.sr.marchid = value; 
        printf("Write marchid CSR (0xF12): 0x%x\n", value);
+       */
       break; // 架构 ID
 
     // 其他 CSR 寄存器...

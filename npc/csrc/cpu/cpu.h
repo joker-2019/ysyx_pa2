@@ -9,9 +9,25 @@
 extern "C" {
 #endif
 
+typedef uint32_t paddr_t;
+typedef uint32_t word_t;
+
+//SR系统寄存器结构体
+typedef struct{
+  paddr_t mepc;    // 保存异常发生时的 PC
+  word_t mcause;   // 异常原因码（如中断号、异常类型）
+  paddr_t mtvec;   // 异常向量表基地址（异常处理程序入口）
+  word_t mtval;    // 异常附加信息（如错误地址、指令码等）
+  word_t mstatus;  // 机器态状态寄存器（0x300）
+  word_t mvendorid; // 厂商 ID (0xF11)
+  word_t marchid;  // 架构 ID (0xF12)
+  // 可扩展其他系统寄存器
+} riscv_system_regs;
+
 typedef struct {
   uint32_t gpr[32];
   uint32_t pc;
+  riscv_system_regs sr; //SR系统寄存器
 } CPU_state;
 
 extern CPU_state cpu;  // 声明cpu为外部变量

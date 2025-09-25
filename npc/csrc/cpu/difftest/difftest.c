@@ -47,9 +47,7 @@ void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
 }
 
 void difftest_regcpy(void *dut, bool direction) {
-    if (!p_difftest_regcpy)
-        printf("同步失败！");
-    return;
+    if (!p_difftest_regcpy) return;
     p_difftest_regcpy(dut, direction);
 }
 
