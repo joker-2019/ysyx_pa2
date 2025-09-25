@@ -24,12 +24,12 @@ void halt(int code) {
 }
 
 void _trm_init() {
- unsigned int vendorid, marchid;
-  asm volatile("csrr %0, mvendorid" : "=r"(vendorid));
-  asm volatile("csrr %0, marchid"   : "=r"(marchid));
+  unsigned int vendorid, marchid;
+  asm volatile("csrrs %0, mvendorid, x0" : "=r"(vendorid));
+  asm volatile("csrrs %0, marchid, x0"   : "=r"(marchid));
 
-  printf("mvendorid = %u\n", vendorid);
-  printf("marchid  = %u\n", marchid);
+  printf("mvendorid = 0x%x\n", vendorid);
+  printf("marchid  = 0x%x\n", marchid);
   int ret = main(mainargs);
   halt(ret);
 }
