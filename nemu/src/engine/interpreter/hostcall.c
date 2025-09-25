@@ -72,11 +72,11 @@ word_t csr_read(vaddr_t csr_addr) {
   case 0x343:
     return cpu.sr.mtval; // 异常附加信息
   case 0xF11:            // return cpu.sr.mvendorid; // 厂商 ID
-    // cpu.sr.mvendorid = 0x79737978; 
+    cpu.sr.mvendorid = 0x79737978; 
     printf("reading mvendorid CSR 0x%x\n", cpu.sr.mvendorid);
     return cpu.sr.mvendorid;
   case 0xF12:
-    // cpu.sr.marchid = 0x78797368; // 架构 ID
+    cpu.sr.marchid = 0x78797368; // 架构 ID
     printf("reading marchid CSR 0x%x\n", cpu.sr.marchid);
     return cpu.sr.marchid; // 架构 ID
   // 其他 CSR 寄存器...
