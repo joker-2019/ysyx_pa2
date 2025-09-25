@@ -72,11 +72,11 @@ word_t csr_read(vaddr_t csr_addr) {
   case 0x343:
     return cpu.sr.mtval; // 异常附加信息
   case 0xF11:            // return cpu.sr.mvendorid; // 厂商 ID
-    cpu.sr.mvendorid = 0x79737978; 
+    // cpu.sr.mvendorid = 0x79737978; 
     printf("reading mvendorid CSR 0x%x\n", cpu.sr.mvendorid);
     return cpu.sr.mvendorid;
   case 0xF12:
-    cpu.sr.marchid = 0x78797368; // 架构 ID
+    // cpu.sr.marchid = 0x78797368; // 架构 ID
     printf("reading marchid CSR 0x%x\n", cpu.sr.marchid);
     return cpu.sr.marchid; // 架构 ID
   // 其他 CSR 寄存器...
@@ -87,6 +87,7 @@ word_t csr_read(vaddr_t csr_addr) {
 
 // 写入 CSR 寄存器
 void csr_write(vaddr_t csr_addr, word_t value) {
+  csr_addr &= 0xfff;
   switch (csr_addr) {
     // case 0xc: cpu.sr.mtvec = value; break;
     case 0x305:
@@ -100,16 +101,14 @@ void csr_write(vaddr_t csr_addr, word_t value) {
       cpu.sr.mepc = value; break;
     case 0x342: cpu.sr.mcause = value; break;
     case 0x343: cpu.sr.mtval = value; break;
-    /*  case 0xF11:
+    case 0xF11:
       cpu.sr.mvendorid = value;
       printf("writing mvendorid CSR (0xF11) 0x%x\n", value);
       break; // 厂商 ID
     case 0xF12:
       cpu.sr.marchid = value; 
-       printf("Write marchid CSR (0xF12): 0x%x\n", value);
-       */
+      printf("Write marchid CSR (0xF12): 0x%x\n", value);
       break; // 架构 ID
-
     // 其他 CSR 寄存器...
     default: panic("Unsupported CSR write: 0x%x", csr_addr);
   }
