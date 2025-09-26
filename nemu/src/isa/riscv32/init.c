@@ -38,6 +38,7 @@ static void restart() {
   cpu.sr.mstatus = 0x1800;
   cpu.sr.mvendorid = 0x79737978;
   cpu.sr.marchid = 0x78797368;
+  printf("[NEMU] restart called: mvendorid=0x%x, marchid=0x%x\n", cpu.sr.mvendorid, cpu.sr.marchid);
 }
 
 void init_isa() {

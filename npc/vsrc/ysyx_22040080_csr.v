@@ -18,26 +18,26 @@
     input trap_valid,
     input [31:0] trap_mepc,
     input [31:0] trap_mcause
-  );
-
-export "DPI-C" task get_csr_info;
-task get_csr_info(
-  output bit[31:0] mstatus,
-  output bit[31:0] mepc,
-  output bit[31:0] mcause,
-  output bit[31:0] mtvec,
-  output bit[31:0] mvendorid,
-  output bit[31:0] marchid
 );
-  begin
-    mstatus   = mstatus;
-    mepc      = mepc;
-    mcause    = mcause;
-    mtvec     = mtvec;
-    mvendorid = mvendorid;
-    marchid   = marchid;
-  end
-endtask
+
+  export "DPI-C" task get_csr_info;
+  task get_csr_info(
+    output bit[31:0] out_mstatus,
+    output bit[31:0] out_mepc,
+    output bit[31:0] out_mcause,
+    output bit[31:0] out_mtvec,
+    output bit[31:0] out_mvendorid,
+    output bit[31:0] out_marchid
+  );
+    begin
+      out_mstatus   = mstatus;
+      out_mepc      = mepc;
+      out_mcause    = mcause;
+      out_mtvec     = mtvec;
+      out_mvendorid = mvendorid;
+      out_marchid   = marchid;
+    end
+  endtask
 
   always @(posedge clk) begin
     if(rst) begin
