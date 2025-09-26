@@ -102,8 +102,8 @@ void init_monitor(int argc, char *argv[]){
   check_difftest_memcpy(CONFIG_MBASE, pmem, img_size);
 
   // 执行5个周期的复位
-  // reset(5);
-
+  reset(10);
+  
   // 同步仿真寄存器的值
   update_register(&cpu);
 
@@ -112,4 +112,5 @@ void init_monitor(int argc, char *argv[]){
 
   // 将寄存器状态同步到 REF
   difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+ 
 }

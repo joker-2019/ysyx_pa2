@@ -48,6 +48,7 @@
       mepc <= 32'b0;
       mcause  <= 32'b0;
       mstatus <= 32'h00001800;
+      // $display("[RTL CSR] Reset done at clk=%t: mvendorid=0x%x, marchid=0x%x", $time, mvendorid, marchid);
     end else begin
       mcycle_full <= mcycle_full + 1; //每个时钟周期+1
       if(wen) begin

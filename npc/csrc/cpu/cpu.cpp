@@ -120,11 +120,10 @@ extern "C" void update_register(CPU_state *cpu){
   cpu->sr.mvendorid = mvendorid;
   cpu->sr.marchid   = marchid;
   // 新增：打印 NPC 的 cpu 结构中 CSR 值
-  printf("[NPC] cpu->sr.mvendorid=0x%x, cpu->sr.marchid=0x%x\n", 
-         cpu->sr.mvendorid, cpu->sr.marchid);
+  printf("[NPC] cpu->sr.mvendorid=0x%x, cpu->sr.marchid=0x%x\n", cpu->sr.mvendorid, cpu->sr.marchid);
   printf("[DiffTest Init] Registers fully synchronized from RTL.\n");
   // 新增：将NPC的CPU_state同步到NEMU（REF）
-  difftest_regcpy(cpu, DIFFTEST_TO_REF);
+  // difftest_regcpy(cpu, DIFFTEST_TO_REF);
 }
 
 void print_cpu_regs(const CPU_state *cpu) {

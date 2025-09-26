@@ -228,7 +228,7 @@ int sdb_mainloop(int argc, char *argv[]) {
 
   init_monitor(argc, argv);     // 初始化监视器中的内容
 
-  reset(10);          // 重置模拟器状态
+  // reset(10);          // 重置模拟器状态
 
   init_sdb();          // 初始化 SDB
 
