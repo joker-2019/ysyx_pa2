@@ -50,11 +50,11 @@ import "DPI-C" function int lw_mem_read(input int addr, input int len);
 import "DPI-C" function void sw_mem_write(input int addr, input int data, input int len);
 
   // PC更新逻辑：新增分支、jal、jalr判断
-  wire is_jal   = (op == 7'b1101111);
+ wire is_jal   = (op == 7'b1101111);
   wire is_jalr   = (op == 7'b1100111);
   wire is_branch = (op == 7'b1100011);
 
-  wire branch_taken = is_branch && (
+   wire branch_taken = is_branch && (
     (func3 == 3'b000 && rs1_data == rs2_data) ||       // beq
     (func3 == 3'b001 && rs1_data != rs2_data) ||       // bne
     (func3 == 3'b100 && $signed(rs1_data) < $signed(rs2_data)) || // blt
@@ -76,6 +76,7 @@ import "DPI-C" function void sw_mem_write(input int addr, input int data, input 
                       (csr_addr == 12'h300) ? mstatus :
                       // (csr_addr == 12'hB00) ? mcycle :
                       32'b0;
+                      
 // ----------------------
 //  LOAD 数据读取逻辑
 // ----------------------
@@ -103,7 +104,7 @@ end
 
 always @(posedge clk) begin
   // 初始化
-  if(rst) begin 
+  if(rst) begin
     pc <= 32'h80000000;
   end else if(trap_valid) begin
     pc <= mtvec;
@@ -152,7 +153,31 @@ ysyx_22040080_idu idu(
   .op(op),
   .shamt(shamt),
   // .is_ebreak(is_ebreak),
-  .instr_type(instr_type)
+  .instr_type(instr_type),
+  .csr_addr(csr_addr)
+);
+
+// CSR模块实例化
+ysyx_22040080_csr csr(
+  .clk(clk),
+  .rst(rst),
+  .wen(csr_wen),
+  .csr_addr(csr_addr),
+  .wdata(csr_wdata),
+  .rdata(csr_rdata),
+  .mcycle(mcycle),
+  .mcycleh(mcycleh),
+  .mcycle_full(mcycle_full),
+  .mvendorid(mvendorid),
+  .marchid(marchid),
+  // exception
+  .mepc(mepc),
+  .mcause(mcause),
+  .mstatus(mstatus),
+  .mtvec(mtvec),
+  .trap_mepc(trap_mepc),
+  .trap_mcause(trap_mcause),
+  .trap_valid(trap_valid)
 );
 
 //执行
@@ -166,6 +191,7 @@ ysyx_22040080_alu alu(
   .op(op),
   .pc(pc),
   .shamt(shamt),
+  .jump_flag(jump_flag),
   .jal_target(jal_target),
   .result(alu_result),
   .wen(wen),
@@ -185,29 +211,6 @@ ysyx_22040080_alu alu(
   .is_mret(is_mret),
   .trap_mepc(trap_mepc),
   .trap_mcause(trap_mcause)
-);
-
-// CSR模块实例化
-ysyx_22040080_csr csr(
-  .clk(clk),
-  .rst(rst),
-  .wen(csr_wen),
-  .addr(csr_addr),
-  .wdata(csr_wdata),
-  // .rdata(csr_rdata),
-  .mcycle(mcycle),
-  .mcycleh(mcycleh),
-  .mcycle_full(mcycle_full),
-  .mvendorid(mvendorid),
-  .marchid(marchid),
-  // exception
-  .mepc(mepc),
-  .mcause(mcause),
-  .mstatus(mstatus),
-  .mtvec(mtvec),
-  .trap_mepc(trap_mepc),
-  .trap_mcause(trap_mcause),
-  .trap_valid(trap_valid)
 );
 
  //寄存器堆实例

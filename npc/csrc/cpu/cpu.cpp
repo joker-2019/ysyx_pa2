@@ -120,6 +120,7 @@ extern "C" void update_register(CPU_state *cpu){
   cpu->sr.mvendorid = mvendorid;
   cpu->sr.marchid   = marchid;
   // 新增：打印 NPC 的 cpu 结构中 CSR 值
+  printf("[NPC CSR] mstatus=0x%x, mepc= 0x%x, mcause=0x%x, mtvec=0x%x\n");
   printf("[NPC] cpu->sr.mvendorid=0x%x, cpu->sr.marchid=0x%x\n", cpu->sr.mvendorid, cpu->sr.marchid);
   printf("[DiffTest Init] Registers fully synchronized from RTL.\n");
   // 新增：将NPC的CPU_state同步到NEMU（REF）
@@ -238,6 +239,32 @@ void check_register(CPU_state *cpu) {
                    i, cpu->gpr[i], nemu_cpu.gpr[i]);
             assert(0);
         }
+    }
+
+     // 新增：对比 CSR 寄存器
+    if (cpu->sr.mepc != nemu_cpu.sr.mepc) {
+        printf("INIT CSR Mismatch: mepc | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mepc, nemu_cpu.sr.mepc);
+        assert(0);
+    }
+    if (cpu->sr.mcause != nemu_cpu.sr.mcause) {
+        printf("INIT CSR Mismatch: mcause | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mcause, nemu_cpu.sr.mcause);
+        assert(0);
+    }
+    if (cpu->sr.mstatus != nemu_cpu.sr.mstatus) {
+        printf("INIT CSR Mismatch: mstatus | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mstatus, nemu_cpu.sr.mstatus);
+        assert(0);
+    }
+    if (cpu->sr.mtvec != nemu_cpu.sr.mtvec) {
+        printf("INIT CSR Mismatch: mtvec | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mtvec, nemu_cpu.sr.mtvec);
+        assert(0);
+    }
+    if (cpu->sr.mvendorid != nemu_cpu.sr.mvendorid) {
+        printf("INIT CSR Mismatch: mvendorid | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mvendorid, nemu_cpu.sr.mvendorid);
+        assert(0);
+    }
+    if (cpu->sr.marchid != nemu_cpu.sr.marchid) {
+        printf("INIT CSR Mismatch: marchid | DUT=0x%08x, REF=0x%08x\n", cpu->sr.marchid, nemu_cpu.sr.marchid);
+        assert(0);
     }
 
     printf("[DiffTest] Register Check Passed!\n");

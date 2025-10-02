@@ -10,8 +10,9 @@ module ysyx_22040080_alu(
 	input [4:0] shamt,
 	output reg [31:0] result, //计算结果
 	output reg wen, //传递到写回阶段的写使能端
-	output reg [31:0] jal_target, // 新增：跳转目标地址（用于 jal、jalr）
+	output reg jump_flag, 
 
+	output reg [31:0] jal_target, // 新增：跳转目标地址（用于 jal、jalr）
 	output reg [31:0] mem_addr,     // 访存地址
  output reg [31:0] mem_wdata,    // SW写入内存数据
  // output reg [31:0] mem_rdata,    // LW读取内存数据
@@ -23,16 +24,13 @@ module ysyx_22040080_alu(
 	output reg			  			csr_wen,
  // output reg [11:0] csr_addr,
  output reg [31:0] csr_wdata,
-
 	//exception
 	output	reg trap_valid,
-	output	reg is_mret, 
+	output	reg is_mret,
 	output reg [31:0] trap_mepc,
 	output reg [31:0] trap_mcause
 
 );
-
-// import "DPI-C" function void phys_mem_write(input int addr, input int len, input int data);
 
 // 通用加法器输入信号
 wire [31:0] alu_in1;
@@ -48,6 +46,7 @@ wire [31:0] alu_sum = alu_in1 + alu_in2; // 共享加法器核心
 always @(*) begin
 	// 默认输出
  result = 0;
+	jump_flag = 0;
  jal_target = 0;
  wen = 1'b0;
 
@@ -175,6 +174,7 @@ always @(*) begin
 			result = pc + 4;
 			jal_target = alu_sum;
 			// $display("jal_target=0x%8h, Result=0x%8h", jal_target, result);
+			jump_flag = 1'b1;
 			wen = 1'b1;	
 			end
 
@@ -183,20 +183,21 @@ always @(*) begin
 			result = pc + 4;
 			jal_target = ($unsigned(rs1_data) + $unsigned(imm_ext)) & ~32'b1; // 低位清零
 			// $display("jalr_target=0x%8h, Result=0x%8h", jal_target, result);
+			jump_flag = 1'b1;
 			wen = 1'b1;	
 			end
 		7'b1110011: begin // SYSTEM 指令  
 			case (func3)
 				3'b000: begin 
 					if(imm_ext[11:0] == 12'h000) begin // ecall
-						 trap_valid  = 1'b1; 
-							trap_mepc = pc;	// 保存异常发生地址
-							trap_mcause = 32'd11;
+						$display("ecall at pc=%h", pc);
+						trap_valid  = 1'b1; 
+						trap_mepc = pc;	// 保存异常发生地址
+						trap_mcause = 32'd11;
 					end else if(imm_ext[11:0] == 12'h302) //mret
-							is_mret = 1'b1; //顶层应从 CSR 的 mepc 恢复 PC
+						is_mret = 1'b1; //顶层应从 CSR 的 mepc 恢复 PC
 				end
 				3'b001: begin	// CSRRW
-					// csr_addr = imm_ext[11:0];// CSR地址（通常来自指令[31:20]，这里imm_ext已解码）
 					csr_wdata = rs1_data;    // 写入CSR的新值
 					result = csr_rdata;      // 将写入的值传递到rd
 					csr_wen = 1'b1;          // 使能写CSR
