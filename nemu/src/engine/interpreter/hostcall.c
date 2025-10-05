@@ -54,7 +54,7 @@ void invalid_inst(vaddr_t thispc) {
 // 读取 CSR 寄存器
 word_t csr_read(vaddr_t csr_addr) {
   csr_addr &= 0xfff;
-  printf("csr_read: csr_addr=0x%x\n", csr_addr);
+  // printf("csr_read: csr_addr=0x%x\n", csr_addr);
   switch (csr_addr)
   {
   // case 0xc: return cpu.sr.mtvec;

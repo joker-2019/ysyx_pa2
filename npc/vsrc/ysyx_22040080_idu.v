@@ -13,8 +13,7 @@ module ysyx_22040080_idu(
 	//ebreak指令检测
 	// output is_ebreak,
 
-	output [2:0]  instr_type, // 新增指令类型标识
-	output [11:0] csr_addr
+	output [2:0]  instr_type // 新增指令类型标识
 );
 	// 直接从 instruction 中解码字段
     assign rs1 = instruction[19:15];

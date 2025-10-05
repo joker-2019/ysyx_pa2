@@ -153,31 +153,7 @@ ysyx_22040080_idu idu(
   .op(op),
   .shamt(shamt),
   // .is_ebreak(is_ebreak),
-  .instr_type(instr_type),
-  .csr_addr(csr_addr)
-);
-
-// CSR模块实例化
-ysyx_22040080_csr csr(
-  .clk(clk),
-  .rst(rst),
-  .wen(csr_wen),
-  .csr_addr(csr_addr),
-  .wdata(csr_wdata),
-  .rdata(csr_rdata),
-  .mcycle(mcycle),
-  .mcycleh(mcycleh),
-  .mcycle_full(mcycle_full),
-  .mvendorid(mvendorid),
-  .marchid(marchid),
-  // exception
-  .mepc(mepc),
-  .mcause(mcause),
-  .mstatus(mstatus),
-  .mtvec(mtvec),
-  .trap_mepc(trap_mepc),
-  .trap_mcause(trap_mcause),
-  .trap_valid(trap_valid)
+  .instr_type(instr_type)
 );
 
 //执行
@@ -211,6 +187,29 @@ ysyx_22040080_alu alu(
   .is_mret(is_mret),
   .trap_mepc(trap_mepc),
   .trap_mcause(trap_mcause)
+);
+
+// CSR模块实例化
+ysyx_22040080_csr csr(
+  .clk(clk),
+  .rst(rst),
+  .wen(csr_wen),
+  .csr_addr(csr_addr),
+  .wdata(csr_wdata),
+  .rdata(csr_rdata),
+  .mcycle(mcycle),
+  .mcycleh(mcycleh),
+  .mcycle_full(mcycle_full),
+  .mvendorid(mvendorid),
+  .marchid(marchid),
+  // exception
+  .mepc(mepc),
+  .mcause(mcause),
+  .mstatus(mstatus),
+  .mtvec(mtvec),
+  .trap_mepc(trap_mepc),
+  .trap_mcause(trap_mcause),
+  .trap_valid(trap_valid)
 );
 
  //寄存器堆实例

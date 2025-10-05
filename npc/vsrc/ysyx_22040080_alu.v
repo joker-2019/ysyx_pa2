@@ -198,14 +198,14 @@ always @(*) begin
 						is_mret = 1'b1; //顶层应从 CSR 的 mepc 恢复 PC
 				end
 				3'b001: begin	// CSRRW
+					result = csr_wdata;      // 将写入的值传递到rd
 					csr_wdata = rs1_data;    // 写入CSR的新值
-					result = csr_rdata;      // 将写入的值传递到rd
 					csr_wen = 1'b1;          // 使能写CSR
 					wen = 1'b1;
 				end
 				3'b010: begin // CSRRS
+					result = csr_wdata;
 					csr_wdata = rs1_data | csr_rdata; // CSRS: 将rs1与csr_rdata按位相与后写回csr
-					result = csr_rdata;
 					csr_wen= 1'b1;
 					wen = 1'b1;
 				end

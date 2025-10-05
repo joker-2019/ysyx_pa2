@@ -120,7 +120,7 @@ extern "C" void update_register(CPU_state *cpu){
   cpu->sr.mvendorid = mvendorid;
   cpu->sr.marchid   = marchid;
   // 新增：打印 NPC 的 cpu 结构中 CSR 值
-  printf("[NPC CSR] mstatus=0x%x, mepc= 0x%x, mcause=0x%x, mtvec=0x%x\n");
+  printf("[NPC CSR] mstatus=0x%x, mepc= 0x%x, mcause=0x%x, mtvec=0x%x\n",cpu->sr.mstatus, cpu->sr.mepc, cpu->sr.mcause,cpu->sr.mtvec);
   printf("[NPC] cpu->sr.mvendorid=0x%x, cpu->sr.marchid=0x%x\n", cpu->sr.mvendorid, cpu->sr.marchid);
   printf("[DiffTest Init] Registers fully synchronized from RTL.\n");
   // 新增：将NPC的CPU_state同步到NEMU（REF）
@@ -304,5 +304,39 @@ extern "C" void reg_write_commit(int waddr, int wdata) {
     if (waddr != 0) {  // x0 永远为 0
         cpu.gpr[waddr] = wdata;
         // printf("[SYNC] %s <= 0x%08x\n", reg_names[waddr], wdata);
+    }
+}
+
+extern "C" void csr_write_commit(int waddr, int wdata) {
+    if (waddr != 0) {  // x0 永远为 0
+      switch (waddr & 0xFFF) { // 保留低 12 位
+      case 0xF11:
+        cpu.sr.mvendorid= wdata;
+        printf("[CSR SYNC] mvendorid <= 0x%08x\n", wdata);
+        break;
+      case 0xF12:
+        cpu.sr.marchid= wdata;
+        printf("[CSR SYNC] marchid <= 0x%08x\n", wdata);
+        break;
+      case 0x300:
+        cpu.sr.mstatus= wdata;
+        printf("[CSR SYNC] mstatus <= 0x%08x\n", wdata);
+        break;
+      case 0x305:
+        cpu.sr.mtvec= wdata;
+        printf("[CSR SYNC] mtvec <= 0x%08x\n", wdata);
+        break;
+      case 0x341:
+        cpu.sr.mepc= wdata;
+        printf("[CSR SYNC] mepc <= 0x%08x\n", wdata);
+        break;
+      case 0x342:
+        cpu.sr.mcause= wdata;
+        printf("[CSR SYNC] mcause <= 0x%08x\n", wdata);
+        break;
+      default:
+        printf("[CSR SYNC] Unknown CSR write: addr=0x%x, data=0x%08x\n", waddr, wdata);
+        break;
+      }
     }
 }
