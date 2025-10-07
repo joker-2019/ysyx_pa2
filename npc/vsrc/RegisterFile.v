@@ -37,6 +37,8 @@ module RegisterFile (
         if(rst) begin
             rf[0] <= 32'b0;
         end else if (wen && waddr != 0) begin
+             $display("[WB] write: waddr=%0d wen=%b wdata=0x%08h",
+              waddr, wen, wdata);
             rf[waddr] <= wdata;
             // reg_write_commit(waddr, wdata); // DPI-C调用，同步给C端
             // reg_write_commit({27'b0, waddr}, wdata); // DPI-C调用，同步给C端

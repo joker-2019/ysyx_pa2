@@ -308,7 +308,7 @@ extern "C" void reg_write_commit(int waddr, int wdata) {
 }
 
 extern "C" void csr_write_commit(int waddr, int wdata) {
-    if (waddr != 0) {  // x0 永远为 0
+    if (waddr != 0) { 
       switch (waddr & 0xFFF) { // 保留低 12 位
       case 0xF11:
         cpu.sr.mvendorid= wdata;

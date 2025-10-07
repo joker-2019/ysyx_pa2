@@ -1,6 +1,7 @@
 module ysyx_22040080_idu(
 	input [31:0] instruction, //来自IFU的指令
-
+    input [31:0] rs1_data,
+    input [31:0] rs2_data,
 	output [4:0] rs1, // 源寄存器rs1的地址
 	output [4:0] rs2,	// 源寄存器2 new
 
@@ -12,8 +13,13 @@ module ysyx_22040080_idu(
 	output [4:0] shamt,
 	//ebreak指令检测
 	// output is_ebreak,
+    output [11:0] csr_addr, //csr寄存器地址
+	output [2:0]  instr_type, // 新增指令类型标识
 
-	output [2:0]  instr_type // 新增指令类型标识
+    output is_jal,
+    output is_jalr,
+    output is_branch,
+    output branch_taken
 );
 	// 直接从 instruction 中解码字段
     assign rs1 = instruction[19:15];
@@ -38,6 +44,10 @@ module ysyx_22040080_idu(
     (op == 7'b0010111) ? 3'b100 : // U-type (auipc)
     (op == 7'b1101111) ? 3'b101 : // J-type (jal)
     3'b111;
+
+    assign is_jal   = (op == 7'b1101111);
+    assign is_jalr   = (op == 7'b1100111);
+    assign is_branch = (op == 7'b1100011);
 
 	//------------------------------------------
     // 立即数扩展（按指令类型区分）
@@ -66,6 +76,7 @@ module ysyx_22040080_idu(
 
 	// 符号扩展立即数 (I-type)
 	assign imm_ext = imm;
+    assign csr_addr = (op == 7'b1110011) ? imm_ext[11:0] : 12'b0; //csr地址
 
     //------------------------------------------
     // ebreak检测（SYSTEM指令）
