@@ -69,6 +69,10 @@ export "DPI-C" task get_csr_info;
       default: $display("Unsport csr_addr: %b", csr_addr);
      endcase
     end
+    if(trap_valid)begin 
+      mepc = trap_mepc; 
+      mcause = trap_mcause;
+      end
   end
 
   assign mcycle = mcycle_full[31:0]; 

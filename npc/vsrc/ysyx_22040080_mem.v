@@ -22,8 +22,11 @@ module ysyx_22040080_mem (
 // ----------------------
 always @(*) begin
   if(is_load) begin
-    $display("[EX] lw: mem_addr=0x%08h func3=%b", mem_addr, func3);
+    // $display("[EX] lw: mem_addr=0x%08h func3=%b", mem_addr, func3);
     case (func3)
+      3'b000: begin
+        load_data = $signed(lw_mem_read(mem_addr, 1) << 24) >>> 24;
+       end
       3'b010: begin //LW指令 加载 4 字节
         load_data = lw_mem_read(mem_addr, 4);
       end

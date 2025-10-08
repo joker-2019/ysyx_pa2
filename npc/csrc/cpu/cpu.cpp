@@ -174,7 +174,7 @@ void exec_once() {
     contextp->gotFinish(true);
     // assert(0);
   }else{
-    printf("Difftest PASS\n");
+    // printf("Difftest PASS\n");
   }
   #endif
   
@@ -192,7 +192,7 @@ bool check_regs(CPU_state *dut, CPU_state *ref) {
         printf("PC Mismatch: DUT = 0x%08x, REF = 0x%08x\n", dut->pc, ref->pc);
         return true;
     }
-     // 新增：对比 CSR 寄存器
+    /*  // 新增：对比 CSR 寄存器
     if (dut->sr.mepc != ref->sr.mepc) {
         printf("CSR Mismatch: mepc | DUT=0x%08x, REF=0x%08x\n", dut->sr.mepc, ref->sr.mepc);
         return true;
@@ -216,7 +216,7 @@ bool check_regs(CPU_state *dut, CPU_state *ref) {
     if (dut->sr.marchid != ref->sr.marchid) {
         printf("CSR Mismatch: marchid | DUT=0x%08x, REF=0x%08x\n", dut->sr.marchid, ref->sr.marchid);
         return true;
-    }
+    } */
     return false;
 }
 

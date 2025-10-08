@@ -113,4 +113,6 @@ void init_monitor(int argc, char *argv[]){
   // 将寄存器状态同步到 REF
   difftest_regcpy(&cpu, DIFFTEST_TO_REF);
  
+  // 初始化系统时间
+  init_clock();
 }
