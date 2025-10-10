@@ -8,7 +8,8 @@
 #include "../utils/iringbuf.h"
 #include "../config/config.h"
 #include <sys/time.h>
-#include <stdint.h>
+#include <time.h>
+#include "../device/mmio.h"
 
 #define PG_ALIGN __attribute((aligned(4096)))
 uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
@@ -25,13 +26,20 @@ static uint64_t get_time_us() {
 }
 
 // 初始化时钟（在仿真启动时调用）
-void init_clock() {
+/* void init_clock() {
     boot_time = get_time_us();
 }
-
+ */
 // 获取从启动到现在的时间（微秒）
-uint64_t get_clock_time() {
+/* uint64_t get_clock_time() {
     return get_time_us() - boot_time;
+} */
+
+uint64_t get_clock_time() {
+    struct timespec ts;
+    // clock_gettime(CLOCK_MONOTONIC, &ts);
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return (uint64_t)ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000ULL;
 }
 
 void init_mem(){
@@ -71,10 +79,11 @@ extern "C" uint32_t mem_read(int pc) {
 }
 
 extern "C" uint32_t lw_mem_read(int addr, int len) {
-    // 判断是否访问时钟 MMIO
-    if ((addr & ~0x3u) == RTC_ADDR) {
-        uint64_t now = get_clock_time();
+    if ((addr & ~0x3u) == RTC_ADDR)
+    {
+        uint64_t now = get_clock_time();    // 当前时间 (us)
         return (uint32_t)(now & 0xffffffff); // 返回低32位（us）
+        // return (uint32_t)time(NULL); // 秒数
     }
     // uint32_t offset = addr - CONFIG_MBASE; // 按照字节寻址(uint8_t)
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
@@ -89,9 +98,12 @@ extern "C" uint32_t lw_mem_read(int addr, int len) {
 // 写入数据
 // 注意：RISC-V数据访问通常是按字（4字节）对齐
 extern "C" void sw_mem_write(int addr, int len, int data) {
+    uint32_t aligned_addr = addr & ~0x3u; // 对其地址
+    // printf("addr = 0x%08x, aligned_addr = 0x%08x\n", addr, aligned_addr);
     // 串口写入
-    if (addr == SERIAL_ADDR) {
-        putchar((char)(data & 0xFF));
+    if (aligned_addr == SERIAL_ADDR) {
+        printf("[UART] write char = '%c' (0x%02x)\n", data & 0xFF, data & 0xFF);
+        putchar((char)(data & 0xFF)); 
         fflush(stdout);  // 立即刷新输出
         return;
     }

@@ -13,7 +13,7 @@ extern uint8_t pmem[CONFIG_MSIZE];
 
 void init_mem();
 
-void init_clock();
+// void init_clock();
 
 // uint32_t *guest_to_host(uint32_t paddr);
 

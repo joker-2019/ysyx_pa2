@@ -14,17 +14,20 @@ module ysyx_22040080_mem (
 );
 // import "DPI-C" function void ebreak_trigger();  // 声明 DPI-C 函数
  import "DPI-C" function int lw_mem_read(input int addr, input int len);
- import "DPI-C" function void sw_mem_write(input int addr, input int data, input int len);
+ import "DPI-C" function void sw_mem_write(input int addr, input int len, input int data);
 
 
 // ----------------------
 //  LOAD 数据读取逻辑
 // ----------------------
 always @(*) begin
-  if(is_load) begin
+   if (rst) begin
+   load_data = 32'b0;
+   end else if(is_load) 
+   begin
     // $display("[EX] lw: mem_addr=0x%08h func3=%b", mem_addr, func3);
     case (func3)
-      3'b000: begin
+      3'b000: begin //LB 加载1字节 有符号扩展
         load_data = $signed(lw_mem_read(mem_addr, 1) << 24) >>> 24;
        end
       3'b010: begin //LW指令 加载 4 字节
@@ -41,16 +44,33 @@ always @(*) begin
       end
       default: load_data = 32'b0; // 未支持的 load 类型 
     endcase
-  end else begin
+    end else begin
     load_data = alu_result;
     end
-end
 
- always @(posedge clk) begin
+    if(is_store) begin
+     $display("[MEM] store addr=%h data=%h", mem_addr, mem_wdata);
+     case (func3)
+      3'b000: begin //sb 存2字节
+        sw_mem_write(mem_addr, 1, mem_wdata);
+      end 
+      3'b001: begin // SH: 存 2 字节
+        sw_mem_write(mem_addr, 2, mem_wdata);
+      end
+      3'b010: begin //sw 存4字节
+        sw_mem_write(mem_addr, 4, mem_wdata);
+      end
+      default: $display("ERROR: Unsupported store func3 %b", func3);
+     endcase   
+    end
+  end
+
+/*  always @(posedge clk) begin
   if (rst) begin
    load_data = 32'b0;
    end else begin
     if(is_store) begin
+     $display("[MEM] store addr=%h data=%h", mem_addr, mem_wdata);
      case (func3)
       3'b000: begin //sb 存2字节
         sw_mem_write(mem_addr, 1, mem_wdata);
@@ -65,6 +85,6 @@ end
      endcase   
     end
    end
- end
+ end */
    
 endmodule

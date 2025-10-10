@@ -16,6 +16,7 @@ static char *file_elf = NULL; // new add elf
 
 void sdb_set_batch_mode();
 void init_isa();
+void init_device();
 
 // 加载镜像
 static long load_img() {
@@ -83,6 +84,9 @@ void init_monitor(int argc, char *argv[]){
   /* Initialize memory. */
   init_mem();
 
+  /* Initialize devices*/
+  // init_device();
+
   /* Perform ISA dependent initialization. */
   init_isa();
 
@@ -114,5 +118,5 @@ void init_monitor(int argc, char *argv[]){
   difftest_regcpy(&cpu, DIFFTEST_TO_REF);
  
   // 初始化系统时间
-  init_clock();
+  // init_clock();
 }
