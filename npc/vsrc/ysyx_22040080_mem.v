@@ -47,30 +47,14 @@ always @(*) begin
     end else begin
     load_data = alu_result;
     end
-
-    if(is_store) begin
-     $display("[MEM] store addr=%h data=%h", mem_addr, mem_wdata);
-     case (func3)
-      3'b000: begin //sb 存2字节
-        sw_mem_write(mem_addr, 1, mem_wdata);
-      end 
-      3'b001: begin // SH: 存 2 字节
-        sw_mem_write(mem_addr, 2, mem_wdata);
-      end
-      3'b010: begin //sw 存4字节
-        sw_mem_write(mem_addr, 4, mem_wdata);
-      end
-      default: $display("ERROR: Unsupported store func3 %b", func3);
-     endcase   
-    end
   end
 
-/*  always @(posedge clk) begin
+ always @(posedge clk) begin
   if (rst) begin
    load_data = 32'b0;
    end else begin
     if(is_store) begin
-     $display("[MEM] store addr=%h data=%h", mem_addr, mem_wdata);
+     // $display("[MEM] store addr=%h data=%h", mem_addr, mem_wdata);
      case (func3)
       3'b000: begin //sb 存2字节
         sw_mem_write(mem_addr, 1, mem_wdata);
@@ -85,6 +69,6 @@ always @(*) begin
      endcase   
     end
    end
- end */
+ end
    
 endmodule

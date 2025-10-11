@@ -9,7 +9,6 @@
 #include "../config/config.h"
 #include <sys/time.h>
 #include <time.h>
-#include "../device/mmio.h"
 
 #define PG_ALIGN __attribute((aligned(4096)))
 uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
@@ -98,13 +97,13 @@ extern "C" uint32_t lw_mem_read(int addr, int len) {
 // 写入数据
 // 注意：RISC-V数据访问通常是按字（4字节）对齐
 extern "C" void sw_mem_write(int addr, int len, int data) {
-    uint32_t aligned_addr = addr & ~0x3u; // 对其地址
-    // printf("addr = 0x%08x, aligned_addr = 0x%08x\n", addr, aligned_addr);
+    // uint32_t aligned_addr = addr & ~0x3u; // 对其地址
+    printf("[UART] addr=0x%x, data=0x%x, len=%u\n", addr, data, len);
     // 串口写入
-    if (aligned_addr == SERIAL_ADDR) {
+    if (addr >= SERIAL_ADDR  && addr <= SERIAL_ADDR + 4) {
         printf("[UART] write char = '%c' (0x%02x)\n", data & 0xFF, data & 0xFF);
         putchar((char)(data & 0xFF)); 
-        fflush(stdout);  // 立即刷新输出
+        // fflush(stdout);  // 立即刷新输出
         return;
     }
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
