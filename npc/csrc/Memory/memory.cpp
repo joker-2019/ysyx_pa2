@@ -74,8 +74,7 @@ extern "C" uint32_t mem_read(int pc) {
 }
 
 extern "C" uint32_t lw_mem_read(int addr, int len) {
-    // printf("[MEM] lw addr=0x%x len=%u\n", addr, len);
-    // uint64_t now = get_clock_time();                           // 当前时间 (us)
+
     uint64_t now = get_time_us() - boot_time; // 启动后的微秒数
     if (addr == RTC_ADDR){
         // printf("[RTC] read time = %u\n", (uint32_t)(now & 0xffffffff));
@@ -84,14 +83,13 @@ extern "C" uint32_t lw_mem_read(int addr, int len) {
     if (addr == RTC_ADDR + 4){
         return (uint32_t)(now >> 32); // 返回高32位
     }
-    // uint32_t offset = addr - CONFIG_MBASE; // 按照字节寻址(uint8_t)
+
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
      #if ENABLE_MTRACE
     display_mread(addr, len);
     #endif
     uint32_t ret = host_read(guest_to_host(addr), len);
     return ret;
-    // return phys_mem_read((uint32_t)addr, len);
 }
 
 // 写入数据
