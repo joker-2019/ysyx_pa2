@@ -312,27 +312,27 @@ extern "C" void csr_write_commit(int waddr, int wdata) {
       switch (waddr & 0xFFF) { // 保留低 12 位
       case 0xF11:
         cpu.sr.mvendorid= wdata;
-        printf("[CSR SYNC] mvendorid <= 0x%08x\n", wdata);
+        // printf("[CSR SYNC] mvendorid <= 0x%08x\n", wdata);
         break;
       case 0xF12:
         cpu.sr.marchid= wdata;
-        printf("[CSR SYNC] marchid <= 0x%08x\n", wdata);
+        // printf("[CSR SYNC] marchid <= 0x%08x\n", wdata);
         break;
       case 0x300:
         cpu.sr.mstatus= wdata;
-        printf("[CSR SYNC] mstatus <= 0x%08x\n", wdata);
+        // printf("[CSR SYNC] mstatus <= 0x%08x\n", wdata);
         break;
       case 0x305:
         cpu.sr.mtvec= wdata;
-        printf("[CSR SYNC] mtvec <= 0x%08x\n", wdata);
+        // printf("[CSR SYNC] mtvec <= 0x%08x\n", wdata);
         break;
       case 0x341:
         cpu.sr.mepc= wdata;
-        printf("[CSR SYNC] mepc <= 0x%08x\n", wdata);
+        // printf("[CSR SYNC] mepc <= 0x%08x\n", wdata);
         break;
       case 0x342:
         cpu.sr.mcause= wdata;
-        printf("[CSR SYNC] mcause <= 0x%08x\n", wdata);
+        // printf("[CSR SYNC] mcause <= 0x%08x\n", wdata);
         break;
       default:
         printf("[CSR SYNC] Unknown CSR write: addr=0x%x, data=0x%08x\n", waddr, wdata);

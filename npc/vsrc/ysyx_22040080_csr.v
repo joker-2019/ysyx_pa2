@@ -64,7 +64,10 @@ export "DPI-C" task get_csr_info;
       12'hB80: mcycle_full = { wdata, mcycle_full[31:0] }; //写高32位
       12'h341: mepc = wdata; // mepc
       12'h342: mcause = wdata; // mcause
-      12'h305: begin mtvec = wdata; $display("mtvec trigger and mtvec is :0x%h, wdata:0x%h", mtvec, wdata);  end
+      12'h305: begin 
+        mtvec = wdata; 
+        // $display("mtvec trigger and mtvec is :0x%h, wdata:0x%h", mtvec, wdata);  
+        end
       12'h300: mstatus = wdata; // mstatus
       default: $display("Unsport csr_addr: %b", csr_addr);
      endcase

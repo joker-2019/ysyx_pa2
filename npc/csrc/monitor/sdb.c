@@ -234,6 +234,7 @@ int sdb_mainloop(int argc, char *argv[]) {
 
   char *line = NULL;
   while (!contextp->gotFinish()) {
+  // while(!sim_finished){
     line = rl_gets();
     if (strlen(line) > 0){
       int success = cmd_dispatch(line);
