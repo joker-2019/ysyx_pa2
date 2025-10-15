@@ -16,9 +16,10 @@ void init_monitor(int argc, char *argv[]);
 
 // 命令函数
 static int cmd_c(char *args) {
- while (!contextp->gotFinish()) {
-  exec_once();
- }
+ // while (!contextp->gotFinish()) {
+  while (!sim_finished) {
+    exec_once();
+  }
  printf("Simulation finished (via ebreak)\n");
  return 0;
 }
@@ -233,8 +234,8 @@ int sdb_mainloop(int argc, char *argv[]) {
   init_sdb();          // 初始化 SDB
 
   char *line = NULL;
-  while (!contextp->gotFinish()) {
-  // while(!sim_finished){
+  // while (!contextp->gotFinish()) {
+  while(!sim_finished){
     line = rl_gets();
     if (strlen(line) > 0){
       int success = cmd_dispatch(line);

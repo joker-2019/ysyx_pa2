@@ -291,6 +291,13 @@ extern "C" void ebreak_trigger() {
   } else {
     printf("\33[1;31mHIT BAD TRAP (code = %u)\33[0m\n", exit_code);
   }
+  // ⚙️ 延迟一段时间，等待UART缓冲区输出完成
+  fflush(stdout);  // 先手动刷新 C stdout 缓冲
+  fflush(stderr);
+
+  // 等待 UART 完全输出
+  // 模拟等待大约 10~50ms（Verilator 仿真时间，不是真实时间）
+  usleep(500000); // 50毫秒，可根据情况调整
 }
 
 extern "C" uint32_t get_reg_val(const char *regname) {
