@@ -50,7 +50,7 @@ extern "C" void get_csr_info(
 );
 
 void step_and_dump_wave() {
-  top->eval();
+  // top->eval();
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 }
@@ -89,6 +89,7 @@ bool is_jalr(uint32_t inst) {
   uint32_t opcode = inst & 0x7F;
   return opcode == OPCODE_JALR;
 }
+
 
 extern "C" void update_register(CPU_state *cpu){
   // uint32_t npc_pc;
@@ -177,7 +178,14 @@ void exec_once() {
     // printf("Difftest PASS\n");
   }
   #endif
-  
+
+  // 每条指令执行完后更新设备
+  device_update();
+  if (inst == 0x00100073) { // ebreak 指令编码
+    device_update();
+    fflush(stdout);
+  }
+
 }
 
 bool check_regs(CPU_state *dut, CPU_state *ref) {
@@ -291,13 +299,6 @@ extern "C" void ebreak_trigger() {
   } else {
     printf("\33[1;31mHIT BAD TRAP (code = %u)\33[0m\n", exit_code);
   }
-  // ⚙️ 延迟一段时间，等待UART缓冲区输出完成
-  fflush(stdout);  // 先手动刷新 C stdout 缓冲
-  fflush(stderr);
-
-  // 等待 UART 完全输出
-  // 模拟等待大约 10~50ms（Verilator 仿真时间，不是真实时间）
-  usleep(500000); // 50毫秒，可根据情况调整
 }
 
 extern "C" uint32_t get_reg_val(const char *regname) {

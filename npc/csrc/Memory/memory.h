@@ -27,4 +27,6 @@ uint32_t lw_mem_read(int addr, int len);
 
 void sw_mem_write(int addr, int len, int data);
 
+void device_update();
+
 #endif

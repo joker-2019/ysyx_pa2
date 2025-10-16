@@ -26,8 +26,8 @@ static int cmd_c(char *args) {
 
 // 返回0表示继续执行，-1表示退出
 static int cmd_q(char *args) {
- // ebreak_trigger(); //触发ebreak
- return -1; // 返回-1表示退出
+ ebreak_trigger(); //触发ebreak
+ // return -1; // 返回-1表示退出
 }
 
 static int cmd_si(char *args) {

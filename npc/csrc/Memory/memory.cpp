@@ -17,6 +17,11 @@ uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 static uint64_t boot_time = 0; //系统启动时间
 #define RTC_ADDR     0xa0000048  // real-time clock MMIO 地址
 
+static bool need_update = false;
+static int uart_char;
+
+#define TIMER_HZ 60 // 模拟每秒刷新频率
+
 uint64_t get_time_us() {
     struct timespec ts;
     // clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -29,13 +34,15 @@ void init_device() {
   printf("[Device Init] boot_time = %lu us\n", boot_time);
 }
 
-// 获取从启动到现在的时间（微秒）
-/* uint64_t get_clock_time() {
-    if (boot_time == 0) {
-        boot_time = get_time_us(); // 第一次调用时记录启动时间
+void device_update() {
+    // printf("device_update called\n");
+    if (need_update)
+    {
+        putchar(uart_char);
+        fflush(stdout);
+        need_update = false;
     }
-    return get_time_us() - boot_time; // 返回从启动到现在的微秒差值
-} */
+}
 
 void init_mem(){
     memset(pmem, 0, sizeof(pmem));  // 清空内存
@@ -78,10 +85,20 @@ extern "C" uint32_t lw_mem_read(int addr, int len) {
     uint64_t now = get_time_us() - boot_time; // 启动后的微秒数
     if (addr == RTC_ADDR){
         // printf("[RTC] read time = %u\n", (uint32_t)(now & 0xffffffff));
+        fflush(stdout);
         return (uint32_t)(now & 0xffffffff); // 返回低32位 (us)
     } 
     if (addr == RTC_ADDR + 4){
+        // printf("[DBG] lw_mem_read: RTC high read -> %u\n", (uint32_t)(now >> 32));
+        fflush(stdout);
         return (uint32_t)(now >> 32); // 返回高32位
+    }
+    // 💡 模拟串口接收寄存器读取
+    if (addr == SERIAL_ADDR) {
+        // 没有外部输入时返回 0，表示没有数据
+        // printf("[DBG] lw_mem_read: SERIAL_ADDR read (addr=0x%x len=%d)\n", addr, len);
+        fflush(stdout);
+        return 0;
     }
 
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
@@ -99,8 +116,10 @@ extern "C" void sw_mem_write(int addr, int len, int data) {
     // 串口写入
     if (addr == SERIAL_ADDR) {
         // printf("[UART] write char = '%c' (0x%02x)\n", data & 0xFF, data & 0xFF);
-        putchar((char)(data & 0xFF)); 
+        // putchar((char)(data & 0xFF)); 
         // fflush(stdout);  // 立即刷新输出
+        need_update = true;
+        uart_char = data & 0xFF;  // 保存要输出的字符
         return;
     }
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
