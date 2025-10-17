@@ -181,11 +181,6 @@ void exec_once() {
 
   // 每条指令执行完后更新设备
   device_update();
-  if (inst == 0x00100073) { // ebreak 指令编码
-    device_update();
-    fflush(stdout);
-  }
-
 }
 
 bool check_regs(CPU_state *dut, CPU_state *ref) {
@@ -292,7 +287,7 @@ void print_registers() {
 
 // DPI-C 函数
 extern "C" void ebreak_trigger() {
-  sim_finished = true;
+  // sim_finished = true;
   uint32_t exit_code = rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[10];
   if ((exit_code & 0xff) == 0) {
     printf("\33[1;32mHIT GOOD TRAP\33[0m\n");

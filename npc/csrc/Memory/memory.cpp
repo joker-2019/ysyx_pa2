@@ -20,8 +20,6 @@ static uint64_t boot_time = 0; //系统启动时间
 static bool need_update = false;
 static int uart_char;
 
-#define TIMER_HZ 60 // 模拟每秒刷新频率
-
 uint64_t get_time_us() {
     struct timespec ts;
     // clock_gettime(CLOCK_MONOTONIC, &ts);
