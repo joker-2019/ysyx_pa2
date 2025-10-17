@@ -162,7 +162,7 @@ always @(*) begin
 			case (func3)
 				3'b000: begin 
 					if(imm_ext[11:0] == 12'h000) begin // ecall
-						$display("ecall at pc=%h", pc);
+						// $display("ecall at pc=%h", pc);
 						trap_valid  = 1'b1; 
 						trap_mepc = pc;	// 保存异常发生地址
 						trap_mcause = 32'd11;

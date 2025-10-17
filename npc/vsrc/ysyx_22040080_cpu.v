@@ -112,6 +112,7 @@ always @(posedge clk) begin
   if(rst) begin
     pc <= 32'h80000000;
   end else if(trap_valid) begin
+    // $display("Trap taken: jumping to mtvec=0x%h from pc=%h", mtvec, pc);
     pc <= mtvec;
   end else if(is_mret) begin 
     pc <= mepc;

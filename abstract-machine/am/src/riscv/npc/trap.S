@@ -55,6 +55,9 @@ __am_asm_trap:
   mv a0, sp
   jal __am_irq_handle
 
+  mv sp, a0  # sp = next 的上下文基址（Context*）
+  # 从 new context 恢复 CSR（mstatus, mepc）
+  
   LOAD t1, OFFSET_STATUS(sp)
   LOAD t2, OFFSET_EPC(sp)
   csrw mstatus, t1

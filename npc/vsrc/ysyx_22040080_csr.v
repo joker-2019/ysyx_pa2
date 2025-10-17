@@ -72,7 +72,8 @@ export "DPI-C" task get_csr_info;
       default: $display("Unsport csr_addr: %b", csr_addr);
      endcase
     end
-    if(trap_valid)begin 
+    if(trap_valid)begin
+      // $display("Trap triggered: mepc=%h, mcause=%d, mtvec=%h", trap_mepc, trap_mcause, mtvec);
       mepc = trap_mepc; 
       mcause = trap_mcause;
       end

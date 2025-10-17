@@ -59,9 +59,6 @@ __am_asm_trap:
   or t1, t1, a0
   csrw mstatus, t1
 
-.align 3
-.globl __am_asm_set
-__am_asm_set:
   mv a0, sp  
   jal __am_irq_handle  # 调用：__am_irq_handle(Context *cur) -> 返回 Context *next (放在 a0)
 
