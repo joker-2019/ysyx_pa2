@@ -92,12 +92,12 @@ extern "C" uint32_t lw_mem_read(int addr, int len) {
         return (uint32_t)(now >> 32); // 返回高32位
     }
     // 💡 模拟串口接收寄存器读取
-    if (addr == SERIAL_ADDR) {
+    /* if (addr == SERIAL_ADDR) {
         // 没有外部输入时返回 0，表示没有数据
         // printf("[DBG] lw_mem_read: SERIAL_ADDR read (addr=0x%x len=%d)\n", addr, len);
         fflush(stdout);
         return 0;
-    }
+    } */
 
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
      #if ENABLE_MTRACE

@@ -61,7 +61,9 @@ __am_asm_trap:
 
   mv a0, sp  
   jal __am_irq_handle  # 调用：__am_irq_handle(Context *cur) -> 返回 Context *next (放在 a0)
-
+  
+.globl __am_asm_set
+__am_asm_set:
   mv sp, a0  # sp = next 的上下文基址（Context*）
   # 从 new context 恢复 CSR（mstatus, mepc）
   LOAD t1, OFFSET_STATUS(sp)

@@ -20,7 +20,7 @@ static int cmd_c(char *args) {
   while (!sim_finished) {
     exec_once();
   }
- printf("Simulation finished (via ebreak)\n");
+ // printf("Simulation finished (via ebreak)\n");
  return 0;
 }
 
