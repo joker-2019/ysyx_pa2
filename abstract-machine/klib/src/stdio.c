@@ -146,6 +146,12 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                     }
                     break;
                 }
+                case 'c':{
+                    char ch = (char)va_arg(args_copy, int);
+                    *buf++ = ch;
+                    count++;
+                    break;
+                }
                 default:
                     *buf++ = '%';
                     *buf++ = *fmt;
