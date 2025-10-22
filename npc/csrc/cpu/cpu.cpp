@@ -62,9 +62,9 @@ void sim_init() {
   rootp = top->rootp;
 
   init_disasm("riscv32-pc-linux-gnu"); // 初始化反汇编器
-  contextp->traceEverOn(true); // 关闭波形器可以运行红白机模拟器 make ARCH=native run mainargs=mario
-  top->trace(tfp, 0);
-  tfp->open("dump.vcd");
+  // contextp->traceEverOn(true); // 关闭波形器可以运行红白机模拟器 make ARCH=native run mainargs=mario
+  // top->trace(tfp, 0);
+  // tfp->open("dump.vcd");
 }
 
 void sim_exit() {
