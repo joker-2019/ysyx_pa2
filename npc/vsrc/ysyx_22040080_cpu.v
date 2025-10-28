@@ -19,7 +19,7 @@ module ysyx_22040080_cpu(
   wire [2:0] instr_type; // 指令类型
   wire [31:0] jal_target; //跳转目标
   wire [31:0] next_pc;
-  wire jump_flag;
+  wire jump_flag; //是否跳转
   // wire branch_taken;
   wire [31:0] mem_addr;     // 访存地址
   wire [31:0] mem_wdata;    // SW写入内存数据
@@ -43,29 +43,12 @@ module ysyx_22040080_cpu(
   wire        is_mret;     // mret
   wire [31:0] trap_mepc;
   wire [31:0] trap_mcause;
-
-
-// import "DPI-C" function void ebreak_trigger();  // 声明 DPI-C 函数
-import "DPI-C" function int lw_mem_read(input int addr, input int len);
-import "DPI-C" function void sw_mem_write(input int addr, input int data, input int len);
-
-  // PC更新逻辑：新增分支、jal、jalr判断
-  wire is_jal   = (op == 7'b1101111);
-  wire is_jalr   = (op == 7'b1100111);
-  wire is_branch = (op == 7'b1100011);
-
-  wire branch_taken = is_branch && (
-    (func3 == 3'b000 && rs1_data == rs2_data) ||       // beq
-    (func3 == 3'b001 && rs1_data != rs2_data) ||       // bne
-    (func3 == 3'b100 && $signed(rs1_data) < $signed(rs2_data)) || // blt
-    (func3 == 3'b101 && $signed(rs1_data) >= $signed(rs2_data)) ||   // bge
-    (func3 == 3'b110 && $unsigned(rs1_data) < $unsigned(rs2_data))  ||   // BLTU
-    (func3 == 3'b111 && $unsigned(rs1_data) >= $unsigned(rs2_data))  // BGEU
-  );
-           
+  wire is_jal;
+  wire is_jalr;
+  wire is_branch;
+  wire branch_taken; 
+          
   assign next_pc = (branch_taken || is_jal || is_jalr) ? jal_target : pc + 4;
-  assign csr_addr = (op == 7'b1110011) ? imm_ext[11:0] : 12'b0; // CSR地址（通常来自指令[31:20]，这里imm_ext已解码）
-  // 顶层直接读取CSR数据
   assign csr_rdata =  (csr_addr == 12'hB00) ? mcycle_full[31:0] :
                       (csr_addr == 12'hB80) ? mcycle_full[63:32] :
                       (csr_addr == 12'hF11) ? mvendorid : // "ysyx"
@@ -74,57 +57,20 @@ import "DPI-C" function void sw_mem_write(input int addr, input int data, input 
                       (csr_addr == 12'h342) ? mcause :
                       (csr_addr == 12'h305) ? mtvec :
                       (csr_addr == 12'h300) ? mstatus :
-                      32'b0;
-// ----------------------
-//  LOAD 数据读取逻辑
-// ----------------------
-always @(*) begin
-  if(is_load) begin
-    case (func3)
-      3'b010: begin //LW指令 加载 4 字节
-        load_data = lw_mem_read(mem_addr, 4);
-      end
-      3'b100: begin // LBU: 加载 1 字节，无符号扩展
-        load_data = lw_mem_read(mem_addr, 1) & 32'hFF;
-      end
-      3'b101: begin // Lhu: 加载 2 字节，零扩展
-         load_data = lw_mem_read(mem_addr, 2) & 32'hFFFF;
-      end
-      3'b001: begin // Lh: 加载 2 字节，有符号扩展
-        load_data = $signed(lw_mem_read(mem_addr, 2) << 16) >>> 16; // >>> 16：算术右移16位，高位填充​​符号位​
-      end
-      default: load_data = 32'b0; // 未支持的 load 类型 
-    endcase
-  end else begin
-    load_data = alu_result;
-    end
-end
+                      // (csr_addr == 12'hB00) ? mcycle :
+                      32'b0;                     
 
 always @(posedge clk) begin
   // 初始化
-  if(rst) begin 
+  if(rst) begin
     pc <= 32'h80000000;
   end else if(trap_valid) begin
+    // $display("Trap taken: jumping to mtvec=0x%h from pc=%h", mtvec, pc);
     pc <= mtvec;
   end else if(is_mret) begin 
     pc <= mepc;
   end else begin 
     pc <= next_pc;
-  end
-  // 只支持 SW (一次写4字节)
-  if(is_store) begin
-    case (func3)
-      3'b000: begin //sb 存2字节
-        sw_mem_write(mem_addr, 1, mem_wdata);
-      end 
-      3'b001: begin // SH: 存 2 字节
-        sw_mem_write(mem_addr, 2, mem_wdata);
-      end
-      3'b010: begin //sw 存4字节
-        sw_mem_write(mem_addr, 4, mem_wdata);
-      end
-      default: $display("ERROR: Unsupported store func3 %b", func3);
-    endcase   
   end
 end
 
@@ -151,7 +97,15 @@ ysyx_22040080_idu idu(
   .op(op),
   .shamt(shamt),
   // .is_ebreak(is_ebreak),
-  .instr_type(instr_type)
+  .csr_addr(csr_addr),
+  .instr_type(instr_type),
+  //new add
+  .rs1_data(rs1_data),
+  .rs2_data(rs2_data),
+  .is_jal(is_jal),
+  .is_jalr(is_jalr),
+  .is_branch(is_branch),
+  .branch_taken(branch_taken)
 );
 
 //执行
@@ -165,10 +119,11 @@ ysyx_22040080_alu alu(
   .op(op),
   .pc(pc),
   .shamt(shamt),
+  .jump_flag(jump_flag),
   .jal_target(jal_target),
   .result(alu_result),
   .wen(wen),
-  // .branch_taken(branch_taken).
+  .branch_taken(branch_taken),
   .mem_addr(mem_addr),   // 新增: 访存地址
   .mem_wdata(mem_wdata), // 新增: SW写入内存数据
   // .mem_rdata(mem_rdata),
@@ -191,9 +146,9 @@ ysyx_22040080_csr csr(
   .clk(clk),
   .rst(rst),
   .wen(csr_wen),
-  .addr(csr_addr),
+  .csr_addr(csr_addr),
   .wdata(csr_wdata),
-  // .rdata(csr_rdata),
+  .rdata(csr_rdata),
   .mcycle(mcycle),
   .mcycleh(mcycleh),
   .mcycle_full(mcycle_full),
@@ -207,6 +162,19 @@ ysyx_22040080_csr csr(
   .trap_mepc(trap_mepc),
   .trap_mcause(trap_mcause),
   .trap_valid(trap_valid)
+);
+
+// 访存
+ysyx_22040080_mem storage(
+  .clk(clk),
+  .rst(rst),
+  .load_data(load_data),
+  .is_load(is_load),
+  .is_store(is_store),
+  .mem_addr(mem_addr),
+  .mem_wdata(mem_wdata),
+  .func3(func3),
+  .alu_result(alu_result)
 );
 
  //寄存器堆实例

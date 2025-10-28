@@ -40,8 +40,17 @@ const char* reg_names[] = {
   "s8","s9","s10","s11","t3","t4","t5","t6"
 };
 
+extern "C" void get_csr_info(
+  uint32_t *mstatus,
+  uint32_t *mepc,
+  uint32_t *mcause,
+  uint32_t *mtvec,
+  uint32_t *mvendorid,
+  uint32_t *marchid
+);
+
 void step_and_dump_wave() {
-  top->eval();
+  // top->eval();
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 }
@@ -53,9 +62,9 @@ void sim_init() {
   rootp = top->rootp;
 
   init_disasm("riscv32-pc-linux-gnu"); // 初始化反汇编器
-  contextp->traceEverOn(true);
-  top->trace(tfp, 0);
-  tfp->open("dump.vcd");
+  // contextp->traceEverOn(true); // 关闭波形器可以运行红白机模拟器 make ARCH=native run mainargs=mario
+  // top->trace(tfp, 0);
+  // tfp->open("dump.vcd");
 }
 
 void sim_exit() {
@@ -81,6 +90,7 @@ bool is_jalr(uint32_t inst) {
   return opcode == OPCODE_JALR;
 }
 
+
 extern "C" void update_register(CPU_state *cpu){
   // uint32_t npc_pc;
   uint32_t regs[32];
@@ -92,10 +102,30 @@ extern "C" void update_register(CPU_state *cpu){
   // printf("get reg infomation done!\n");
   regs[0] = 0; //rf[0]在初始化的时候已经赋值为0了
   for (int i = 0; i < 32; i++) {
-    cpu->gpr[i] = regs[i];
+    cpu->gpr[i] = regs[i]; 
   }
   cpu->pc = CONFIG_MBASE;
+
+  // 读取 CSR
+  uint32_t mstatus, mepc, mcause, mtvec, mvendorid, marchid;
+  svScope csr_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.csr");
+  assert(csr_scope);
+  svScope prev_scope2 = svSetScope(csr_scope);
+  get_csr_info(&mstatus, &mepc, &mcause, &mtvec, &mvendorid, &marchid);
+  svSetScope(prev_scope2);
+
+  cpu->sr.mstatus   = mstatus;
+  cpu->sr.mepc      = mepc;
+  cpu->sr.mcause    = mcause;
+  cpu->sr.mtvec     = mtvec;
+  cpu->sr.mvendorid = mvendorid;
+  cpu->sr.marchid   = marchid;
+  // 新增：打印 NPC 的 cpu 结构中 CSR 值
+  printf("[NPC CSR] mstatus=0x%x, mepc= 0x%x, mcause=0x%x, mtvec=0x%x\n",cpu->sr.mstatus, cpu->sr.mepc, cpu->sr.mcause,cpu->sr.mtvec);
+  printf("[NPC] cpu->sr.mvendorid=0x%x, cpu->sr.marchid=0x%x\n", cpu->sr.mvendorid, cpu->sr.marchid);
   printf("[DiffTest Init] Registers fully synchronized from RTL.\n");
+  // 新增：将NPC的CPU_state同步到NEMU（REF）
+  // difftest_regcpy(cpu, DIFFTEST_TO_REF);
 }
 
 void print_cpu_regs(const CPU_state *cpu) {
@@ -142,12 +172,15 @@ void exec_once() {
   if (check_regs(&cpu, &ref_cpu)) {
     printf("Difftest mismatch at pc = 0x%08x\n", cpu.pc);
     printf_inst_error(cpu.pc);
+    contextp->gotFinish(true);
     // assert(0);
   }else{
-    printf("Difftest PASS\n");
+    // printf("Difftest PASS\n");
   }
   #endif
-  
+
+  // 每条指令执行完后更新设备
+  device_update();
 }
 
 bool check_regs(CPU_state *dut, CPU_state *ref) {
@@ -162,6 +195,31 @@ bool check_regs(CPU_state *dut, CPU_state *ref) {
         printf("PC Mismatch: DUT = 0x%08x, REF = 0x%08x\n", dut->pc, ref->pc);
         return true;
     }
+    /*  // 新增：对比 CSR 寄存器
+    if (dut->sr.mepc != ref->sr.mepc) {
+        printf("CSR Mismatch: mepc | DUT=0x%08x, REF=0x%08x\n", dut->sr.mepc, ref->sr.mepc);
+        return true;
+    }
+    if (dut->sr.mcause != ref->sr.mcause) {
+        printf("CSR Mismatch: mcause | DUT=0x%08x, REF=0x%08x\n", dut->sr.mcause, ref->sr.mcause);
+        return true;
+    }
+    if (dut->sr.mstatus != ref->sr.mstatus) {
+        printf("CSR Mismatch: mstatus | DUT=0x%08x, REF=0x%08x\n", dut->sr.mstatus, ref->sr.mstatus);
+        return true;
+    }
+    if (dut->sr.mtvec != ref->sr.mtvec) {
+        printf("CSR Mismatch: mtvec | DUT=0x%08x, REF=0x%08x\n", dut->sr.mtvec, ref->sr.mtvec);
+        return true;
+    }
+    if (dut->sr.mvendorid != ref->sr.mvendorid) {
+        printf("CSR Mismatch: mvendorid | DUT=0x%08x, REF=0x%08x\n", dut->sr.mvendorid, ref->sr.mvendorid);
+        return true;
+    }
+    if (dut->sr.marchid != ref->sr.marchid) {
+        printf("CSR Mismatch: marchid | DUT=0x%08x, REF=0x%08x\n", dut->sr.marchid, ref->sr.marchid);
+        return true;
+    } */
     return false;
 }
 
@@ -184,6 +242,32 @@ void check_register(CPU_state *cpu) {
                    i, cpu->gpr[i], nemu_cpu.gpr[i]);
             assert(0);
         }
+    }
+
+     // 新增：对比 CSR 寄存器
+    if (cpu->sr.mepc != nemu_cpu.sr.mepc) {
+        printf("INIT CSR Mismatch: mepc | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mepc, nemu_cpu.sr.mepc);
+        assert(0);
+    }
+    if (cpu->sr.mcause != nemu_cpu.sr.mcause) {
+        printf("INIT CSR Mismatch: mcause | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mcause, nemu_cpu.sr.mcause);
+        assert(0);
+    }
+    if (cpu->sr.mstatus != nemu_cpu.sr.mstatus) {
+        printf("INIT CSR Mismatch: mstatus | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mstatus, nemu_cpu.sr.mstatus);
+        assert(0);
+    }
+    if (cpu->sr.mtvec != nemu_cpu.sr.mtvec) {
+        printf("INIT CSR Mismatch: mtvec | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mtvec, nemu_cpu.sr.mtvec);
+        assert(0);
+    }
+    if (cpu->sr.mvendorid != nemu_cpu.sr.mvendorid) {
+        printf("INIT CSR Mismatch: mvendorid | DUT=0x%08x, REF=0x%08x\n", cpu->sr.mvendorid, nemu_cpu.sr.mvendorid);
+        assert(0);
+    }
+    if (cpu->sr.marchid != nemu_cpu.sr.marchid) {
+        printf("INIT CSR Mismatch: marchid | DUT=0x%08x, REF=0x%08x\n", cpu->sr.marchid, nemu_cpu.sr.marchid);
+        assert(0);
     }
 
     printf("[DiffTest] Register Check Passed!\n");
@@ -223,5 +307,39 @@ extern "C" void reg_write_commit(int waddr, int wdata) {
     if (waddr != 0) {  // x0 永远为 0
         cpu.gpr[waddr] = wdata;
         // printf("[SYNC] %s <= 0x%08x\n", reg_names[waddr], wdata);
+    }
+}
+
+extern "C" void csr_write_commit(int waddr, int wdata) {
+    if (waddr != 0) { 
+      switch (waddr & 0xFFF) { // 保留低 12 位
+      case 0xF11:
+        cpu.sr.mvendorid= wdata;
+        // printf("[CSR SYNC] mvendorid <= 0x%08x\n", wdata);
+        break;
+      case 0xF12:
+        cpu.sr.marchid= wdata;
+        // printf("[CSR SYNC] marchid <= 0x%08x\n", wdata);
+        break;
+      case 0x300:
+        cpu.sr.mstatus= wdata;
+        // printf("[CSR SYNC] mstatus <= 0x%08x\n", wdata);
+        break;
+      case 0x305:
+        cpu.sr.mtvec= wdata;
+        // printf("[CSR SYNC] mtvec <= 0x%08x\n", wdata);
+        break;
+      case 0x341:
+        cpu.sr.mepc= wdata;
+        // printf("[CSR SYNC] mepc <= 0x%08x\n", wdata);
+        break;
+      case 0x342:
+        cpu.sr.mcause= wdata;
+        // printf("[CSR SYNC] mcause <= 0x%08x\n", wdata);
+        break;
+      default:
+        printf("[CSR SYNC] Unknown CSR write: addr=0x%x, data=0x%08x\n", waddr, wdata);
+        break;
+      }
     }
 }

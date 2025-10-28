@@ -16,6 +16,7 @@ static char *file_elf = NULL; // new add elf
 
 void sdb_set_batch_mode();
 void init_isa();
+void init_device();
 
 // 加载镜像
 static long load_img() {
@@ -83,6 +84,9 @@ void init_monitor(int argc, char *argv[]){
   /* Initialize memory. */
   init_mem();
 
+  /* Initialize devices*/
+  init_device();
+
   /* Perform ISA dependent initialization. */
   init_isa();
 
@@ -102,8 +106,8 @@ void init_monitor(int argc, char *argv[]){
   check_difftest_memcpy(CONFIG_MBASE, pmem, img_size);
 
   // 执行5个周期的复位
-  // reset(5);
-
+  reset(10);
+  
   // 同步仿真寄存器的值
   update_register(&cpu);
 
@@ -112,4 +116,7 @@ void init_monitor(int argc, char *argv[]){
 
   // 将寄存器状态同步到 REF
   difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+ 
+  // 初始化系统时间
+  // init_clock();
 }

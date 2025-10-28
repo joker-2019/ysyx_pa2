@@ -3,11 +3,20 @@
 #include <klib.h>
 
 static Context* (*user_handler)(Event, Context*) = NULL;
+#define CONTEXT_SIZE ((32 + 3 + 1) * sizeof(uintptr_t))
 
 Context* __am_irq_handle(Context *c) {
   if (user_handler) {
     Event ev = {0};
     switch (c->mcause) {
+      case 11:
+        // printf("c->mcause: %d\n", c->mcause);
+        ev.event = EVENT_YIELD;
+        // printf("entry c->mepc: %0x\n", c->mepc);
+        // printf("args c->gpr[10]: %d\n", c->gpr[10]);
+        // printf("size c.size: %d\n", sizeof(c));
+        c->mepc += 4;
+        break;
       default: ev.event = EVENT_ERROR; break;
     }
 
@@ -31,7 +40,14 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  return NULL;
+  // return NULL;
+  Context *ctx = (Context *)(kstack.end - CONTEXT_SIZE); //定义上下文结构体的大小
+  ctx->mstatus = 0x1800;
+  ctx->mepc = (uintptr_t)entry; // 异常入口地址
+  // printf("ctx->mepc : %0x\n", ctx->mepc);
+  ctx->gpr[10] = (uintptr_t)arg; // a0寄存器（x10）用于传递函数参数arg（符合RISC-V调用约定）
+  ctx->gpr[2] = (uintptr_t)ctx;//sp 在汇编代码中被单独定义  addi sp, sp, -CONTEXT_SIZE  ; 将栈指针向下移动，预留保存上下文的空间
+  return ctx;
 }
 
 void yield() {

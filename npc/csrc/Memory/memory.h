@@ -13,6 +13,8 @@ extern uint8_t pmem[CONFIG_MSIZE];
 
 void init_mem();
 
+// void init_clock();
+
 // uint32_t *guest_to_host(uint32_t paddr);
 
 uint8_t *guest_to_host(uint32_t paddr);
@@ -24,5 +26,7 @@ uint32_t phys_mem_read(uint32_t addr, int len);
 uint32_t lw_mem_read(int addr, int len);
 
 void sw_mem_write(int addr, int len, int data);
+
+void device_update();
 
 #endif

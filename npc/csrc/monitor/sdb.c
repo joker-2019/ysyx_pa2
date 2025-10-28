@@ -16,17 +16,18 @@ void init_monitor(int argc, char *argv[]);
 
 // 命令函数
 static int cmd_c(char *args) {
- while (!contextp->gotFinish()) {
-  exec_once();
- }
- printf("Simulation finished (via ebreak)\n");
+ // while (!contextp->gotFinish()) {
+  while (!sim_finished) {
+    exec_once();
+  }
+ // printf("Simulation finished (via ebreak)\n");
  return 0;
 }
 
 // 返回0表示继续执行，-1表示退出
 static int cmd_q(char *args) {
- // ebreak_trigger(); //触发ebreak
- return -1; // 返回-1表示退出
+ ebreak_trigger(); //触发ebreak
+ // return -1; // 返回-1表示退出
 }
 
 static int cmd_si(char *args) {
@@ -228,12 +229,13 @@ int sdb_mainloop(int argc, char *argv[]) {
 
   init_monitor(argc, argv);     // 初始化监视器中的内容
 
-  reset(10);          // 重置模拟器状态
+  // reset(10);          // 重置模拟器状态
 
   init_sdb();          // 初始化 SDB
 
   char *line = NULL;
-  while (!contextp->gotFinish()) {
+  // while (!contextp->gotFinish()) {
+  while(!sim_finished){
     line = rl_gets();
     if (strlen(line) > 0){
       int success = cmd_dispatch(line);
