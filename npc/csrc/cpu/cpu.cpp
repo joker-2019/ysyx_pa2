@@ -90,6 +90,7 @@ bool is_jalr(uint32_t inst) {
   return opcode == OPCODE_JALR;
 }
 
+
 extern "C" void update_register(CPU_state *cpu){
   // uint32_t npc_pc;
   uint32_t regs[32];
