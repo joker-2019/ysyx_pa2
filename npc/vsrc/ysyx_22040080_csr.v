@@ -45,6 +45,20 @@ export "DPI-C" task get_csr_info;
   end 
  endtask
 
+  always @(*) begin
+    case(csr_addr)
+      12'hB00: rdata = mcycle_full[31:0];
+      12'hB80: rdata = mcycle_full[63:32];
+      12'hF11: rdata = mvendorid; // ysyx
+      12'hF12: rdata = marchid; // 25040104
+      12'h341: rdata = mepc;
+      12'h342: rdata = mcause;
+      12'h305: rdata = mtvec;
+      12'h300: rdata = mstatus;
+      default: rdata = 32'b0;
+    endcase
+  end
+
   always @(posedge clk) begin
    if(rst) begin
     mcycle_full = 64'b0; //初始化寄存器mcycle
@@ -58,7 +72,7 @@ export "DPI-C" task get_csr_info;
    if(wen) begin
      // $display("csr write: addr=0x%h, wdata=0x%h, wen=%b", csr_addr, wdata, wen);
      //立刻同步C端的问题，请立刻同步到c端，保证读取的是最新的值 
-     if(csr_addr !=0) csr_write_commit({20'b0, csr_addr}, wdata); // 补全这个信息
+     if(csr_addr !=0) csr_write_commit({20'b0, csr_addr}, wdata);
      case(csr_addr)
       12'hB00: mcycle_full = { mcycle_full[63:32], wdata }; //写低32位
       12'hB80: mcycle_full = { wdata, mcycle_full[31:0] }; //写高32位

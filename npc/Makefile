@@ -95,6 +95,22 @@ view:$(FST_FILE)
 # Clean build directory
 clean:
 	rm -rf $(BUILD_DIR)
-        
+
+# 时序分析（STA）相关变量
+DESIGN ?= $(TOPNAME)
+SDC_FILE ?= constr/top.sdc
+CLK_FREQ_MHZ ?= 100 # 时钟频率100MHZ
+CLK_PORT_NAME ?= clk # 时钟端口名称
+O ?= ./sta_output
+RTL_FILES ?= $(VSRCS)
+
+# 关键修改：在read_verilog后添加-sv，支持SystemVerilog的DPI-C语法
+sta:
+	@mkdir -p $(O)
+	@echo "开始综合与时序分析..."
+	yosys -p "read_verilog -sv $(RTL_FILES); hierarchy -top $(DESIGN); synth -top $(DESIGN); write_verilog $(O)/synth.v"
+	sta $(SDC_FILE) -top $(DESIGN) -freq $(CLK_FREQ_MHZ) -port $(CLK_PORT_NAME) -o $(O)/sta_report.rpt
+	@echo "时序分析结果已保存至 $(O)/sta_report.rpt"
+
 .PHONY: default all clean run view sim
 

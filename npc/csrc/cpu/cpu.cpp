@@ -62,9 +62,9 @@ void sim_init() {
   rootp = top->rootp;
 
   init_disasm("riscv32-pc-linux-gnu"); // 初始化反汇编器
-  // contextp->traceEverOn(true); // 关闭波形器可以运行红白机模拟器 make ARCH=native run mainargs=mario
-  // top->trace(tfp, 0);
-  // tfp->open("dump.vcd");
+  contextp->traceEverOn(true); // 关闭波形器可以运行红白机模拟器 make ARCH=native run mainargs=mario
+  top->trace(tfp, 0);
+  tfp->open("dump.vcd");
 }
 
 void sim_exit() {
@@ -136,14 +136,35 @@ void print_cpu_regs(const CPU_state *cpu) {
 }
 
 void exec_once() {
-  // 一个周期 = clk 拉低 -> clk 拉高 -> eval 两次
-  top->clk = 0; top->eval(); step_and_dump_wave();
-  top->clk = 1; top->eval(); step_and_dump_wave();
+  bool instr_finish = false;
+  int timeout_cnt = 0;  // 超时保护，防止死循环
+  const int MAX_TIMEOUT = 10;  // 多周期最大允许clk数（根据你的CPU调整）
+  // static int ref_count = 0;
+  while (!instr_finish && timeout_cnt < MAX_TIMEOUT)
+  {
+    // 一个周期 = clk 拉低 -> clk 拉高 -> eval 两次
+    top->clk = 0; top->eval(); step_and_dump_wave();
+    top->clk = 1; top->eval(); step_and_dump_wave();
+    // 3. 检测是否指令完成（instr_done为高，单周期脉冲） 或者为ebreak指令
+    if (top->instr_done || contextp->gotFinish()) {
+      instr_finish = true;
+    }
+    timeout_cnt++;
+  }
+  // 检测到ebreak指令
+  if (contextp->gotFinish()) {
+    return;
+  }
+  // 超时判断（防止CPU卡死）
+  if (!instr_finish) {
+    printf("Error: Instruction execution timeout (max %d cycles)\n", MAX_TIMEOUT);
+    contextp->gotFinish(true);
+    return;
+  }
   
   // 跟踪 PC/指令（可选）itrace
   cpu.pc = rootp->trace_pc; // 记录的是next_pc 当前pc的内容并未写回
   uint32_t inst = rootp->trace_instr;
-  // printf("Before difftest_exec: pc=0x%08x\n", cpu.pc);
   // NPC执行一条指令后，让REF(NEMU)执行一条
 
   // 多个 trace 可以 hook 在这里
@@ -159,21 +180,18 @@ void exec_once() {
   
   #if ENABLE_DIFFTEST
   difftest_exec(1);
+  // ref_count++;
+  // printf("exec count = %d\n", ref_count);
   CPU_state ref_cpu;
   // 把 REF 的寄存器同步回来
   difftest_regcpy(&ref_cpu, DIFFTEST_TO_DUT);  // memcpy(&cpu, dut, sizeof(CPU_state));
-  // printf("DUT pc=0x%08x, REF pc=0x%08x\n", cpu.pc, ref_cpu.pc);
-  /* printf("DUT regs:\n");
-  print_cpu_regs(&cpu);
-  printf("REF regs:\n");
-  print_cpu_regs(&ref_cpu); */
   
   // 比对寄存器
   if (check_regs(&cpu, &ref_cpu)) {
     printf("Difftest mismatch at pc = 0x%08x\n", cpu.pc);
     printf_inst_error(cpu.pc);
     contextp->gotFinish(true);
-    // assert(0);
+    // sim_finished = true;
   }else{
     // printf("Difftest PASS\n");
   }
@@ -287,7 +305,8 @@ void print_registers() {
 
 // DPI-C 函数
 extern "C" void ebreak_trigger() {
-  sim_finished = true;
+  // sim_finished = true;
+  contextp->gotFinish(true);
   uint32_t exit_code = rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[10];
   if ((exit_code & 0xff) == 0) {
     printf("\33[1;32mHIT GOOD TRAP\33[0m\n");

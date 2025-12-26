@@ -70,8 +70,10 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 static void exec_once(Decode *s, vaddr_t pc) {
   s->pc = pc;
   s->snpc = pc;
+  // printf("exec_once at pc = 0x%08x\n", pc);
   isa_exec_once(s);
   cpu.pc = s->dnpc;
+  // printf("after isa_exec_once, cpu.pc = 0x%08x\n", cpu.pc);
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf; // s->logbuf存储指令日志的缓冲区
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);  //函数snprintf（）向str写入最多大小的字节
@@ -87,7 +89,6 @@ static void exec_once(Decode *s, vaddr_t pc) {
   space_len = space_len * 3 + 1; // 每个缺失字节补3个字符（"   "），再加1个空格
   memset(p, ' ', space_len);   // 填充空格
   p += space_len; // 移动指针
-
 
 #ifndef CONFIG_ISA_loongarch32r
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);

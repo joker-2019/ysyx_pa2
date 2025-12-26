@@ -16,8 +16,8 @@ void init_monitor(int argc, char *argv[]);
 
 // 命令函数
 static int cmd_c(char *args) {
- // while (!contextp->gotFinish()) {
-  while (!sim_finished) {
+ while (!contextp->gotFinish()) {
+ // while (!sim_finished) {
     exec_once();
   }
  // printf("Simulation finished (via ebreak)\n");
@@ -27,7 +27,7 @@ static int cmd_c(char *args) {
 // 返回0表示继续执行，-1表示退出
 static int cmd_q(char *args) {
  ebreak_trigger(); //触发ebreak
- // return -1; // 返回-1表示退出
+ return -1; // 返回-1表示退出
 }
 
 static int cmd_si(char *args) {
@@ -39,13 +39,14 @@ static int cmd_si(char *args) {
  }
  else{
    step = atoi(args); // 从命令行参数获取步数
-   printf("step: %d", step);
+   // printf("step: %d\n", step);
    if (step <= 0){
      printf("Invalid step count: %s\n", args);
      return 0; // 返回0表示继续执行
    }
  }
-  while (step-- > 0 && !sim_finished) {
+  // while (step-- > 0 && !sim_finished) {
+  while (step-- > 0 && !contextp->gotFinish()) {
     exec_once();
   }
  // printf("Executed %d steps.\n", step);
@@ -234,8 +235,8 @@ int sdb_mainloop(int argc, char *argv[]) {
   init_sdb();          // 初始化 SDB
 
   char *line = NULL;
-  // while (!contextp->gotFinish()) {
-  while(!sim_finished){
+  while (!contextp->gotFinish()) {
+  // while(!sim_finished){
     line = rl_gets();
     if (strlen(line) > 0){
       int success = cmd_dispatch(line);

@@ -63,7 +63,7 @@ uint32_t phys_mem_read(uint32_t addr, int len) {
     return ret;
 }
 
-extern "C" uint32_t mem_read(int pc) {
+/*extern "C" uint32_t mem_read(int pc) {
     if (pc == 0){
         return 0;
     }
@@ -78,27 +78,41 @@ extern "C" uint32_t mem_read(int pc) {
     // return phys_mem_read((uint32_t)pc, 4);
 }
 
-extern "C" uint32_t lw_mem_read(int addr, int len) {
+ extern "C" uint32_t lw_mem_read(int addr, int len) {
 
     uint64_t now = get_time_us() - boot_time; // 启动后的微秒数
     if (addr == RTC_ADDR){
-        // printf("[RTC] read time = %u\n", (uint32_t)(now & 0xffffffff));
         fflush(stdout);
         return (uint32_t)(now & 0xffffffff); // 返回低32位 (us)
     } 
     if (addr == RTC_ADDR + 4){
-        // printf("[DBG] lw_mem_read: RTC high read -> %u\n", (uint32_t)(now >> 32));
         fflush(stdout);
         return (uint32_t)(now >> 32); // 返回高32位
     }
-    // 💡 模拟串口接收寄存器读取
-    /* if (addr == SERIAL_ADDR) {
-        // 没有外部输入时返回 0，表示没有数据
-        // printf("[DBG] lw_mem_read: SERIAL_ADDR read (addr=0x%x len=%d)\n", addr, len);
-        fflush(stdout);
-        return 0;
-    } */
+    assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
+     #if ENABLE_MTRACE
+    display_mread(addr, len);
+    #endif
+    uint32_t ret = host_read(guest_to_host(addr), len);
+    return ret;
+} */
 
+extern "C" uint32_t pmem_read(int addr, int len) {
+
+    uint64_t now = get_time_us() - boot_time; // 启动后的微秒数
+    if (addr == RTC_ADDR){
+        fflush(stdout);
+        return (uint32_t)(now & 0xffffffff); // 返回低32位 (us)
+    } 
+    if (addr == RTC_ADDR + 4){
+        fflush(stdout);
+        return (uint32_t)(now >> 32); // 返回高32位
+    }
+    // printf("[pmem_write] 调试信息：\n");
+    // printf("  addr=0x%x, len=%d\n", addr, len);
+    // printf("  内存范围: 0x%x ~ 0x%x (不包含0x%x)\n", CONFIG_MBASE, CONFIG_MBASE + CONFIG_MSIZE - 1, CONFIG_MBASE + CONFIG_MSIZE);
+    // printf("  addr >= mem_base? %s\n", (addr >= CONFIG_MBASE) ? "是" : "否");
+    // printf("  addr + len <= mem_end? %s(addr+len=0x%x)\n", (addr + len <= CONFIG_MBASE + CONFIG_MSIZE) ? "是" : "否", addr + len);
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
      #if ENABLE_MTRACE
     display_mread(addr, len);
@@ -109,7 +123,7 @@ extern "C" uint32_t lw_mem_read(int addr, int len) {
 
 // 写入数据
 // 注意：RISC-V数据访问通常是按字（4字节）对齐
-extern "C" void sw_mem_write(int addr, int len, int data) {
+extern "C" void pmem_write(int addr, int len, int data) {
     // printf("[UART] addr=0x%x, data=0x%x, len=%u\n", addr, data, len);
     // 串口写入
     if (addr == SERIAL_ADDR) {
@@ -120,6 +134,11 @@ extern "C" void sw_mem_write(int addr, int len, int data) {
         uart_char = data & 0xFF;  // 保存要输出的字符
         return;
     }
+    // printf("[pmem_write] 调试信息：\n");
+    // printf("  addr=0x%x, len=%d\n", addr, len);
+    // printf("  内存范围: 0x%x ~ 0x%x (不包含0x%x)\n", CONFIG_MBASE, CONFIG_MBASE + CONFIG_MSIZE - 1, CONFIG_MBASE + CONFIG_MSIZE);
+    // printf("  addr >= mem_base? %s\n", (addr >= CONFIG_MBASE) ? "是" : "否");
+    // printf("  addr + len <= mem_end? %s(addr+len=0x%x)\n", (addr + len <= CONFIG_MBASE + CONFIG_MSIZE) ? "是" : "否", addr + len);
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
 
     #if ENABLE_MTRACE
