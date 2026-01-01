@@ -26,7 +26,8 @@ module ysyx_22040080_idu(
     output reg is_jalr,
     output reg is_branch,
     output reg is_load,
-    output reg is_store
+    output reg is_store,
+    output reg lsu_reqValid
 );
 /*     // ready 定义（是否能接 IFU）
     assign idu_ready = ~idu_alu_valid;
@@ -88,6 +89,7 @@ module ysyx_22040080_idu(
 // 立即数扩展（按指令类型区分）
 //------------------------------------------
 // reg [31:0] imm;
+
 always @(*) begin
 // 步骤1：默认值（避免不定态，无延迟）
 rs1 = 5'b0;
@@ -105,6 +107,7 @@ imm_ext = 32'b0;
 csr_addr = 12'b0;
 is_load = 1'b0;
 is_store = 1'b0;
+lsu_reqValid = 1'b0;
 
 if(inst_active) begin
     rs1 = instruction[19:15];
@@ -133,6 +136,8 @@ if(inst_active) begin
     is_branch= (op == 7'b1100011);
     is_load  = (op == 7'b0000011);
     is_store = (op == 7'b0100011);
+
+    lsu_reqValid = is_load || is_store;
 
     case (instr_type)
         // I型：ADDI/LB/LH/LW 符号扩展：复制最高位20次  立即数位：31-20（共12位）

@@ -138,7 +138,7 @@ void print_cpu_regs(const CPU_state *cpu) {
 void exec_once() {
   bool instr_finish = false;
   int timeout_cnt = 0;  // 超时保护，防止死循环
-  const int MAX_TIMEOUT = 10;  // 多周期最大允许clk数（根据你的CPU调整）
+  const int MAX_TIMEOUT = 50;  // 多周期最大允许clk数（根据你的CPU调整）
   // static int ref_count = 0;
   while (!instr_finish && timeout_cnt < MAX_TIMEOUT)
   {

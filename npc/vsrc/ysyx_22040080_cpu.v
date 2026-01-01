@@ -56,16 +56,23 @@ module ysyx_22040080_cpu(
   // 握手信号
   wire ifu_valid;  // 取值有效
   wire pc_update_en;
-  reg mem_done;
+  // reg mem_done;
   reg wb_done;
   reg is_mem_inst;
   reg inst_active;
   reg pc_valid;
   reg wb_data;
+  
 
-  // wire [31:0] wb_data = is_load ? load_data : alu_result;
+  reg ifu_respReady;
+  reg mem_respReady;
 
-  // assign pc_update_en = mem_done || wb_done;
+  reg lsu_reqValid;  // ID--> LSU
+  reg lsu_reqReady;  // LSU --> WB
+
+  reg lsu_respValid; // LSU --> WB
+  reg lsu_respReady; // WB -- > LSU
+
   assign pc_update_en = wb_done;
 
 generate_next_pc gpc(
@@ -104,9 +111,9 @@ ysyx_22040080_ifu ifu(
   // .trace_pc(trace_pc),
   .ifu_valid(ifu_valid),
   .pc_update_en(pc_update_en),
-  .pc_valid(pc_valid)
-  // .if_id_valid(if_id_valid),
-  // .idu_ready(idu_ready)
+  .pc_valid(pc_valid),
+  .ifu_respReady(ifu_respReady)
+  
 );
 
 
@@ -116,7 +123,9 @@ memory mem(
   .ifu_raddr(ifu_raddr),
   .ifu_rdata(instruction),
   .ifu_valid(ifu_valid),
-  .inst_active(inst_active)
+  .inst_active(inst_active),
+  .ifu_respReady(ifu_respReady),
+  .mem_respReady(mem_respReady)
 );
 
   //译码
@@ -139,7 +148,8 @@ ysyx_22040080_idu idu(
   .is_jalr(is_jalr),
   .is_branch(is_branch),
   .is_load(is_load),
-  .is_store(is_store)
+  .is_store(is_store),
+  .lsu_reqValid(lsu_reqValid)
 );
 
 //执行
@@ -211,7 +221,13 @@ ysyx_22040080_mem storage(
   .mem_wdata(mem_wdata),
   .func3(func3),
   .alu_result(alu_result),
-  .mem_done(mem_done)
+  // .mem_done(mem_done),
+
+  .lsu_reqValid(lsu_reqValid),
+  .lsu_reqReady(lsu_reqReady),
+
+  .lsu_respValid(lsu_respValid),
+  .lsu_respReady(lsu_respReady)
 );
 
  //寄存器堆实例
@@ -231,9 +247,13 @@ RegisterFile regfile(
   .wb_done(wb_done),
   .is_branch(is_branch),
   .is_load(is_load),
-  .mem_done(mem_done),
+  // .mem_done(mem_done),
   .is_store(is_store),
-  .load_data(load_data)
+  .load_data(load_data),
+
+  .lsu_reqReady(lsu_reqReady),
+  .lsu_respValid(lsu_respValid),
+  .lsu_respReady(lsu_respReady)
 );
 
 endmodule
