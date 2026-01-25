@@ -2,48 +2,61 @@ module ysyx_22040080_ifu(
 	input clk, //时钟周期
 	input rst,  //带n表示低电平有效
 	input [31:0] pc,
-	// SimpleBus接口（对接memory_dpi模块）
- output reg [31:0] ifu_raddr,
- input [31:0] ifu_rdata,     // 从memory_dpi拿到的指令（DPI-C返回值）
 
-	output reg ifu_valid, // 取值有效
 	input wire pc_update_en,
 	input wire pc_valid,
-	output reg ifu_respReady  // 生成respReady
-	
+
+	// AXI4-Lite 读通道（Master -> Slave）
+	output reg [31:0] araddr,   // 读地址  ifu_raddr
+	output reg arvalid,         // 读地址有效 
+	input  arready,             // 从设备读地址就绪  memory的ready信号
+
+	// AXI4-Lite 读通道（Slave -> Master）
+	input  [31:0] rdata,        // 读数据 ifu_rdata
+	input  rvalid,              // 读数据有效 memory的valid信号
+	output reg rready          // 主机读数据就绪 ifu_respReady
 );
- reg initial_start; // 初始化启动
+ 	reg initial_start; // 初始化启动
+	reg [31:0] pc_latch;          // 仅锁存pc_valid有效时的PC（不立即给araddr）
 
 	// 模拟CPU忙碌的随机延迟
-	parameter RESP_READY_RAND_DELAY = 2;  // respReady延迟1~2拍
+	parameter RESP_READY_RAND_DELAY = 3;  // respReady延迟1~2拍
 	reg [7:0] resp_ready_cnt;
+
 
 always @(posedge clk) begin
 	if(rst) begin
-		ifu_valid <= 1'b0;
-		ifu_raddr <= 32'h80000000; // 初始化地址为初始PC（避免第一次地址无效）
 		initial_start <= 1'b1; // rst时置1：标识需要初始启动
-		ifu_respReady <= 1'b0; // cpu准备好标识
+		// AXI读地址通道复位
+		araddr <= 32'h80000000;  // 初始PC地址 ifu_raddr
+		arvalid <= 1'b0;								 // ifu_valid
+		rready <= 1'b0;								  // 	ifu_respReady
+		pc_latch <= 32'h80000000;  // 初始化pc_latch，避免0x0
 	end else begin
-		if(initial_start) begin
-			ifu_valid <= 1'b1;
-			initial_start <= 1'b0;
+		rready <= 1'b0;
+		if(initial_start) begin		// 初始化
+			arvalid <= 1'b1;
+			initial_start <= 1'b0; 
 			resp_ready_cnt <= RESP_READY_RAND_DELAY-1;
-		end else if (pc_valid) begin
-			ifu_raddr <= pc;
-			ifu_valid <= 1'b1;
+		end 
+		else if (pc_valid) begin
+			araddr <= pc;
+			arvalid <= 1'b1;		// 发送访问内存请求
 			resp_ready_cnt <= RESP_READY_RAND_DELAY-1;
-		end else begin
-				ifu_valid <= 1'b0;
+		end
+
+		if(arvalid && arready) begin
+			arvalid <= 1'b0;            // 撤销arvalid，结束AR请求
 		end
 		// ---------------- 新增：respReady随机延迟逻辑 ----------------
 		// 1. 计数器>0：CPU忙碌，无法接收指令（respReady=0）
-		if (resp_ready_cnt > 0) begin
-			resp_ready_cnt <= resp_ready_cnt - 1;
-			ifu_respReady <= 1'b0;
-		// 2. 计数器=0：CPU就绪，可接收指令（respReady=1），并重置随机计数器
-		end else begin
-			ifu_respReady <= 1'b1;
+		if(rvalid) begin
+			if (resp_ready_cnt > 0) begin
+				resp_ready_cnt <= resp_ready_cnt - 1;
+				rready <= 1'b0;
+			end else begin
+				rready <= 1'b1;
+			end
 		end
 	end
 end

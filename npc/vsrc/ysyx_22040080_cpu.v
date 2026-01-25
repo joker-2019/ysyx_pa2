@@ -50,28 +50,47 @@ module ysyx_22040080_cpu(
   wire is_branch;
   wire branch_taken;
 
-  wire [31:0] ifu_raddr;
-  wire [31:0] ifu_rdata;
-
-  // 握手信号
-  wire ifu_valid;  // 取值有效
   wire pc_update_en;
-  // reg mem_done;
   reg wb_done;
   reg is_mem_inst;
-  reg inst_active;
+  reg inst_active;  // 告知idu指令有效信号
   reg pc_valid;
   reg wb_data;
-  
 
-  reg ifu_respReady;
-  reg mem_respReady;
+  reg [2:0] lsu_func3;
+ // ifu AXI握手信号
+  wire ifu_arvalid;     // ifu_valid;  // 取值有效  ifu--> memory pc更新后发出取值请求
+  wire ifu_arready;  // mem_respReady  // memory --> ifu  存储器空闲，响应取值请求
+  wire ifu_rvalid;   // mem 读取完请求信号
+  wire ifu_rready;   //   ifu_respReady
+  wire [31:0] ifu_araddr; //  ifu_raddr 
+  wire [31:0] ifu_rdata;  //  ifu_rdata
+
+
+// lsu-read AXI信号
+  wire [31:0] lsu_araddr;
+  wire lsu_arvalid;
+  wire lsu_arready;
+  wire [31:0] lsu_rdata;
+  wire lsu_rvalid;
+  wire lsu_rready;
+
+  wire [31:0] lsu_awaddr;
+  wire lsu_awvalid;
+  wire lsu_awready;
+  wire [31:0] lsu_wdata;
+
+  wire lsu_wvalid;
+  wire lsu_wready;
+  wire lsu_bvalid;
+  wire lsu_bready;
 
   reg lsu_reqValid;  // ID--> LSU
   reg lsu_reqReady;  // LSU --> WB
 
   reg lsu_respValid; // LSU --> WB
   reg lsu_respReady; // WB -- > LSU
+
 
   assign pc_update_en = wb_done;
 
@@ -106,31 +125,55 @@ ysyx_22040080_ifu ifu(
   .clk(clk),
   .rst(rst),
   .pc(pc),
-  .ifu_raddr(ifu_raddr),
-  .ifu_rdata(instruction),
-  // .trace_pc(trace_pc),
-  .ifu_valid(ifu_valid),
+  .araddr(ifu_araddr),
+  .rdata(ifu_rdata),
+  .arvalid(ifu_arvalid),  // ifu_valid
+  .arready(ifu_arready),  // mem_respReady
+  .rvalid(ifu_rvalid),    // mem 读取完请求信号
+  .rready(ifu_rready),    // ifu_respReady
   .pc_update_en(pc_update_en),
-  .pc_valid(pc_valid),
-  .ifu_respReady(ifu_respReady)
-  
+  .pc_valid(pc_valid) 
 );
 
 
 memory mem(
   .clk(clk),
   .rst(rst),
-  .ifu_raddr(ifu_raddr),
-  .ifu_rdata(instruction),
-  .ifu_valid(ifu_valid),
-  .inst_active(inst_active),
-  .ifu_respReady(ifu_respReady),
-  .mem_respReady(mem_respReady)
+
+  .lsu_func3(lsu_func3),
+  // ifu / lsu read channel
+  .ifu_araddr(ifu_araddr),
+  .ifu_arvalid(ifu_arvalid),
+  .ifu_arready(ifu_arready),
+  .ifu_rdata(ifu_rdata),
+  .ifu_rvalid(ifu_rvalid),
+  .ifu_rready(ifu_rready),
+
+    // LSU 读端口
+  .lsu_araddr(lsu_araddr),
+  .lsu_arvalid(lsu_arvalid),
+  .lsu_arready(lsu_arready),
+  .lsu_rdata(lsu_rdata),
+  .lsu_rvalid(lsu_rvalid),
+  .lsu_rready(lsu_rready),
+
+  // LSU 写端口
+  .lsu_awaddr(lsu_awaddr),
+  .lsu_wdata(lsu_wdata),
+  .lsu_awvalid(lsu_awvalid),
+  .lsu_awready(lsu_awready),
+  .lsu_wvalid(lsu_wvalid),
+  .lsu_wready(lsu_wready),
+
+  // AXI4-Lite 写回复通道
+  .lsu_bvalid(lsu_bvalid),
+  .lsu_bready(lsu_bready),
+  .inst_active(inst_active)
 );
 
   //译码
 ysyx_22040080_idu idu(
-  .instruction(instruction),
+  .rdata(ifu_rdata),
   .inst_active(inst_active),
   .rs1(rs1),
   .rs2(rs2),
@@ -211,7 +254,7 @@ ysyx_22040080_csr csr(
 );
 
 // 访存
-ysyx_22040080_mem storage(
+ysyx_22040080_lsu lsu(
   .clk(clk),
   .rst(rst),
   .load_data(load_data),
@@ -221,7 +264,29 @@ ysyx_22040080_mem storage(
   .mem_wdata(mem_wdata),
   .func3(func3),
   .alu_result(alu_result),
-  // .mem_done(mem_done),
+  .lsu_func3(lsu_func3),
+
+  // lsu read channel
+  .araddr(lsu_araddr),
+  .rdata(lsu_rdata),
+
+  .arvalid(lsu_arvalid),
+  .arready(lsu_arready),
+  .rvalid(lsu_rvalid),
+  .rready(lsu_rready),
+
+  // lsu write channel 
+  .awaddr(lsu_awaddr),
+  .wdata(lsu_wdata),
+
+  .awvalid(lsu_awvalid),
+  .awready(lsu_awready),
+
+  .wvalid(lsu_wvalid),
+  .wready(lsu_wready),
+
+  .bvalid(lsu_bvalid),
+  .bready(lsu_bready),
 
   .lsu_reqValid(lsu_reqValid),
   .lsu_reqReady(lsu_reqReady),

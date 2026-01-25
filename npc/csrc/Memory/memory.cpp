@@ -108,12 +108,12 @@ extern "C" uint32_t pmem_read(int addr, int len) {
         fflush(stdout);
         return (uint32_t)(now >> 32); // 返回高32位
     }
-    // printf("[pmem_write] 调试信息：\n");
-    // printf("  addr=0x%x, len=%d\n", addr, len);
-    // printf("  内存范围: 0x%x ~ 0x%x (不包含0x%x)\n", CONFIG_MBASE, CONFIG_MBASE + CONFIG_MSIZE - 1, CONFIG_MBASE + CONFIG_MSIZE);
-    // printf("  addr >= mem_base? %s\n", (addr >= CONFIG_MBASE) ? "是" : "否");
-    // printf("  addr + len <= mem_end? %s(addr+len=0x%x)\n", (addr + len <= CONFIG_MBASE + CONFIG_MSIZE) ? "是" : "否", addr + len);
-    assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
+    /* printf("[pmem_read] 调试信息：\n");
+    printf("  addr=0x%x, len=%d\n", addr, len);
+    printf("  内存范围: 0x%x ~ 0x%x (不包含0x%x)\n", CONFIG_MBASE, CONFIG_MBASE + CONFIG_MSIZE - 1, CONFIG_MBASE + CONFIG_MSIZE);
+    printf("  addr >= mem_base? %s\n", (addr >= CONFIG_MBASE) ? "是" : "否");
+    printf("  addr + len <= mem_end? %s(addr+len=0x%x)\n", (addr + len <= CONFIG_MBASE + CONFIG_MSIZE) ? "是" : "否", addr + len);
+    assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE); */
      #if ENABLE_MTRACE
     display_mread(addr, len);
     #endif

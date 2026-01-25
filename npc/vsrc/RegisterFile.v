@@ -29,6 +29,7 @@ module RegisterFile (
     reg [4:0] load_waddr_buf;
     reg load_wen_buf;
     reg is_store_latch;
+    reg store_req_accepted;
 
     export "DPI-C" task get_reg_info;
     import "DPI-C" task reg_write_commit(input int addr, input int wdata);
@@ -76,6 +77,7 @@ module RegisterFile (
             lsu_respReady <= 1'b0; 
             wb_resp_ready_cnt <= 8'b0;
             is_store_latch <= 1'b0;
+            store_req_accepted <= 1'b0;
         end else begin
             wb_done <= 1'b0;
             lsu_respReady <= 1'b0; // 非Load场景默认就绪
@@ -97,18 +99,26 @@ module RegisterFile (
                 load_wen_buf <= 1'b1;     // 缓存写回使能
                 wb_resp_ready_cnt <= RESP_READY_RAND_DELAY-1; //初始化忙碌信号
             end else if(is_store) begin
-                // 锁存有访存信号
+                // 锁存store请求，等待LSU确认请求已被接收
                 is_store_latch <= 1'b1;
+                store_req_accepted <= 1'b0;
                 wb_resp_ready_cnt <= RESP_READY_RAND_DELAY-1; //初始化忙碌信号     
             end
-            else if(is_store_latch && lsu_reqReady) begin
-                if(wb_resp_ready_cnt > 0) begin
-                    wb_resp_ready_cnt <= wb_resp_ready_cnt - 1;
+            else if(is_store_latch) begin
+                if(!store_req_accepted) begin
+                    if(lsu_reqReady) begin
+                        store_req_accepted <= 1'b1;
+                    end
                 end else begin
-                    if(lsu_respValid) begin
-                        lsu_respReady <= 1'b1;
-                        wb_done <= 1'b1;
-                        is_store_latch <= 1'b0;
+                    if(wb_resp_ready_cnt > 0) begin
+                        wb_resp_ready_cnt <= wb_resp_ready_cnt - 1;
+                    end else begin
+                        if(lsu_respValid) begin
+                            lsu_respReady <= 1'b1;
+                            wb_done <= 1'b1;
+                            is_store_latch <= 1'b0;
+                            store_req_accepted <= 1'b0;
+                        end
                     end
                 end
             end
