@@ -13,6 +13,7 @@ struct FuncSym *elf_head; //函数链表头
 
     //解析elf文件
 void parse_elf(const char* elf_path) {
+    return;
     if (elf_path == NULL){
         printf("elf_path ERROR: %s\n", elf_path);
         return;
