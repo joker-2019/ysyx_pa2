@@ -41,7 +41,7 @@ $(shell mkdir -p $(BUILD_DIR))
 # 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # Find Verilog and C++ source files
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
+VSRCS = $(shell find $(abspath ./vsrc/generated) -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 # CSRCS += $(SRC_AUTO_BIND)
 

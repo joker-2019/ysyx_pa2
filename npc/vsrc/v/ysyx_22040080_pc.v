@@ -5,13 +5,8 @@ module ysyx_22040080_pc (
     input  wire        is_mret,
     input  wire [31:0] mtvec,
     input  wire [31:0] mepc,
-    // input  wire [31:0] jal_target,
-    // input  wire        branch_taken,
-    // input  wire        is_jal,
-    // input  wire        is_jalr,
     output reg  [31:0] pc,
     output reg  pc_valid,
-    // output wire [31:0] next_pc,
     input wire [31:0] next_pc,
     input wire         pc_update_en, // alu阶段指令执行完成信号
     output reg  [31:0] trace_pc,
@@ -19,7 +14,6 @@ module ysyx_22040080_pc (
     output reg  instr_done
 );
 import "DPI-C" function int pmem_read(input int addr, input int len);
-// assign next_pc = (branch_taken || is_jal || is_jalr) ? jal_target : pc + 4;
 
 always @(posedge clk) begin
   if (rst) begin

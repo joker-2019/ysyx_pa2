@@ -68,6 +68,37 @@ static void number_to_str(char *buf, unsigned long num, int base, int is_signed,
     *p = '\0';
 }
 
+static int str_len(const char *s) {
+    int len = 0;
+    while (s[len]) { len++; }
+    return len;
+}
+
+static void append_padded(char **buf, int *count, const char *str, int width, int zero_pad) {
+    int len = str_len(str);
+    int pad = (width > len) ? (width - len) : 0;
+
+    if (pad > 0 && !zero_pad) {
+        while (pad-- > 0) { *(*buf)++ = ' '; (*count)++; }
+    }
+
+    if (pad > 0 && zero_pad) {
+        if (str[0] == '-') {
+            *(*buf)++ = '-';
+            (*count)++;
+            str++;
+        } else if (str[0] == '0' && str[1] == 'x') {
+            *(*buf)++ = '0';
+            *(*buf)++ = 'x';
+            (*count) += 2;
+            str += 2;
+        }
+        while (pad-- > 0) { *(*buf)++ = '0'; (*count)++; }
+    }
+
+    while (*str) { *(*buf)++ = *str++; (*count)++; }
+}
+
 int printf(const char *fmt, ...) {
   char buf[1024]; // 假设输出缓冲区大小为1024
    va_list args; //可变参数
@@ -93,7 +124,15 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
     while (*fmt) {
         if (*fmt == '%') {
             fmt++;
+            const char *fmt_start = fmt;
+            int zero_pad = 0;
+            int width = 0;
             int long_flag = 0;
+            if (*fmt == '0') { zero_pad = 1; fmt++; }
+            while (*fmt >= '0' && *fmt <= '9') {
+                width = width * 10 + (*fmt - '0');
+                fmt++;
+            }
             if (*fmt == 'l') { long_flag = 1; fmt++; }
             switch (*fmt) {
                 case 'd': {
@@ -101,12 +140,12 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                         long num = va_arg(ap, long);
                         char num_buf[32];
                         number_to_str(num_buf, (unsigned long)(num < 0 ? -num : num), 10, 1, num < 0);
-                        char *p = num_buf; while (*p) { *buf++ = *p++; count++; }
+                        append_padded(&buf, &count, num_buf, width, zero_pad);
                     } else {
                         int num = va_arg(ap, int);
                         char num_buf[32];
                         number_to_str(num_buf, (unsigned int)(num < 0 ? -num : num), 10, 1, num < 0);
-                        char *p = num_buf; while (*p) { *buf++ = *p++; count++; }
+                        append_padded(&buf, &count, num_buf, width, zero_pad);
                     }
                     break;
                 }
@@ -115,12 +154,12 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                         unsigned long num = va_arg(ap, unsigned long);
                         char num_buf[32];
                         number_to_str(num_buf, num, 10, 0, 0);
-                        char *p = num_buf; while (*p) { *buf++ = *p++; count++; }
+                        append_padded(&buf, &count, num_buf, width, zero_pad);
                     } else {
                         unsigned int num = va_arg(ap, unsigned int);
                         char num_buf[32];
                         number_to_str(num_buf, num, 10, 0, 0);
-                        char *p = num_buf; while (*p) { *buf++ = *p++; count++; }
+                        append_padded(&buf, &count, num_buf, width, zero_pad);
                     }
                     break;
                 }
@@ -129,12 +168,12 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                         unsigned long num = va_arg(ap, unsigned long);
                         char num_buf[32];
                         number_to_str(num_buf, num, 16, 0, 0);
-                        char *p = num_buf; while (*p) { *buf++ = *p++; count++; }
+                        append_padded(&buf, &count, num_buf, width, zero_pad);
                     } else {
                         unsigned int num = va_arg(ap, unsigned int);
                         char num_buf[32];
                         number_to_str(num_buf, num, 16, 0, 0);
-                        char *p = num_buf; while (*p) { *buf++ = *p++; count++; }
+                        append_padded(&buf, &count, num_buf, width, zero_pad);
                     }
                     break;
                 }
@@ -154,8 +193,10 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                 }
                 default:
                     *buf++ = '%';
-                    *buf++ = *fmt;
-                    count += 2;
+                    while (fmt_start <= fmt) {
+                        *buf++ = *fmt_start++;
+                        count++;
+                    }
                     break;
             }
             fmt++;

@@ -1,9 +1,9 @@
 module ysyx_22040080_cpu(
-	input  clk,
-	input  rst,
-  output reg [31:0] trace_pc, // 输出当前PC值
-  output reg [31:0] trace_instr, // 输出当前指令
-  output wire instr_done  // 新增：指令完成标志（单周期脉冲）
+	input  clock,
+	input  reset,
+  output reg [31:0] io_trace_pc, // 输出当前PC值
+  output reg [31:0] io_trace_instr, // 输出当前指令
+  output wire io_instr_done  // 新增：指令完成标志（单周期脉冲）
 );
   reg [31:0] pc;
   wire [31:0] alu_result;
@@ -161,8 +161,8 @@ module ysyx_22040080_cpu(
   assign pc_update_en = wb_done;
 
 generate_next_pc gpc(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
   .pc(pc),
   .is_jal(is_jal),
   .is_jalr(is_jalr),
@@ -172,8 +172,8 @@ generate_next_pc gpc(
 );  
 
 ysyx_22040080_pc pc_module(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
   .trap_valid(trap_valid),
   .is_mret(is_mret),
   .mtvec(mtvec),
@@ -182,14 +182,14 @@ ysyx_22040080_pc pc_module(
   .next_pc(next_pc),
   .pc_update_en(pc_update_en),
   .pc_valid(pc_valid),
-  .trace_pc(trace_pc),
-  .trace_instr(trace_instr),
-  .instr_done(instr_done)
+  .trace_pc(io_trace_pc),
+  .trace_instr(io_trace_instr),
+  .instr_done(io_instr_done)
 );
 
 ysyx_22040080_ifu ifu(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
   .pc(pc),
   .araddr(ifu_araddr),
   .rdata(ifu_rdata),
@@ -200,10 +200,11 @@ ysyx_22040080_ifu ifu(
   .pc_update_en(pc_update_en),
   .pc_valid(pc_valid) 
 );
+
   // 总线仲裁器
 ysyx_22040080_axi_arbiter arbiter(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
 
   // IFU
   .ifu_araddr(ifu_araddr),
@@ -257,8 +258,8 @@ ysyx_22040080_axi_arbiter arbiter(
 
 // 多路开关模块 (实现内存映射I/O.)  Xbar -> Memory, UART
 ysyx_22040080_axi_xbar xbar(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
 
   // Master side
   .m_araddr(axi_araddr),
@@ -334,8 +335,8 @@ ysyx_22040080_axi_xbar xbar(
 
 // Memory
 memory mem(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
 
   .araddr(mem_araddr),
   .arvalid(mem_arvalid),
@@ -359,8 +360,8 @@ memory mem(
 
 // UART
 ysyx_22040080_uart_axi uart(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
 
   .araddr(uart_araddr),
   .arvalid(uart_arvalid),
@@ -381,8 +382,8 @@ ysyx_22040080_uart_axi uart(
 );
 
 ysyx_22040080_clint_axi clint(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
 
   .araddr(clint_araddr),
   .arvalid(clint_arvalid),
@@ -428,7 +429,7 @@ ysyx_22040080_idu idu(
 
 //执行
 ysyx_22040080_alu alu(
-  .clk(clk),
+  .clk(clock),
   // .rst(rst),
   .inst_active(inst_active),
   .rs1_data(rs1_data),
@@ -459,8 +460,8 @@ ysyx_22040080_alu alu(
 
 // CSR模块实例化
 ysyx_22040080_csr csr(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
   .wen(csr_wen),
   .csr_addr(csr_addr),
   .wdata(csr_wdata),
@@ -482,8 +483,8 @@ ysyx_22040080_csr csr(
 
 // 访存
 ysyx_22040080_lsu lsu(
-  .clk(clk),
-  .rst(rst),
+  .clk(clock),
+  .rst(reset),
   .load_data(load_data),
   .is_load(is_load),
   .is_store(is_store),
@@ -524,10 +525,10 @@ ysyx_22040080_lsu lsu(
 
  //寄存器堆实例
 RegisterFile regfile(
-  .clk(clk),
+  .clk(clock),
   // .wen(wen),
   .wen(wen),
-  .rst(rst),
+  .rst(reset),
   .raddr1(rs1),
   .raddr2(rs2), // 未使用，默认设为 x0
   .waddr(rd),

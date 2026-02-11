@@ -91,10 +91,10 @@ module ysyx_22040080_uart_axi (
         end
         if (aw_captured && w_captured) begin
           if (awaddr_latch == UART_ADDR) begin
-            uart_reg <= wdata_latch;
-            $write("%c", wdata_latch[7:0]);
+            uart_reg <= wdata_latch;  // 32位寄存器，存储最近写入的值
+            $write("%c", wdata_latch[7:0]);  // 输出字符
           end
-          bvalid <= 1'b1;
+          bvalid <= 1'b1;            // 返回写响应
           aw_captured <= 1'b0;
           w_captured <= 1'b0;
         end

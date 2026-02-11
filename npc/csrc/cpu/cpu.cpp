@@ -73,10 +73,10 @@ void sim_exit() {
 }
 
 void reset(int n) {
-  top->rst = 1; 
+  top->reset = 1; 
   while (n-- > 0)
     single_cycyle(); // exec_once();
-  top->rst = 0;
+  top->reset = 0;
 }
 
 
@@ -92,9 +92,11 @@ bool is_jalr(uint32_t inst) {
 
 
 extern "C" void update_register(CPU_state *cpu){
+  printf("update_register start!!!\n");
   // uint32_t npc_pc;
   uint32_t regs[32];
-  regfile_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.regfile");
+  // regfile_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.regfile");
+  regfile_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.regfile.getRegInfo");
   assert(regfile_scope);
   svScope prev_scope = svSetScope(regfile_scope); // 保存当前作用域并切换到寄存器文件作用域
   get_reg_info(regs); // 获取寄存器的值
@@ -108,7 +110,8 @@ extern "C" void update_register(CPU_state *cpu){
 
   // 读取 CSR
   uint32_t mstatus, mepc, mcause, mtvec, mvendorid, marchid;
-  svScope csr_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.csr");
+  // svScope csr_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.csr");
+  svScope csr_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.csr.getCsrInfo");
   assert(csr_scope);
   svScope prev_scope2 = svSetScope(csr_scope);
   get_csr_info(&mstatus, &mepc, &mcause, &mtvec, &mvendorid, &marchid);
@@ -126,6 +129,7 @@ extern "C" void update_register(CPU_state *cpu){
   printf("[DiffTest Init] Registers fully synchronized from RTL.\n");
   // 新增：将NPC的CPU_state同步到NEMU（REF）
   // difftest_regcpy(cpu, DIFFTEST_TO_REF);
+  printf("update_register end!!!\n");
 }
 
 void print_cpu_regs(const CPU_state *cpu) {
@@ -143,10 +147,10 @@ void exec_once() {
   while (!instr_finish && timeout_cnt < MAX_TIMEOUT)
   {
     // 一个周期 = clk 拉低 -> clk 拉高 -> eval 两次
-    top->clk = 0; top->eval(); step_and_dump_wave();
-    top->clk = 1; top->eval(); step_and_dump_wave();
+    top->clock = 0; top->eval(); step_and_dump_wave();
+    top->clock = 1; top->eval(); step_and_dump_wave();
     // 3. 检测是否指令完成（instr_done为高，单周期脉冲） 或者为ebreak指令
-    if (top->instr_done || contextp->gotFinish()) {
+    if (top->io_instr_done || contextp->gotFinish()) {
       instr_finish = true;
     }
     timeout_cnt++;
@@ -163,8 +167,8 @@ void exec_once() {
   }
   
   // 跟踪 PC/指令（可选）itrace
-  cpu.pc = rootp->trace_pc; // 记录的是next_pc 当前pc的内容并未写回
-  uint32_t inst = rootp->trace_instr;
+  cpu.pc = rootp->io_trace_pc; // 记录的是next_pc 当前pc的内容并未写回
+  uint32_t inst = rootp->io_trace_instr;
   // NPC执行一条指令后，让REF(NEMU)执行一条
 
   // 多个 trace 可以 hook 在这里
@@ -293,13 +297,14 @@ void check_register(CPU_state *cpu) {
 
 void single_cycyle() {
   // 一个周期 = clk 拉低 -> clk 拉高 -> eval 两次
-  top->clk = 0; top->eval(); step_and_dump_wave();
-  top->clk = 1; top->eval(); step_and_dump_wave();
+  top->clock = 0; top->eval(); step_and_dump_wave();
+  top->clock = 1; top->eval(); step_and_dump_wave();
 }
 
 void print_registers() {
   for (int i = 0; i < 32; i++) {
-    printf("x%-2d (%3s): 0x%08x\n", i, reg_names[i], rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[i]);
+    // printf("x%-2d (%3s): 0x%08x\n", i, reg_names[i], rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[i]);
+    printf("x%-2d (%3s): 0x%08x\n", i, reg_names[i], rootp->ysyx_22040080_cpu__DOT__regfile__DOT__getRegInfo_rf_flat[i]);
   }
 }
 
@@ -307,7 +312,8 @@ void print_registers() {
 extern "C" void ebreak_trigger() {
   // sim_finished = true;
   contextp->gotFinish(true);
-  uint32_t exit_code = rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[10];
+  // uint32_t exit_code = rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[10];
+  uint32_t exit_code = rootp->ysyx_22040080_cpu__DOT__regfile__DOT__getRegInfo_rf_flat[10];
   if ((exit_code & 0xff) == 0) {
     printf("\33[1;32mHIT GOOD TRAP\33[0m\n");
   } else {
@@ -318,7 +324,8 @@ extern "C" void ebreak_trigger() {
 extern "C" uint32_t get_reg_val(const char *regname) {
   printf("get_reg_val: %s\n", regname);
   int idx = atoi(regname + 1); // skip 'x'
-  return rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[idx];
+  // return rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[idx];
+  return rootp->ysyx_22040080_cpu__DOT__regfile__DOT__getRegInfo_rf_flat[idx];
 }
 
 // RTL 写回时调用，更新 CPU 寄存器状态

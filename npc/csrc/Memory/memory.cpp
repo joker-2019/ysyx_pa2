@@ -114,6 +114,10 @@ extern "C" uint32_t pmem_read(int addr, int len) {
     printf("  addr >= mem_base? %s\n", (addr >= CONFIG_MBASE) ? "是" : "否");
     printf("  addr + len <= mem_end? %s(addr+len=0x%x)\n", (addr + len <= CONFIG_MBASE + CONFIG_MSIZE) ? "是" : "否", addr + len);
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE); */
+    uint32_t uaddr = (uint32_t)addr;
+    if (uaddr < CONFIG_MBASE || uaddr + len > CONFIG_MBASE + CONFIG_MSIZE) {
+        return 0;
+    }
      #if ENABLE_MTRACE
     display_mread(addr, len);
     #endif
@@ -139,8 +143,13 @@ extern "C" void pmem_write(int addr, int len, int data) {
     // printf("  内存范围: 0x%x ~ 0x%x (不包含0x%x)\n", CONFIG_MBASE, CONFIG_MBASE + CONFIG_MSIZE - 1, CONFIG_MBASE + CONFIG_MSIZE);
     // printf("  addr >= mem_base? %s\n", (addr >= CONFIG_MBASE) ? "是" : "否");
     // printf("  addr + len <= mem_end? %s(addr+len=0x%x)\n", (addr + len <= CONFIG_MBASE + CONFIG_MSIZE) ? "是" : "否", addr + len);
-    assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
-
+    
+    // assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
+     // 边界检查：与 pmem_read 同理，组合逻辑驱动时可能传入无效地址
+     uint32_t uaddr = (uint32_t)addr;
+     if (uaddr < CONFIG_MBASE || uaddr + len > CONFIG_MBASE + CONFIG_MSIZE) {
+         return;
+     }
     #if ENABLE_MTRACE
     display_mwrite(addr, len, data);
     #endif
