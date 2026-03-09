@@ -47,3 +47,22 @@
 #define CONFIG_ISA "riscv32"
 #define CONFIG_VGA_CTL_MMIO 0xa0000100
 #define CONFIG_PMEM_GARRAY 1
+
+
+#define RTC_ADDR     0xa0000048  // real-time clock MMIO 地址
+
+// SOC 地址范围
+#define MROM_BASE    0x20000000 // MROM 地址和大小(启动程序)
+#define MROM_SIZE    0x1000
+#define SRAM_BASE    0x0f000000 // SRAM 地址和大小(内部 SRAM，栈/堆使用)
+#define SRAM_SIZE    0x2000
+#define CLINT_BASE   0x02000000 // CLINT 地址和大小
+#define CLINT_SIZE   0x10000
+#define UART_BASE    0x10000000 // 串口地址
+#define UART_SIZE    0x1000
+#define SPI_BASE     0x10001000 // SPI 地址和大小(SPI 控制器)
+#define SPI_SIZE     0x1000
+#define GPIO_BASE    0x10002000 // GPIO 地址和大小(GPIO 控制器)
+#define GPIO_SIZE    0x10
+#define PSRAM_BASE   0x80000000 // PSRAM 地址和大小(PSRAM 控制器)
+#define PSRAM_SIZE   0x400000

@@ -7,7 +7,8 @@
 
 #define PMEM_LEFT  ((uint32_t)CONFIG_MBASE)
 #define PMEM_RIGHT ((uint32_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
-#define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
+// MROM_BASE 由 autoconf.h 统一定义，此处不重复定义
+#define RESET_VECTOR MROM_BASE
 
 extern uint8_t pmem[CONFIG_MSIZE];
 
@@ -28,5 +29,13 @@ uint32_t pmem_read(int addr, int len);
 void pmem_write(int addr, int len, int data);
 
 void device_update();
+
+void flash_read(int32_t addr, int32_t *data);
+
+void mrom_read(int32_t addr, int32_t *data);
+
+long load_mrom(const char *filename);
+
+int is_valid_address(uint32_t addr);
 
 #endif

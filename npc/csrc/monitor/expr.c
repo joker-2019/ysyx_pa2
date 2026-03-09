@@ -5,8 +5,10 @@
 #include <stdint.h>
 #include <regex.h>
 #include <assert.h>
-#include "Vysyx_22040080_cpu.h"
-#include "Vysyx_22040080_cpu___024root.h"
+// #include "Vysyx_22040080_cpu.h"
+// #include "Vysyx_22040080_cpu___024root.h"
+// #include "VysyxSoCFull.h"
+// #include "VysyxSoCFull___024root.h"
 #include "expr.h"
 #include "../cpu/cpu.h"
 

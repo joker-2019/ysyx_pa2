@@ -1,7 +1,8 @@
 # Makefile
 
 # Top module name
-TOPNAME = ysyx_22040080_cpu
+# TOPNAME = ysyx_22040080_cpu
+TOPNAME = ysyxSoCFull
 
 # NXDC constraint file
 # NXDC_FILES = constr/top.nxdc
@@ -17,10 +18,13 @@ CONFIG_FTRACE ?= y
 # Include path for headers
 INC_PATH ?=
 
-# Verilator settings
+# Verilator settings # 新增时序相关选项 timescale为Verilator 仿真设置时间尺度，定义仿真的基本时间单位为 1 纳秒，时间精度也为 1 纳秒
+# -MMD 生成依赖文件(.d) --build 构建Verilator 对象文件 --cc 使用C++编译器编译Verilator 对象文件 -O3 优化级别为3 --x-assign fast --x-initial fast 快速赋值和初始化 --noassert 禁用断言 --trace 生成VCD文件 --timescale "1ns/1ns" 时间尺度为1ns/1ns --no-timing 禁用时序分析
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
-                    -O3 --x-assign fast --x-initial fast --noassert --trace -trace
+					-autoflush	\
+                    -O3 --x-assign fast --x-initial fast --noassert --trace -trace \
+					--timescale "1ns/1ns" --no-timing
 
 
 # Build directories
@@ -44,6 +48,23 @@ $(shell mkdir -p $(BUILD_DIR))
 VSRCS = $(shell find $(abspath ./vsrc/generated) -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 # CSRCS += $(SRC_AUTO_BIND)
+
+CUR_DIR := $(shell pwd)
+# ysyxSoC 路径（相对 npc 目录，可根据实际布局调整）
+YSYXSOC_DIR = $(abspath $(CUR_DIR)/../ysyxSoC)
+# ysyxSoC/perip 及其子目录下的所有 .v 文件
+PERIP_VSRCS = $(shell find $(YSYXSOC_DIR)/perip -name "*.v" 2>/dev/null)
+VSRCS += $(PERIP_VSRCS)
+
+# ========== 关键修改：添加ysyxSoCFull.v到Verilog文件列表 ==========
+# 加入ysyxSoC/build/ysyxSoCFull.v文件
+YSYXSOC_FULL_V = $(YSYXSOC_DIR)/build/ysyxSoCFull.v
+VSRCS += $(YSYXSOC_FULL_V)
+
+# Verilator include 搜索路径（用于 `include 指令，解决 uart_defines.v、spi_defines.v 等）
+VERILATOR_INC = -I$(YSYXSOC_DIR)/perip/uart16550/rtl \
+                -I$(YSYXSOC_DIR)/perip/spi/rtl
+
 
 # LLVM disassembler support
 ifeq ($(CONFIG_ITRACE), y)
@@ -70,10 +91,18 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 # Build the binary
-$(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
-	@rm -rf $(OBJ_DIR)
-	$(VERILATOR) $(VERILATOR_CFLAGS) \
-		--top-module $(TOPNAME) $^ \
+# $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
+#	@rm -rf $(OBJ_DIR)  # 清空旧的编译目录（避免残留文件干扰）
+#	$(VERILATOR) $(VERILATOR_CFLAGS) \
+#		--top-module $(TOPNAME) $^ \ 用$^（自动引用所有依赖项）
+#		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
+#		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
+
+# 在 verilator 调用处添加 $(VERILATOR_INC) （用于 `include 指令，解决 uart_defines.v、spi_defines.v 等）\  # 新增外设include路径
+$(BIN): $(VSRCS) $(CSRCS)
+	@rm -rf $(OBJ_DIR)  
+	$(VERILATOR) $(VERILATOR_CFLAGS) $(VERILATOR_INC) \
+		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 

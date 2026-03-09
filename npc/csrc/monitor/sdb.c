@@ -238,6 +238,7 @@ int sdb_mainloop(int argc, char *argv[]) {
   while (!contextp->gotFinish()) {
   // while(!sim_finished){
     line = rl_gets();
+    if (line == NULL) break;  // readline 遇到 EOF 时返回 NULL，防止 strlen(NULL) 段错误
     if (strlen(line) > 0){
       int success = cmd_dispatch(line);
       if (success < 0)

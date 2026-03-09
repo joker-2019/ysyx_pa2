@@ -13,9 +13,8 @@
 #define PG_ALIGN __attribute((aligned(4096)))
 uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
-#define SERIAL_ADDR  0x10000000 //串口地址
 static uint64_t boot_time = 0; //系统启动时间
-#define RTC_ADDR     0xa0000048  // real-time clock MMIO 地址
+static uint8_t mrom[MROM_SIZE];
 
 static bool need_update = false;
 static int uart_char;
@@ -63,40 +62,6 @@ uint32_t phys_mem_read(uint32_t addr, int len) {
     return ret;
 }
 
-/*extern "C" uint32_t mem_read(int pc) {
-    if (pc == 0){
-        return 0;
-    }
-    assert((pc & 0x3) == 0 && "Instruction address misaligned");
-    uint32_t offset = pc - CONFIG_MBASE;
-    assert(offset + 4 <= CONFIG_MSIZE && "Instruction memory overflow");
-    // 读取4字节，解释为uint32_t（小端对齐）
-    uint32_t inst;
-    memcpy(&inst, pmem + offset, 4);
-    // printf("DEBUG: pc=0x%08x → index=%d → instr=0x%08x\n", pc, offset, inst);
-    return inst;
-    // return phys_mem_read((uint32_t)pc, 4);
-}
-
- extern "C" uint32_t lw_mem_read(int addr, int len) {
-
-    uint64_t now = get_time_us() - boot_time; // 启动后的微秒数
-    if (addr == RTC_ADDR){
-        fflush(stdout);
-        return (uint32_t)(now & 0xffffffff); // 返回低32位 (us)
-    } 
-    if (addr == RTC_ADDR + 4){
-        fflush(stdout);
-        return (uint32_t)(now >> 32); // 返回高32位
-    }
-    assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
-     #if ENABLE_MTRACE
-    display_mread(addr, len);
-    #endif
-    uint32_t ret = host_read(guest_to_host(addr), len);
-    return ret;
-} */
-
 extern "C" uint32_t pmem_read(int addr, int len) {
 
     uint64_t now = get_time_us() - boot_time; // 启动后的微秒数
@@ -115,7 +80,15 @@ extern "C" uint32_t pmem_read(int addr, int len) {
     printf("  addr + len <= mem_end? %s(addr+len=0x%x)\n", (addr + len <= CONFIG_MBASE + CONFIG_MSIZE) ? "是" : "否", addr + len);
     assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE); */
     uint32_t uaddr = (uint32_t)addr;
-    if (uaddr < CONFIG_MBASE || uaddr + len > CONFIG_MBASE + CONFIG_MSIZE) {
+
+    // itrace 读取 MROM 范围指令（0x20000000），走 mrom[] 数组
+    if (uaddr >= MROM_BASE && uaddr + (uint32_t)len <= MROM_BASE + MROM_SIZE) {
+        uint32_t data = 0;
+        memcpy(&data, mrom + (uaddr - MROM_BASE), len);
+        return data;
+    }
+    // 地址越界检查：只有在 SRAM/PSRAM 范围内才访问 pmem，否则返回 0 (地址越界检查在初始化时也对0地址进行判别，否则会导致0地址的越界访问)
+    if (uaddr < CONFIG_MBASE || uaddr + (uint32_t)len > CONFIG_MBASE + CONFIG_MSIZE) {
         return 0;
     }
      #if ENABLE_MTRACE
@@ -130,7 +103,7 @@ extern "C" uint32_t pmem_read(int addr, int len) {
 extern "C" void pmem_write(int addr, int len, int data) {
     // printf("[UART] addr=0x%x, data=0x%x, len=%u\n", addr, data, len);
     // 串口写入
-    if (addr == SERIAL_ADDR) {
+    if (addr >= UART_BASE && addr <= UART_BASE + UART_SIZE) {
         // printf("[UART] write char = '%c' (0x%02x)\n", data & 0xFF, data & 0xFF);
         // putchar((char)(data & 0xFF)); 
         // fflush(stdout);  // 立即刷新输出
@@ -161,4 +134,55 @@ extern "C" void pmem_write(int addr, int len, int data) {
         host_addr[i] = (data >> (8 * i)) & 0xFF;  //  按字节写入（小端）
     }
 }
+
+long load_mrom(const char *filename) {
+    if (!filename) return 0;
+    FILE *fp = fopen(filename, "rb");
+    if (!fp) {
+        printf("[MROM] Cannot open '%s'\n", filename);
+        return -1;
+    }
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    assert(size <= MROM_SIZE);
+    fseek(fp, 0, SEEK_SET);
+    int ret = fread(mrom, size, 1, fp);
+    assert(ret == 1);
+    fclose(fp);
+    printf("[MROM] Loaded %ld bytes from '%s'\n", size, filename);
+    return size;
+}
+
+extern "C" void flash_read(int32_t addr, int32_t *data) { 
+    assert(0); 
+}
+
+extern "C" void mrom_read(int32_t addr, int32_t *data) {
+    uint32_t offset = (uint32_t)addr - MROM_BASE;
+    if (offset + 4 <= MROM_SIZE) {
+        memcpy(data, mrom + offset, 4);
+    } else {
+        *data = 0;
+    }
+}
+
+extern "C" int is_valid_address(uint32_t addr) {
+    // 检查地址是否在合法范围
+    int valid = 1;
+    /* (addr >= MROM_BASE  && addr < MROM_BASE  + MROM_SIZE)  ||
+                (addr >= SRAM_BASE  && addr < SRAM_BASE  + SRAM_SIZE)  ||
+                (addr >= CLINT_BASE && addr < CLINT_BASE + CLINT_SIZE) ||
+                (addr >= UART_BASE  && addr < UART_BASE  + UART_SIZE)  ||
+                (addr >= SPI_BASE   && addr < SPI_BASE   + SPI_SIZE)   ||
+                (addr >= GPIO_BASE  && addr < GPIO_BASE  + GPIO_SIZE)  ||
+                (addr >= PSRAM_BASE && addr < PSRAM_BASE + PSRAM_SIZE); */
+  
+    static int dbg_cnt = 0;
+    if (!valid && dbg_cnt < 30) {
+        dbg_cnt++;
+        fprintf(stderr, "[is_valid_address] #%d addr=0x%08x valid=%d\n", dbg_cnt, addr, valid);
+        fflush(stderr);
+    }
+    return valid; // 合法返回1，非法返回0；由硬件 access_fault 信号处理后续跳转
+  }
 

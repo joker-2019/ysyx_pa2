@@ -2,8 +2,10 @@
 #include "cpu.h"
 #include "verilated.h"
 #include "verilated_vcd_c.h"
-#include "Vysyx_22040080_cpu.h"
-#include "Vysyx_22040080_cpu___024root.h"
+// #include "Vysyx_22040080_cpu.h"
+// #include "Vysyx_22040080_cpu___024root.h"
+#include "VysyxSoCFull.h"
+#include "VysyxSoCFull___024root.h"
 #include "../utils/ftrace.h"
 #include "../utils/utils.h"
 #include "../utils/iringbuf.h"
@@ -25,13 +27,44 @@ CPU_state cpu = {};
 bool sim_finished = false;
 VerilatedContext *contextp = NULL;
 static VerilatedVcdC* tfp = NULL;
-static Vysyx_22040080_cpu* top = NULL;
-static Vysyx_22040080_cpu___024root* rootp = NULL;
+// static Vysyx_22040080_cpu* top = NULL;
+// static Vysyx_22040080_cpu___024root* rootp = NULL;
+static VysyxSoCFull* top = NULL;
+static VysyxSoCFull___024root* rootp = NULL;
 
 extern "C" void get_reg_info(uint32_t regs[32]);
-// extern "C" void get_pc(uint32_t *pc_val);
-static svScope regfile_scope = NULL;
+extern "C" void get_instr_pc(uint32_t *out_pc, uint32_t *out_instr, svBit *out_done);
+
+static svScope regfile_scope  = NULL;
+static svScope csr_scope      = NULL;
+static svScope instr_pc_scope = NULL;
 static uint32_t regs[32];
+
+// 初始化dpi-scope的名称
+#define SCOPE_PREFIX "TOP.ysyxSoCFull.asic.cpu.cpu."
+
+static void init_dpi_scopes() {
+  if (!regfile_scope) {
+    regfile_scope = svGetScopeFromName(SCOPE_PREFIX "regfile.getRegInfo");
+    assert(regfile_scope);
+  }
+  if (!csr_scope) {
+    csr_scope = svGetScopeFromName(SCOPE_PREFIX "csr.getCsrInfo");
+    assert(csr_scope);
+  }
+  if (!instr_pc_scope) {
+    instr_pc_scope = svGetScopeFromName(SCOPE_PREFIX "pc_mod.getInstrPc");
+    assert(instr_pc_scope);
+  }
+}
+
+static void dpi_get_regs(uint32_t out[32]) {
+  init_dpi_scopes();
+  svScope prev = svSetScope(regfile_scope);
+  get_reg_info(out);
+  svSetScope(prev);
+  out[0] = 0;
+}
 
 const char* reg_names[] = {
   "$0","ra","sp","gp","tp","t0","t1","t2",
@@ -58,7 +91,8 @@ void step_and_dump_wave() {
 void sim_init() {
   contextp = new VerilatedContext;
   tfp = new VerilatedVcdC;
-  top = new Vysyx_22040080_cpu;
+  // top = new Vysyx_22040080_cpu;
+  top = new VysyxSoCFull;
   rootp = top->rootp;
 
   init_disasm("riscv32-pc-linux-gnu"); // 初始化反汇编器
@@ -93,29 +127,20 @@ bool is_jalr(uint32_t inst) {
 
 extern "C" void update_register(CPU_state *cpu){
   printf("update_register start!!!\n");
-  // uint32_t npc_pc;
+  init_dpi_scopes();
+
   uint32_t regs[32];
-  // regfile_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.regfile");
-  regfile_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.regfile.getRegInfo");
-  assert(regfile_scope);
-  svScope prev_scope = svSetScope(regfile_scope); // 保存当前作用域并切换到寄存器文件作用域
-  get_reg_info(regs); // 获取寄存器的值
-  svSetScope(prev_scope); //关闭作用域
-  // printf("get reg infomation done!\n");
-  regs[0] = 0; //rf[0]在初始化的时候已经赋值为0了
+  dpi_get_regs(regs);
   for (int i = 0; i < 32; i++) {
     cpu->gpr[i] = regs[i]; 
   }
-  cpu->pc = CONFIG_MBASE;
-
-  // 读取 CSR
+  // cpu->pc = CONFIG_MBASE;
+  cpu->pc = RESET_VECTOR;
+  
   uint32_t mstatus, mepc, mcause, mtvec, mvendorid, marchid;
-  // svScope csr_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.csr");
-  svScope csr_scope = svGetScopeFromName("TOP.ysyx_22040080_cpu.csr.getCsrInfo");
-  assert(csr_scope);
-  svScope prev_scope2 = svSetScope(csr_scope);
+  svScope prev = svSetScope(csr_scope);
   get_csr_info(&mstatus, &mepc, &mcause, &mtvec, &mvendorid, &marchid);
-  svSetScope(prev_scope2);
+  svSetScope(prev);
 
   cpu->sr.mstatus   = mstatus;
   cpu->sr.mepc      = mepc;
@@ -123,12 +148,9 @@ extern "C" void update_register(CPU_state *cpu){
   cpu->sr.mtvec     = mtvec;
   cpu->sr.mvendorid = mvendorid;
   cpu->sr.marchid   = marchid;
-  // 新增：打印 NPC 的 cpu 结构中 CSR 值
   printf("[NPC CSR] mstatus=0x%x, mepc= 0x%x, mcause=0x%x, mtvec=0x%x\n",cpu->sr.mstatus, cpu->sr.mepc, cpu->sr.mcause,cpu->sr.mtvec);
   printf("[NPC] cpu->sr.mvendorid=0x%x, cpu->sr.marchid=0x%x\n", cpu->sr.mvendorid, cpu->sr.marchid);
   printf("[DiffTest Init] Registers fully synchronized from RTL.\n");
-  // 新增：将NPC的CPU_state同步到NEMU（REF）
-  // difftest_regcpy(cpu, DIFFTEST_TO_REF);
   printf("update_register end!!!\n");
 }
 
@@ -141,16 +163,24 @@ void print_cpu_regs(const CPU_state *cpu) {
 
 void exec_once() {
   bool instr_finish = false;
-  int timeout_cnt = 0;  // 超时保护，防止死循环
-  const int MAX_TIMEOUT = 50;  // 多周期最大允许clk数（根据你的CPU调整）
-  // static int ref_count = 0;
+  int timeout_cnt = 0;
+  const int MAX_TIMEOUT = 500;
+
+  init_dpi_scopes();
+
   while (!instr_finish && timeout_cnt < MAX_TIMEOUT)
   {
     // 一个周期 = clk 拉低 -> clk 拉高 -> eval 两次
     top->clock = 0; top->eval(); step_and_dump_wave();
     top->clock = 1; top->eval(); step_and_dump_wave();
-    // 3. 检测是否指令完成（instr_done为高，单周期脉冲） 或者为ebreak指令
-    if (top->io_instr_done || contextp->gotFinish()) {
+
+    uint32_t dpi_pc, dpi_instr;
+    svBit dpi_done;
+    svScope prev = svSetScope(instr_pc_scope);
+    get_instr_pc(&dpi_pc, &dpi_instr, &dpi_done);
+    svSetScope(prev);
+
+    if (dpi_done || contextp->gotFinish()) {
       instr_finish = true;
     }
     timeout_cnt++;
@@ -166,9 +196,14 @@ void exec_once() {
     return;
   }
   
-  // 跟踪 PC/指令（可选）itrace
-  cpu.pc = rootp->io_trace_pc; // 记录的是next_pc 当前pc的内容并未写回
-  uint32_t inst = rootp->io_trace_instr;
+  uint32_t dpi_pc, dpi_instr;
+  svBit dpi_done;
+  svScope prev = svSetScope(instr_pc_scope);
+  get_instr_pc(&dpi_pc, &dpi_instr, &dpi_done);
+  svSetScope(prev);
+
+  cpu.pc = dpi_pc;
+  uint32_t inst = dpi_instr;
   // NPC执行一条指令后，让REF(NEMU)执行一条
 
   // 多个 trace 可以 hook 在这里
@@ -302,18 +337,18 @@ void single_cycyle() {
 }
 
 void print_registers() {
+  uint32_t regs[32];
+  dpi_get_regs(regs);
   for (int i = 0; i < 32; i++) {
-    // printf("x%-2d (%3s): 0x%08x\n", i, reg_names[i], rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[i]);
-    printf("x%-2d (%3s): 0x%08x\n", i, reg_names[i], rootp->ysyx_22040080_cpu__DOT__regfile__DOT__getRegInfo_rf_flat[i]);
+    printf("x%-2d (%3s): 0x%08x\n", i, reg_names[i], regs[i]);
   }
 }
 
-// DPI-C 函数
 extern "C" void ebreak_trigger() {
-  // sim_finished = true;
   contextp->gotFinish(true);
-  // uint32_t exit_code = rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[10];
-  uint32_t exit_code = rootp->ysyx_22040080_cpu__DOT__regfile__DOT__getRegInfo_rf_flat[10];
+  uint32_t regs[32];
+  dpi_get_regs(regs);
+  uint32_t exit_code = regs[10]; // a0：0=GOOD，非0=BAD
   if ((exit_code & 0xff) == 0) {
     printf("\33[1;32mHIT GOOD TRAP\33[0m\n");
   } else {
@@ -324,8 +359,9 @@ extern "C" void ebreak_trigger() {
 extern "C" uint32_t get_reg_val(const char *regname) {
   printf("get_reg_val: %s\n", regname);
   int idx = atoi(regname + 1); // skip 'x'
-  // return rootp->ysyx_22040080_cpu__DOT__regfile__DOT__rf[idx];
-  return rootp->ysyx_22040080_cpu__DOT__regfile__DOT__getRegInfo_rf_flat[idx];
+  uint32_t regs[32];
+  dpi_get_regs(regs);
+  return regs[idx];
 }
 
 // RTL 写回时调用，更新 CPU 寄存器状态
