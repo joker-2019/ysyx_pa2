@@ -104,25 +104,25 @@ void init_monitor(int argc, char *argv[]){
   long img_size = load_img();
 
   /* Initialize differential testing. */
-  // difftest_init_nemu();
+  difftest_init_nemu();
 
   /*将镜像同步到REF(nemu) 的内存 需要把镜像文件（image）load到NPC的物理内存区域（或者RESET_VECTOR）中*/ 
-  // difftest_memcpy(CONFIG_MBASE, pmem, img_size, DIFFTEST_TO_REF);
+  difftest_memcpy(MROM_BASE, pmem_addr(MROM_BASE), img_size, DIFFTEST_TO_REF);
 
   // 检查内存是否一致
-  // check_difftest_memcpy(CONFIG_MBASE, pmem, img_size);
+  check_difftest_memcpy(MROM_BASE, pmem_addr(MROM_BASE), img_size);
 
-  // 执行5个周期的复位
+  // 执行10个周期的复位
   reset(10);
   
   // 同步仿真寄存器的值
-  // update_register(&cpu);
+  update_register(&cpu);
 
   // 检查寄存器是否一致
-  // check_register(&cpu);
+  check_register(&cpu);
 
   // 将寄存器状态同步到 REF
-  // difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+  difftest_regcpy(&cpu, DIFFTEST_TO_REF);
  
   // 初始化系统时间
   // init_clock();

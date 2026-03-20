@@ -66,3 +66,6 @@
 #define GPIO_SIZE    0x10
 #define PSRAM_BASE   0x80000000 // PSRAM 地址和大小(PSRAM 控制器)
 #define PSRAM_SIZE   0x400000
+
+#define FLASH_BASE  0X30000000
+#define FLASH_SIZE  0x10000000

@@ -19,7 +19,10 @@ CONFIG_FTRACE ?= y
 INC_PATH ?=
 
 # Verilator settings # 新增时序相关选项 timescale为Verilator 仿真设置时间尺度，定义仿真的基本时间单位为 1 纳秒，时间精度也为 1 纳秒
-# -MMD 生成依赖文件(.d) --build 构建Verilator 对象文件 --cc 使用C++编译器编译Verilator 对象文件 -O3 优化级别为3 --x-assign fast --x-initial fast 快速赋值和初始化 --noassert 禁用断言 --trace 生成VCD文件 --timescale "1ns/1ns" 时间尺度为1ns/1ns --no-timing 禁用时序分析
+# -MMD 生成依赖文件(.d) --build 构建Verilator 对象文件 --cc 使用C++编译器编译Verilator 对象文件 -O3 优化级别为3 
+# --x-assign fast --x-initial fast 快速赋值和初始化 --noassert 禁用断言 --trace 生成VCD文件 
+# --timescale "1ns/1ns" 时间尺度为1ns/1ns --no-timing 禁用时序分析
+# -autoflush 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
 					-autoflush	\

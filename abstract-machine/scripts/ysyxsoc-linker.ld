@@ -1,13 +1,13 @@
 /* ysyxSoC 专用链接脚本
  *
  * 内存布局：
- *   MROM  0x20000000  4KB  只读（CPU 复位入口，存放代码、只读数据、.data 初始值）
- *   SRAM  0x0f000000  8KB  可读写（.data 运行时、.bss、栈、堆）
+ *   MROM  0x20000000  4KB  只读（CPU 复位入口，存放代码 + rodata/data 初始化镜像）
+ *   SRAM  0x0f000000  8KB  可读写（.rodata/.data 运行时、.bss、栈、堆）
  *
- * .data 段采用 LMA/VMA 分离方案：
- *   LMA（加载地址）= MROM（ELF 文件中存储初始值，紧接 .rodata）
- *   VMA（运行地址）= SRAM（运行时读写）
- *   启动代码负责将 .data 从 MROM 拷贝到 SRAM。
+ * .rodata/.data 段采用 LMA/VMA 分离方案：
+ *   LMA（加载地址）= MROM（ELF 文件中存储初始化镜像）
+ *   VMA（运行地址）= SRAM（运行时访问地址）
+ *   启动代码负责将 .rodata/.data 从 MROM 拷贝到 SRAM。
  */
 ENTRY(_start)
 
@@ -33,16 +33,20 @@ SECTIONS {
     *(.text*)
   } > mrom : text
 
-  .rodata : {
+  /* 切换到 SRAM，放置运行时 rodata/data */
+  . = ORIGIN(sram);
+
+  /* .rodata：VMA 在 SRAM，LMA 在 MROM(.text 之后) */
+  .rodata : AT(ALIGN(LOADADDR(.text) + SIZEOF(.text), 4)) {
+    _rodata_start = .;
     *(.rodata*)
     *(.srodata*)
-  } > mrom
+    . = ALIGN(4);
+    _rodata_end = .;
+  } > sram : data
 
-  /* 记录 .data 在 MROM 中的加载起始地址（LMA） */
-  _data_lma = .;
-
-  /* .data：LMA 在 MROM（AT(_data_lma)），VMA 在 SRAM（> sram） */
-  .data : AT(_data_lma) {
+  /* .data：VMA 在 SRAM，LMA 紧跟 .rodata 的 LMA */
+  .data : AT(ALIGN(LOADADDR(.rodata) + SIZEOF(.rodata), 4)) {
     _data_start = .;        /* VMA 起始（SRAM 运行地址） */
     *(.data)
     *(.data*)
@@ -50,6 +54,16 @@ SECTIONS {
     . = ALIGN(4);
     _data_end = .;          /* VMA 结束 */
   } > sram : data
+
+  /* 显式导出 MA/SA/LEN，供启动代码拷贝 .rodata/.data 使用 */
+  _rodata_ma  = LOADADDR(.rodata);
+  _rodata_sa  = ADDR(.rodata);
+  _rodata_len = SIZEOF(.rodata);
+
+  _data_ma  = LOADADDR(.data);
+  _data_sa  = ADDR(.data);
+  _data_len = SIZEOF(.data);
+  _data_lma = _data_ma;
 
   /* ---- SRAM：BSS + 栈 + 堆 ---- */
 
@@ -60,14 +74,14 @@ SECTIONS {
     *(.scommon)
     . = ALIGN(4);
     _bss_end = .;
-  } > sram
+  } > sram :NONE
 
-  /* 栈：紧跟 BSS，向高地址增长，分配 4KB */
-  _stack_top     = ALIGN(0x10);
-  . = _stack_top + 0x1000;
-  _stack_pointer = .;
+  /* 堆：放在 .bss 之后，避免覆盖全局变量 */
+  _heap_start = ALIGN(_bss_end, 0x10);
 
-  /* 堆：栈之后到 SRAM 末尾 */
-  _heap_start = ALIGN(0x10);
-  _heap_end   = ORIGIN(sram) + LENGTH(sram);
+  /* 栈：固定在 SRAM 末尾，向低地址增长，分配 4KB */
+  /* 堆范围是 [heap_start, stack_top)  栈范围是[stack_top, sram_end) 动态加载获取 SRAM 首尾地址*/
+  _stack_pointer = ORIGIN(sram) + LENGTH(sram);
+  _stack_top     = _stack_pointer - 0x1000;
+  _heap_end      = _stack_top;
 }

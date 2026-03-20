@@ -12,11 +12,18 @@ LDFLAGS += --gc-sections -e _start  # 指定程序的入口点为 _start（对�
 CFLAGS  += -DMAINARGS=\"$(mainargs)\"
 .PHONY: $(AM_HOME)/am/src/riscv/ysyxsoc/trm.c
 
-# objdump -d：反汇编 ELF 文件的代码段，输出到 $(IMAGE).txt，方便调试（查看汇编指令）； --set-section-flags .bss=alloc,contents设置 .bss 段（未初始化全局变量）的属性为 “可分配 + 有内容”，确保 .bss 段被包含到 bin 文件中；
+# objdump -d：反汇编 ELF 文件的代码段，输出到 $(IMAGE).txt，方便调试（查看汇编指令）
+# ysyxSoC 使用 MROM+SRAM 分离地址，.bss 由启动代码清零，不应打包进 bin
+# @$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin 
+# .bss段专门存放未初始化 / 初始值为 0 的全局 / 静态变量   
+# 会把.bss段的大小全部用 0 填充进 bin，比如你的.bss段有 16KB，bin 就会多 16KB 的 0；
+# 如果地址分离，甚至会生成几百 MB / 几 GB 的无效 bin
+# 旧的编译包含.text(代码)、.rodata(只读数据)、.data(有初值的变量)、强制加入的.bss段（全 0 填充） 体积巨大
+# 现在的做法是仅包含.text、.rodata、.data三个必须的段，无任何冗余内容
 image: $(IMAGE).elf
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
-	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
+	@$(OBJCOPY) -S -j .text -j .rodata -j .data -O binary $(IMAGE).elf $(IMAGE).bin	
 
 .PHONY: run
 run: image

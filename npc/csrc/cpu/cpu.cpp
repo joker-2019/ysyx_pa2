@@ -165,6 +165,9 @@ void exec_once() {
   bool instr_finish = false;
   int timeout_cnt = 0;
   const int MAX_TIMEOUT = 500;
+  uint32_t latched_pc = 0;
+  uint32_t latched_inst = 0;
+  bool has_latched_trace = false;
 
   init_dpi_scopes();
 
@@ -179,6 +182,13 @@ void exec_once() {
     svScope prev = svSetScope(instr_pc_scope);
     get_instr_pc(&dpi_pc, &dpi_instr, &dpi_done);
     svSetScope(prev);
+
+    if (dpi_done) {
+      // 仅锁存“本条指令完成”对应的 trace，避免采到无效拍的 0/0
+      latched_pc = dpi_pc;
+      latched_inst = dpi_instr;
+      has_latched_trace = true;
+    }
 
     if (dpi_done || contextp->gotFinish()) {
       instr_finish = true;
@@ -196,14 +206,14 @@ void exec_once() {
     return;
   }
   
-  uint32_t dpi_pc, dpi_instr;
-  svBit dpi_done;
-  svScope prev = svSetScope(instr_pc_scope);
-  get_instr_pc(&dpi_pc, &dpi_instr, &dpi_done);
-  svSetScope(prev);
-
-  cpu.pc = dpi_pc;
-  uint32_t inst = dpi_instr;
+  // 使用 done 拍锁存的 trace，避免循环退出后再次采样到无效值
+  if (!has_latched_trace) {
+    printf("Error: Missing valid trace when instruction finished\n");
+    contextp->gotFinish(true);
+    return;
+  }
+  cpu.pc = latched_pc;
+  uint32_t inst = latched_inst;
   // NPC执行一条指令后，让REF(NEMU)执行一条
 
   // 多个 trace 可以 hook 在这里

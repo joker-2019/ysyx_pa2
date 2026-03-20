@@ -154,7 +154,12 @@ long load_mrom(const char *filename) {
 }
 
 extern "C" void flash_read(int32_t addr, int32_t *data) { 
-    assert(0); 
+    uint32_t offset = (uint32_t)addr;
+    if (offset + 4 <= FLASH_SIZE) {
+        memcpy(data, flash + offset, 4);
+    } else {
+        *data = 0;
+    }
 }
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
@@ -166,23 +171,29 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
     }
 }
 
+// 返回 guest 物理地址对应的 host 指针（支持 MROM/SRAM/PSRAM）
+void *pmem_addr(uint32_t addr) {
+    uint32_t uaddr = addr;
+    if (uaddr >= MROM_BASE && uaddr < MROM_BASE + MROM_SIZE)
+        return (void *)(mrom + (uaddr - MROM_BASE));
+    if (uaddr >= CONFIG_MBASE && uaddr < CONFIG_MBASE + CONFIG_MSIZE)
+        return (void *)(pmem + (uaddr - CONFIG_MBASE));
+    return NULL;
+}
+
+extern bool sim_in_reset;
+
 extern "C" int is_valid_address(uint32_t addr) {
     // 检查地址是否在合法范围
     int valid = 1;
-    /* (addr >= MROM_BASE  && addr < MROM_BASE  + MROM_SIZE)  ||
+    /* int valid = (addr >= MROM_BASE  && addr < MROM_BASE  + MROM_SIZE)  ||
                 (addr >= SRAM_BASE  && addr < SRAM_BASE  + SRAM_SIZE)  ||
                 (addr >= CLINT_BASE && addr < CLINT_BASE + CLINT_SIZE) ||
                 (addr >= UART_BASE  && addr < UART_BASE  + UART_SIZE)  ||
                 (addr >= SPI_BASE   && addr < SPI_BASE   + SPI_SIZE)   ||
                 (addr >= GPIO_BASE  && addr < GPIO_BASE  + GPIO_SIZE)  ||
-                (addr >= PSRAM_BASE && addr < PSRAM_BASE + PSRAM_SIZE); */
-  
-    static int dbg_cnt = 0;
-    if (!valid && dbg_cnt < 30) {
-        dbg_cnt++;
-        fprintf(stderr, "[is_valid_address] #%d addr=0x%08x valid=%d\n", dbg_cnt, addr, valid);
-        fflush(stderr);
-    }
+                (addr >= PSRAM_BASE && addr < PSRAM_BASE + PSRAM_SIZE);
+ */
     return valid; // 合法返回1，非法返回0；由硬件 access_fault 信号处理后续跳转
   }
 

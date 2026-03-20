@@ -20,15 +20,44 @@
 
 #define PMEM_LEFT  ((paddr_t)CONFIG_MBASE)
 #define PMEM_RIGHT ((paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
-#define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
+// #define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
+// ysyxSoC 地址空间定义
+#define MROM_BASE    0x20000000
+#define MROM_SIZE    0x1000
+#define MROM_LEFT    ((paddr_t)MROM_BASE)
+#define MROM_RIGHT   ((paddr_t)MROM_BASE + MROM_SIZE - 1)
 
+
+#define SRAM_BASE    0x0f000000
+#define SRAM_SIZE    0x2000
+#define SRAM_LEFT    ((paddr_t)SRAM_BASE)
+#define SRAM_RIGHT   ((paddr_t)SRAM_BASE + SRAM_SIZE - 1)
+
+#define RESET_VECTOR (MROM_LEFT + CONFIG_PC_RESET_OFFSET)
+
+extern uint8_t *mrom;
+extern uint8_t *sram;
 /* convert the guest physical address in the guest program to host virtual address in NEMU */
 uint8_t* guest_to_host(paddr_t paddr);
 /* convert the host virtual address in NEMU to guest physical address in the guest program */
 paddr_t host_to_guest(uint8_t *haddr);
 
-static inline bool in_pmem(paddr_t addr) {
+static inline bool in_mrom(paddr_t addr) {
+  return addr - MROM_BASE < MROM_SIZE;
+}
+
+static inline bool in_sram(paddr_t addr) {
+  return addr - SRAM_BASE < SRAM_SIZE;
+}
+
+static inline bool in_psram(paddr_t addr) {
   return addr - CONFIG_MBASE < CONFIG_MSIZE;
+}
+
+// 兼容原有 in_pmem 名称：MROM + SRAM + PSRAM 均视为合法物理内存
+static inline bool in_pmem(paddr_t addr) {
+  // return addr - CONFIG_MBASE < CONFIG_MSIZE;
+  return in_mrom(addr) || in_sram(addr) || in_psram(addr);
 }
 
 word_t paddr_read(paddr_t addr, int len);

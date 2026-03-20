@@ -36,6 +36,8 @@ void mrom_read(int32_t addr, int32_t *data);
 
 long load_mrom(const char *filename);
 
+void *pmem_addr(uint32_t addr);
+
 int is_valid_address(uint32_t addr);
 
 #endif
