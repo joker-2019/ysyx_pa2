@@ -37,7 +37,9 @@ void difftest_init_nemu() {
  }
     
  p_difftest_init(0); // 初始化 NEMU 仿真环境
- 
+ // ========== 新增：初始化时同步MROM内容到NEMU ==========
+ // printf("[DiffTest] Sync MROM (0x%08x - 0x%08x) to NEMU...\n", MROM_BASE, MROM_BASE + MROM_SIZE);
+ // p_difftest_memcpy(MROM_BASE, pmem_addr(MROM_BASE), MROM_SIZE, DIFFTEST_TO_REF);
 }
 
 // 封装调用接口

@@ -14,7 +14,9 @@
 uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
 static uint64_t boot_time = 0; //系统启动时间
-static uint8_t mrom[MROM_SIZE];
+// static uint8_t mrom[MROM_SIZE];
+static uint8_t flash[FLASH_SIZE];
+static uint8_t sram[SRAM_SIZE];
 
 static bool need_update = false;
 static int uart_char;
@@ -41,24 +43,43 @@ void device_update() {
     }
 }
 
+// 在 flash_dpi.c 中添加初始化函数
+
 void init_mem(){
-    memset(pmem, 0, sizeof(pmem));  // 清空内存
+    memset(pmem, 0, sizeof(pmem));
+    // memset(mrom, 0, sizeof(mrom));
+    memset(sram, 0, sizeof(sram));
+    memset(flash, 0, sizeof(flash));
+
+     uint32_t *flash_ptr = (uint32_t *)(flash + 0x100000); // 偏移 1MB 处
+    *flash_ptr = 0xdeadbeef;
 }
 
 uint8_t *guest_to_host(uint32_t paddr){
-    return pmem + (paddr - CONFIG_MBASE);
+    if (paddr >= SRAM_BASE && paddr < SRAM_BASE + SRAM_SIZE) {
+        return sram + (paddr - SRAM_BASE);
+    }
+    /* if(paddr >= MROM_BASE && paddr < MROM_BASE + MROM_SIZE) {
+        return mrom + (paddr - MROM_BASE);
+    } */
+    if (paddr >= CONFIG_MBASE && paddr < CONFIG_MBASE + CONFIG_MSIZE) {
+        return pmem + (paddr - CONFIG_MBASE);
+    }
+    if (paddr >= FLASH_BASE && paddr < FLASH_BASE + FLASH_SIZE) {
+        return flash + (paddr - FLASH_BASE);
+    }
+    return NULL;
 }
 
 uint32_t phys_mem_read(uint32_t addr, int len) {
-    uint32_t offset = addr - CONFIG_MBASE; // 按照字节寻址(uint8_t)
-    assert(offset + len <= CONFIG_MSIZE && "phys_mem_read overflow");
-    // assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
+    uint8_t *host_addr = guest_to_host(addr);
+    assert(host_addr != NULL && "phys_mem_read out of SoC memory range");
 
     #if ENABLE_MTRACE
     display_mread(addr, len);
     #endif
     
-    uint32_t ret = host_read(guest_to_host(addr), len); 
+    uint32_t ret = host_read(host_addr, len); 
     return ret;
 }
 
@@ -73,28 +94,28 @@ extern "C" uint32_t pmem_read(int addr, int len) {
         fflush(stdout);
         return (uint32_t)(now >> 32); // 返回高32位
     }
-    /* printf("[pmem_read] 调试信息：\n");
-    printf("  addr=0x%x, len=%d\n", addr, len);
-    printf("  内存范围: 0x%x ~ 0x%x (不包含0x%x)\n", CONFIG_MBASE, CONFIG_MBASE + CONFIG_MSIZE - 1, CONFIG_MBASE + CONFIG_MSIZE);
-    printf("  addr >= mem_base? %s\n", (addr >= CONFIG_MBASE) ? "是" : "否");
-    printf("  addr + len <= mem_end? %s(addr+len=0x%x)\n", (addr + len <= CONFIG_MBASE + CONFIG_MSIZE) ? "是" : "否", addr + len);
-    assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE); */
     uint32_t uaddr = (uint32_t)addr;
 
-    // itrace 读取 MROM 范围指令（0x20000000），走 mrom[] 数组
-    if (uaddr >= MROM_BASE && uaddr + (uint32_t)len <= MROM_BASE + MROM_SIZE) {
+    // itrace 读取 FLASH 范围指令
+    /* if (uaddr >= MROM_BASE && uaddr + (uint32_t)len <= MROM_BASE + MROM_SIZE) {
         uint32_t data = 0;
         memcpy(&data, mrom + (uaddr - MROM_BASE), len);
         return data;
+    } */
+    if (uaddr >= FLASH_BASE && uaddr + (uint32_t)len <= FLASH_BASE + FLASH_SIZE) {
+        uint32_t data = 0;
+        memcpy(&data, flash + (uaddr - FLASH_BASE), len);
+        return data;
     }
-    // 地址越界检查：只有在 SRAM/PSRAM 范围内才访问 pmem，否则返回 0 (地址越界检查在初始化时也对0地址进行判别，否则会导致0地址的越界访问)
-    if (uaddr < CONFIG_MBASE || uaddr + (uint32_t)len > CONFIG_MBASE + CONFIG_MSIZE) {
+    uint8_t *host_addr = guest_to_host(uaddr);
+    // 地址越界检查：只有在 SRAM/PSRAM 范围内才访问内存，否则返回 0
+    if (host_addr == NULL) {
         return 0;
     }
      #if ENABLE_MTRACE
     display_mread(addr, len);
     #endif
-    uint32_t ret = host_read(guest_to_host(addr), len);
+    uint32_t ret = host_read(host_addr, len);
     return ret;
 }
 
@@ -111,16 +132,10 @@ extern "C" void pmem_write(int addr, int len, int data) {
         uart_char = data & 0xFF;  // 保存要输出的字符
         return;
     }
-    // printf("[pmem_write] 调试信息：\n");
-    // printf("  addr=0x%x, len=%d\n", addr, len);
-    // printf("  内存范围: 0x%x ~ 0x%x (不包含0x%x)\n", CONFIG_MBASE, CONFIG_MBASE + CONFIG_MSIZE - 1, CONFIG_MBASE + CONFIG_MSIZE);
-    // printf("  addr >= mem_base? %s\n", (addr >= CONFIG_MBASE) ? "是" : "否");
-    // printf("  addr + len <= mem_end? %s(addr+len=0x%x)\n", (addr + len <= CONFIG_MBASE + CONFIG_MSIZE) ? "是" : "否", addr + len);
-    
-    // assert(addr >= CONFIG_MBASE && addr + len <= CONFIG_MBASE + CONFIG_MSIZE);
      // 边界检查：与 pmem_read 同理，组合逻辑驱动时可能传入无效地址
      uint32_t uaddr = (uint32_t)addr;
-     if (uaddr < CONFIG_MBASE || uaddr + len > CONFIG_MBASE + CONFIG_MSIZE) {
+     uint8_t *host_addr = guest_to_host(uaddr);
+     if (host_addr == NULL) {
          return;
      }
     #if ENABLE_MTRACE
@@ -128,14 +143,12 @@ extern "C" void pmem_write(int addr, int len, int data) {
     #endif
 
     // 写入data到物理内存 (小端存储)
-    // memcpy(pmem + offset, &data, len);
-    uint8_t *host_addr = guest_to_host(addr);
     for (int i = 0; i < len; i++) {
         host_addr[i] = (data >> (8 * i)) & 0xFF;  //  按字节写入（小端）
     }
 }
 
-long load_mrom(const char *filename) {
+/* long load_mrom(const char *filename) {
     if (!filename) return 0;
     FILE *fp = fopen(filename, "rb");
     if (!fp) {
@@ -151,34 +164,71 @@ long load_mrom(const char *filename) {
     fclose(fp);
     printf("[MROM] Loaded %ld bytes from '%s'\n", size, filename);
     return size;
+} */
+
+long load_flash(const char *filename) {
+    if (!filename) return 0;
+    FILE *fp = fopen(filename, "rb");
+    if (!fp) {
+        printf("[FLASH] Cannot open '%s'\n", filename);
+        return -1;
+    }
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    assert(size <= FLASH_SIZE);
+    fseek(fp, 0, SEEK_SET);
+    int ret = fread(flash, size, 1, fp);
+    assert(ret == 1);
+    fclose(fp);
+    printf("[FLASH] Loaded %ld bytes from '%s'\n", size, filename);
+    return size;
 }
 
-extern "C" void flash_read(int32_t addr, int32_t *data) { 
+extern "C" void flash_read(int32_t addr, int32_t *data) {
+    // printf("flash_read addr = %08x\n", addr);
     uint32_t offset = (uint32_t)addr;
     if (offset + 4 <= FLASH_SIZE) {
         memcpy(data, flash + offset, 4);
     } else {
         *data = 0;
     }
+
+    /* uint32_t offset = (uint32_t)addr;
+    // 我们在此处直接返回 char-test.bin 的机器码以模拟存放在 flash 颗粒中
+    const uint32_t char_test_bin[] = {
+        0x100007b7, // lui a5,0x10000
+        0x04100713, // li a4,65 ('A')
+        0x00e78023, // sb a4,0(a5)
+        0x0000006f  // j 0 (死循环)
+    };
+    if (offset < sizeof(char_test_bin)) {
+        memcpy(data, (uint8_t*)char_test_bin + offset, 4);
+    } else {
+        *data = 0; // 其他地址默认返回 0
+    } */
+
 }
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
-    uint32_t offset = (uint32_t)addr - MROM_BASE;
+    /* uint32_t offset = (uint32_t)addr - MROM_BASE;
     if (offset + 4 <= MROM_SIZE) {
         memcpy(data, mrom + offset, 4);
     } else {
         *data = 0;
-    }
+    } */
+    *data = 0;
 }
 
 // 返回 guest 物理地址对应的 host 指针（支持 MROM/SRAM/PSRAM）
 void *pmem_addr(uint32_t addr) {
     uint32_t uaddr = addr;
-    if (uaddr >= MROM_BASE && uaddr < MROM_BASE + MROM_SIZE)
-        return (void *)(mrom + (uaddr - MROM_BASE));
-    if (uaddr >= CONFIG_MBASE && uaddr < CONFIG_MBASE + CONFIG_MSIZE)
-        return (void *)(pmem + (uaddr - CONFIG_MBASE));
-    return NULL;
+   /*  if (uaddr >= MROM_BASE && uaddr < MROM_BASE + MROM_SIZE)
+        return (void *)(mrom + (uaddr - MROM_BASE)); */
+    if (uaddr >= FLASH_BASE && uaddr < FLASH_BASE + FLASH_SIZE)
+        return (void *)(flash + (uaddr - FLASH_BASE));
+    if (uaddr >= SRAM_BASE && uaddr < SRAM_BASE + SRAM_SIZE)
+        return (void *)(sram + (uaddr - SRAM_BASE));
+    return (void *)guest_to_host(uaddr);
 }
 
 extern bool sim_in_reset;

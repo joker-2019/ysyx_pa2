@@ -9,6 +9,9 @@ CFLAGS  += -fdata-sections -ffunction-sections
 LDFLAGS += -T $(AM_HOME)/scripts/ysyxsoc-linker.ld
 LDFLAGS += --gc-sections -e _start  # 指定程序的入口点为 _start（对应 start.S 中的 _start 符号)
 
+# 仅改链接脚本时，.o/.a 时间戳不变，Make 默认不会重链接 .elf；显式把 .ld 列为依赖
+$(IMAGE).elf: $(AM_HOME)/scripts/ysyxsoc-linker.ld
+
 CFLAGS  += -DMAINARGS=\"$(mainargs)\"
 .PHONY: $(AM_HOME)/am/src/riscv/ysyxsoc/trm.c
 

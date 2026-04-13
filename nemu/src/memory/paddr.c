@@ -31,16 +31,20 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 // ysyxSoC：MROM 和 SRAM 独立内存区域
 uint8_t *mrom = NULL;
 uint8_t *sram = NULL;
+// ysyxSoC：FLASH 和 SRAM 独立内存区域
+uint8_t *flash = NULL;
 
 uint8_t* guest_to_host(paddr_t paddr) {
-  if (in_mrom(paddr))  return mrom + (paddr - MROM_BASE);
+  // if (in_mrom(paddr))  return mrom + (paddr - MROM_BASE);
   if (in_sram(paddr))  return sram + (paddr - SRAM_BASE);
+  if (in_flash(paddr))  return flash + (paddr - FLASH_BASE);
   return pmem + (paddr - CONFIG_MBASE);
 }
 
 paddr_t host_to_guest(uint8_t *haddr) {
-  if (haddr >= mrom && haddr < mrom + MROM_SIZE) return (paddr_t)(haddr - mrom) + MROM_BASE;
+  // if (haddr >= mrom && haddr < mrom + MROM_SIZE) return (paddr_t)(haddr - mrom) + MROM_BASE;
   if (haddr >= sram && haddr < sram + SRAM_SIZE) return (paddr_t)(haddr - sram) + SRAM_BASE;
+  if (haddr >= flash && haddr < flash + FLASH_SIZE) return (paddr_t)(haddr - flash) + FLASH_BASE;
   return (paddr_t)(haddr - pmem) + CONFIG_MBASE;
 }
 
@@ -68,10 +72,16 @@ void init_mem() {
   Log("PSRAM area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 
   // 分配 MROM 内存
-  mrom = malloc(MROM_SIZE);
+  /* mrom = malloc(MROM_SIZE);
   assert(mrom);
   memset(mrom, 0, MROM_SIZE);
-  Log("MROM area [" FMT_PADDR ", " FMT_PADDR "]", MROM_LEFT, MROM_RIGHT);
+  Log("MROM area [" FMT_PADDR ", " FMT_PADDR "]", MROM_LEFT, MROM_RIGHT); */
+
+  // 分配 FLASH 内存
+  flash = (uint8_t *)malloc(FLASH_SIZE);
+  assert(flash);
+  memset(flash, 0, FLASH_SIZE);
+  Log("FLASH area [" FMT_PADDR ", " FMT_PADDR "]", FLASH_LEFT, FLASH_RIGHT);
 
   // 分配 SRAM 内存
   sram = malloc(SRAM_SIZE);
@@ -90,7 +100,7 @@ word_t paddr_read(paddr_t addr, int len) {
   );
   if (likely(in_pmem(addr))) {return pmem_read(addr, len);} */
   IFDEF(CONFIG_MTRACE, display_mread(addr, len));
-  if (likely(in_pmem(addr))) { return pmem_read(addr, len);  } 
+  if (likely(in_pmem(addr))) { return pmem_read(addr, len);  }
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
   return 0;
@@ -108,8 +118,13 @@ void paddr_write(paddr_t addr, int len, word_t data) {
   IFDEF(CONFIG_MTRACE, display_mwrite(addr, len, data));
   if (likely(in_pmem(addr))) {
     // MROM 为只读，拒绝写入
-    if (in_mrom(addr)) {
+   /*  if (in_mrom(addr)) {
       Log("Warning: attempt to write to MROM at " FMT_PADDR ", ignored", addr);
+      return;
+    } */
+    // FLASH 为只读，拒绝写入
+    if (in_flash(addr)) {
+      Log("Warning: attempt to write to FLASH at " FMT_PADDR ", ignored", addr);
       return;
     }
     pmem_write(addr, len, data);

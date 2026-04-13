@@ -1,9 +1,9 @@
 /* ysyxSoC TRM 启动代码
- * CPU 从 MROM(0x20000000) 取第一条指令执行
+ * CPU 从 MROM(0x30000000) 取第一条指令执行 FLASH
  * 栈分配在 SRAM(0x0f000000) 中，由链接脚本定义 _stack_pointer
  *
  * 启动流程：
- *   1. 将 .rodata/.data 从 MROM（MA/LMA）拷贝到 SRAM（SA/VMA）
+ *   1. 将 .rodata/.data 从 FLASH（MA/LMA）拷贝到 SRAM（SA/VMA）
  *   2. 将 .bss 段清零
  *   3. 跳转到 _trm_init
  */
@@ -31,7 +31,7 @@ _start:
 
   /* ---- bootloader: 拷贝 .data（MA->SA）----
    * a0 = MA: _data_ma  (MROM load address)
-   * a1 = SA: _data_sa  (SRAM run address)
+   * a1 = SA: _data_sa  (FLASH run address)
    * a2 = SA_end = SA + LEN
    */
 .Ldata_init:

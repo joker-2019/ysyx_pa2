@@ -164,7 +164,7 @@ void print_cpu_regs(const CPU_state *cpu) {
 void exec_once() {
   bool instr_finish = false;
   int timeout_cnt = 0;
-  const int MAX_TIMEOUT = 500;
+  const int MAX_TIMEOUT = 10000;
   uint32_t latched_pc = 0;
   uint32_t latched_inst = 0;
   bool has_latched_trace = false;
@@ -202,6 +202,16 @@ void exec_once() {
   // 超时判断（防止CPU卡死）
   if (!instr_finish) {
     printf("Error: Instruction execution timeout (max %d cycles)\n", MAX_TIMEOUT);
+    /*
+    printf("[timeout] accessFaultLatched=%d arbiter_arvalid=%d arbiter_rvalid=%d master_araddr=0x%08x pcReg=0x%08x tracePc=0x%08x traceInstr=0x%08x\n",
+      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__accessFaultLatched,
+      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arbiter_io_m_arvalid,
+      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arbiter_io_m_rvalid,
+      rootp->ysyxSoCFull__DOT__asic__DOT___cpu_auto_master_out_araddr,
+      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc_mod__DOT__pcReg,
+      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc_mod__DOT__tracePcReg,
+      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc_mod__DOT__traceInstrReg);
+      */
     contextp->gotFinish(true);
     return;
   }

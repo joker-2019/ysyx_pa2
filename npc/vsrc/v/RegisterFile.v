@@ -139,6 +139,10 @@ module RegisterFile (
                     end
                 end
             end
+            // 对 fence/fence.i 等无寄存器写回、非访存、非分支指令，也要允许指令退休推进 PC
+            else begin
+                wb_done <= 1'b1;
+            end
         end
     end
 

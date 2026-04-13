@@ -3,7 +3,7 @@
  * 内存布局：
  *   MROM  0x20000000  4KB  只读（CPU 复位入口，存放代码 + rodata/data 初始化镜像）
  *   SRAM  0x0f000000  8KB  可读写（.rodata/.data 运行时、.bss、栈、堆）
- *
+ *   FLASH 0X30000000  256M
  * .rodata/.data 段采用 LMA/VMA 分离方案：
  *   LMA（加载地址）= MROM（ELF 文件中存储初始化镜像）
  *   VMA（运行地址）= SRAM（运行时访问地址）
@@ -12,7 +12,8 @@
 ENTRY(_start)
 
 MEMORY {
-  mrom : ORIGIN = 0x20000000, LENGTH = 0x1000   /* 4KB MROM */
+  /* mrom : ORIGIN = 0x20000000, LENGTH = 0x1000  4KB MROM */
+  flash : ORIGIN = 0X30000000, LENGTH = 0X01000000  /* 16MB FLASH */
   sram : ORIGIN = 0x0f000000, LENGTH = 0x2000   /* 8KB SRAM */
 }
 /*
@@ -25,18 +26,18 @@ PHDRS {
 }
 
 SECTIONS {
-  /* ---- MROM：代码 + 只读数据 + .data 初始值（LMA） ---- */
-  . = ORIGIN(mrom);
+  /* ---- MROM：代码 + 只读数据 + .data 初始值（LMA） . = ORIGIN(mrom);---- */
+  . = ORIGIN(flash);
 
   .text : {
     *(entry)        /* _start 必须是第一条指令 代码段（存放指令）*/
     *(.text*)
-  } > mrom : text
+  } > flash : text
 
-  /* 切换到 SRAM，放置运行时 rodata/data */
+   /* 切换到 SRAM，放置运行时 rodata/data */
   . = ORIGIN(sram);
 
-  /* .rodata：VMA 在 SRAM，LMA 在 MROM(.text 之后) */
+  /* .rodata：VMA 在 SRAM 动态执行区之后，LMA 在 MROM(.text 之后) */
   .rodata : AT(ALIGN(LOADADDR(.text) + SIZEOF(.text), 4)) {
     _rodata_start = .;
     *(.rodata*)
