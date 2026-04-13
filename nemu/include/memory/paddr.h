@@ -38,20 +38,20 @@
 #define FLASH_LEFT    ((paddr_t)FLASH_BASE)
 #define FLASH_RIGHT   ((paddr_t)FLASH_BASE + FLASH_SIZE - 1)
 
-#define RESET_VECTOR (FLASH_LEFT + CONFIG_PC_RESET_OFFSET)
-// #define RESET_VECTOR (MROM_LEFT + CONFIG_PC_RESET_OFFSET)
+// #define RESET_VECTOR (FLASH_LEFT + CONFIG_PC_RESET_OFFSET)
+#define RESET_VECTOR (MROM_LEFT + CONFIG_PC_RESET_OFFSET)
 
-// extern uint8_t *mrom;
-extern uint8_t *flash;
+extern uint8_t *mrom;
+// extern uint8_t *flash;
 extern uint8_t *sram;
 /* convert the guest physical address in the guest program to host virtual address in NEMU */
 uint8_t* guest_to_host(paddr_t paddr);
 /* convert the host virtual address in NEMU to guest physical address in the guest program */
 paddr_t host_to_guest(uint8_t *haddr);
 
-/* static inline bool in_mrom(paddr_t addr) {
+static inline bool in_mrom(paddr_t addr) {
   return addr - MROM_BASE < MROM_SIZE;
-} */
+}
 
 static inline bool in_sram(paddr_t addr) {
   return addr - SRAM_BASE < SRAM_SIZE;
@@ -62,14 +62,14 @@ static inline bool in_psram(paddr_t addr) {
 }
 
 
-static inline bool in_flash(paddr_t addr) {
+/* static inline bool in_flash(paddr_t addr) {
   return addr - FLASH_BASE < FLASH_SIZE;
-}
+} */
 
 // 兼容原有 in_pmem 名称：MROM + SRAM + PSRAM 均视为合法物理内存
 static inline bool in_pmem(paddr_t addr) {
   // return addr - CONFIG_MBASE < CONFIG_MSIZE;
-  return in_flash(addr) || in_sram(addr) || in_psram(addr);
+  return in_mrom(addr) || in_sram(addr) || in_psram(addr);
 }
 
 word_t paddr_read(paddr_t addr, int len);

@@ -11,12 +11,12 @@ module generate_next_pc(
 `ifdef RANDOMIZE_REG_INIT
   reg [31:0] _RAND_0;
 `endif // RANDOMIZE_REG_INIT
-  reg [31:0] nextPcReg; // @[scala/ysyx/generate_next_pc.scala 17:26]
+  reg [31:0] nextPcReg; // @[scala/ysyx/generate_next_pc.scala 16:26]
   wire [31:0] _nextPcReg_T_1 = io_pc + 32'h4; // @[scala/ysyx/generate_next_pc.scala 22:24]
   assign io_next_pc = nextPcReg; // @[scala/ysyx/generate_next_pc.scala 25:14]
   always @(posedge clock) begin
-    if (reset) begin // @[scala/ysyx/generate_next_pc.scala 17:26]
-      nextPcReg <= 32'h30000000; // @[scala/ysyx/generate_next_pc.scala 17:26]
+    if (reset) begin // @[scala/ysyx/generate_next_pc.scala 16:26]
+      nextPcReg <= 32'h20000000; // @[scala/ysyx/generate_next_pc.scala 16:26]
     end else if (io_branch_taken | io_is_jal | io_is_jalr) begin // @[scala/ysyx/generate_next_pc.scala 19:52]
       nextPcReg <= io_jal_target; // @[scala/ysyx/generate_next_pc.scala 20:15]
     end else begin
@@ -96,14 +96,14 @@ module ysyx_22040080_pc(
   wire [31:0] getInstrPc_trace_pc; // @[scala/ysyx/ysyx_22040080_pc.scala 100:26]
   wire [31:0] getInstrPc_trace_instr; // @[scala/ysyx/ysyx_22040080_pc.scala 100:26]
   wire  getInstrPc_instr_done; // @[scala/ysyx/ysyx_22040080_pc.scala 100:26]
-  reg [31:0] pcReg; // @[scala/ysyx/ysyx_22040080_pc.scala 83:30]
+  reg [31:0] pcReg; // @[scala/ysyx/ysyx_22040080_pc.scala 82:30]
   reg  pcValidReg; // @[scala/ysyx/ysyx_22040080_pc.scala 84:30]
-  reg [31:0] tracePcReg; // @[scala/ysyx/ysyx_22040080_pc.scala 86:30]
+  reg [31:0] tracePcReg; // @[scala/ysyx/ysyx_22040080_pc.scala 85:30]
   reg [31:0] traceInstrReg; // @[scala/ysyx/ysyx_22040080_pc.scala 87:30]
   reg  instrDoneReg; // @[scala/ysyx/ysyx_22040080_pc.scala 88:30]
   wire  _T = io_pc_update_en | io_access_fault; // @[scala/ysyx/ysyx_22040080_pc.scala 113:24]
   wire [31:0] _GEN_0 = io_is_mret ? io_mepc : io_next_pc; // @[scala/ysyx/ysyx_22040080_pc.scala 122:29 124:13 128:21]
-  wire [31:0] _GEN_2 = io_is_mret ? tracePcReg : io_next_pc; // @[scala/ysyx/ysyx_22040080_pc.scala 122:29 130:21 86:30]
+  wire [31:0] _GEN_2 = io_is_mret ? tracePcReg : io_next_pc; // @[scala/ysyx/ysyx_22040080_pc.scala 122:29 130:21 85:30]
   wire [31:0] _GEN_3 = io_is_mret ? traceInstrReg : pmemReader_data; // @[scala/ysyx/ysyx_22040080_pc.scala 122:29 131:21 87:30]
   wire  _GEN_4 = io_is_mret ? 1'h0 : 1'h1; // @[scala/ysyx/ysyx_22040080_pc.scala 111:16 122:29 132:21]
   wire  _GEN_9 = io_trap_valid ? 1'h0 : _GEN_4; // @[scala/ysyx/ysyx_22040080_pc.scala 111:16 118:32]
@@ -129,8 +129,8 @@ module ysyx_22040080_pc(
   assign getInstrPc_trace_instr = traceInstrReg; // @[scala/ysyx/ysyx_22040080_pc.scala 103:29]
   assign getInstrPc_instr_done = instrDoneReg; // @[scala/ysyx/ysyx_22040080_pc.scala 104:28]
   always @(posedge clock) begin
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_pc.scala 83:30]
-      pcReg <= 32'h30000000; // @[scala/ysyx/ysyx_22040080_pc.scala 83:30]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_pc.scala 82:30]
+      pcReg <= 32'h20000000; // @[scala/ysyx/ysyx_22040080_pc.scala 82:30]
     end else if (io_pc_update_en | io_access_fault) begin // @[scala/ysyx/ysyx_22040080_pc.scala 113:44]
       if (io_access_fault) begin // @[scala/ysyx/ysyx_22040080_pc.scala 114:27]
         pcReg <= 32'h0; // @[scala/ysyx/ysyx_22040080_pc.scala 116:21]
@@ -145,8 +145,8 @@ module ysyx_22040080_pc(
     end else begin
       pcValidReg <= _T;
     end
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_pc.scala 86:30]
-      tracePcReg <= 32'h30000000; // @[scala/ysyx/ysyx_22040080_pc.scala 86:30]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_pc.scala 85:30]
+      tracePcReg <= 32'h20000000; // @[scala/ysyx/ysyx_22040080_pc.scala 85:30]
     end else if (io_pc_update_en | io_access_fault) begin // @[scala/ysyx/ysyx_22040080_pc.scala 113:44]
       if (!(io_access_fault)) begin // @[scala/ysyx/ysyx_22040080_pc.scala 114:27]
         if (!(io_trap_valid)) begin // @[scala/ysyx/ysyx_22040080_pc.scala 118:32]
@@ -243,67 +243,67 @@ module ysyx_22040080_ifu(
   reg [31:0] _RAND_4;
   reg [31:0] _RAND_5;
 `endif // RANDOMIZE_REG_INIT
-  wire [31:0] addrChecker_addr; // @[scala/ysyx/ysyx_22040080_ifu.scala 48:27]
-  wire  addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 48:27]
+  wire [31:0] addrChecker_addr; // @[scala/ysyx/ysyx_22040080_ifu.scala 47:27]
+  wire  addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 47:27]
   reg  initialStart; // @[scala/ysyx/ysyx_22040080_ifu.scala 36:29]
-  reg [31:0] araddrReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 38:29]
-  reg  arvalidReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
-  reg  rreadyReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 41:29]
-  reg  accessFaultReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 42:31]
-  reg [7:0] respReadyCnt; // @[scala/ysyx/ysyx_22040080_ifu.scala 45:29]
-  wire [7:0] _respReadyCnt_T_1 = 8'h3 - 8'h1; // @[scala/ysyx/ysyx_22040080_ifu.scala 66:43]
-  wire  _T = ~addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 67:10]
-  wire [7:0] _GEN_4 = io_pc_valid ? _respReadyCnt_T_1 : respReadyCnt; // @[scala/ysyx/ysyx_22040080_ifu.scala 70:28 74:18 45:29]
-  wire  _GEN_5 = io_pc_valid & _T; // @[scala/ysyx/ysyx_22040080_ifu.scala 60:18 70:28]
-  wire  _GEN_7 = initialStart ? 1'h0 : initialStart; // @[scala/ysyx/ysyx_22040080_ifu.scala 62:22 65:18 36:29]
-  wire [7:0] _GEN_8 = initialStart ? _respReadyCnt_T_1 : _GEN_4; // @[scala/ysyx/ysyx_22040080_ifu.scala 62:22 66:18]
-  wire [7:0] _respReadyCnt_T_5 = respReadyCnt - 8'h1; // @[scala/ysyx/ysyx_22040080_ifu.scala 88:36]
-  wire  _GEN_13 = respReadyCnt > 8'h0 ? 1'h0 : 1'h1; // @[scala/ysyx/ysyx_22040080_ifu.scala 87:30 89:20 91:17]
-  wire  _GEN_15 = io_rvalid & _GEN_13; // @[scala/ysyx/ysyx_22040080_ifu.scala 59:13 86:19]
-  is_valid_address_wrapper addrChecker ( // @[scala/ysyx/ysyx_22040080_ifu.scala 48:27]
+  reg [31:0] araddrReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 37:29]
+  reg  arvalidReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 39:29]
+  reg  rreadyReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
+  reg  accessFaultReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 41:31]
+  reg [7:0] respReadyCnt; // @[scala/ysyx/ysyx_22040080_ifu.scala 44:29]
+  wire [7:0] _respReadyCnt_T_1 = 8'h3 - 8'h1; // @[scala/ysyx/ysyx_22040080_ifu.scala 65:43]
+  wire  _T = ~addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 66:10]
+  wire [7:0] _GEN_4 = io_pc_valid ? _respReadyCnt_T_1 : respReadyCnt; // @[scala/ysyx/ysyx_22040080_ifu.scala 69:28 73:18 44:29]
+  wire  _GEN_5 = io_pc_valid & _T; // @[scala/ysyx/ysyx_22040080_ifu.scala 59:18 69:28]
+  wire  _GEN_7 = initialStart ? 1'h0 : initialStart; // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22 64:18 36:29]
+  wire [7:0] _GEN_8 = initialStart ? _respReadyCnt_T_1 : _GEN_4; // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22 65:18]
+  wire [7:0] _respReadyCnt_T_5 = respReadyCnt - 8'h1; // @[scala/ysyx/ysyx_22040080_ifu.scala 87:36]
+  wire  _GEN_13 = respReadyCnt > 8'h0 ? 1'h0 : 1'h1; // @[scala/ysyx/ysyx_22040080_ifu.scala 86:30 88:20 90:17]
+  wire  _GEN_15 = io_rvalid & _GEN_13; // @[scala/ysyx/ysyx_22040080_ifu.scala 58:13 85:19]
+  is_valid_address_wrapper addrChecker ( // @[scala/ysyx/ysyx_22040080_ifu.scala 47:27]
     .addr(addrChecker_addr),
     .valid(addrChecker_valid)
   );
-  assign io_araddr = araddrReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 98:14]
-  assign io_arvalid = arvalidReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 99:14]
-  assign io_rready = rreadyReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 100:14]
-  assign io_access_fault = accessFaultReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 101:19]
-  assign addrChecker_addr = initialStart ? araddrReg : io_pc; // @[scala/ysyx/ysyx_22040080_ifu.scala 50:17]
+  assign io_araddr = araddrReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 97:14]
+  assign io_arvalid = arvalidReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 98:14]
+  assign io_rready = rreadyReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 99:14]
+  assign io_access_fault = accessFaultReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 100:19]
+  assign addrChecker_addr = initialStart ? araddrReg : io_pc; // @[scala/ysyx/ysyx_22040080_ifu.scala 49:17]
   always @(posedge clock) begin
     initialStart <= reset | _GEN_7; // @[scala/ysyx/ysyx_22040080_ifu.scala 36:{29,29}]
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 38:29]
-      araddrReg <= 32'h30000000; // @[scala/ysyx/ysyx_22040080_ifu.scala 38:29]
-    end else if (!(initialStart)) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 62:22]
-      if (io_pc_valid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 70:28]
-        araddrReg <= io_pc; // @[scala/ysyx/ysyx_22040080_ifu.scala 72:18]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 37:29]
+      araddrReg <= 32'h20000000; // @[scala/ysyx/ysyx_22040080_ifu.scala 37:29]
+    end else if (!(initialStart)) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22]
+      if (io_pc_valid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 69:28]
+        araddrReg <= io_pc; // @[scala/ysyx/ysyx_22040080_ifu.scala 71:18]
       end
     end
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
-      arvalidReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
-    end else if (arvalidReg & io_arready) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 81:34]
-      arvalidReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 82:16]
-    end else if (initialStart) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 62:22]
-      arvalidReg <= addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 64:18]
-    end else if (io_pc_valid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 70:28]
-      arvalidReg <= addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 73:18]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 39:29]
+      arvalidReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 39:29]
+    end else if (arvalidReg & io_arready) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 80:34]
+      arvalidReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 81:16]
+    end else if (initialStart) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22]
+      arvalidReg <= addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 63:18]
+    end else if (io_pc_valid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 69:28]
+      arvalidReg <= addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 72:18]
     end
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 41:29]
-      rreadyReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 41:29]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
+      rreadyReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
     end else begin
       rreadyReg <= _GEN_15;
     end
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 42:31]
-      accessFaultReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 42:31]
-    end else if (initialStart) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 62:22]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 41:31]
+      accessFaultReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 41:31]
+    end else if (initialStart) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22]
       accessFaultReg <= _T;
     end else begin
       accessFaultReg <= _GEN_5;
     end
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 45:29]
-      respReadyCnt <= 8'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 45:29]
-    end else if (io_rvalid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 86:19]
-      if (respReadyCnt > 8'h0) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 87:30]
-        respReadyCnt <= _respReadyCnt_T_5; // @[scala/ysyx/ysyx_22040080_ifu.scala 88:20]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 44:29]
+      respReadyCnt <= 8'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 44:29]
+    end else if (io_rvalid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 85:19]
+      if (respReadyCnt > 8'h0) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 86:30]
+        respReadyCnt <= _respReadyCnt_T_5; // @[scala/ysyx/ysyx_22040080_ifu.scala 87:20]
       end else begin
         respReadyCnt <= _GEN_8;
       end

@@ -14,7 +14,7 @@
 uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
 static uint64_t boot_time = 0; //系统启动时间
-// static uint8_t mrom[MROM_SIZE];
+static uint8_t mrom[MROM_SIZE];
 static uint8_t flash[FLASH_SIZE];
 static uint8_t sram[SRAM_SIZE];
 
@@ -47,21 +47,21 @@ void device_update() {
 
 void init_mem(){
     memset(pmem, 0, sizeof(pmem));
-    // memset(mrom, 0, sizeof(mrom));
+    memset(mrom, 0, sizeof(mrom));
     memset(sram, 0, sizeof(sram));
     memset(flash, 0, sizeof(flash));
 
-     uint32_t *flash_ptr = (uint32_t *)(flash + 0x100000); // 偏移 1MB 处
-    *flash_ptr = 0xdeadbeef;
+    /*  uint32_t *flash_ptr = (uint32_t *)(flash + 0x100000); // 偏移 1MB 处
+    *flash_ptr = 0xdeadbeef; */
 }
 
 uint8_t *guest_to_host(uint32_t paddr){
     if (paddr >= SRAM_BASE && paddr < SRAM_BASE + SRAM_SIZE) {
         return sram + (paddr - SRAM_BASE);
     }
-    /* if(paddr >= MROM_BASE && paddr < MROM_BASE + MROM_SIZE) {
+    if(paddr >= MROM_BASE && paddr < MROM_BASE + MROM_SIZE) {
         return mrom + (paddr - MROM_BASE);
-    } */
+    }
     if (paddr >= CONFIG_MBASE && paddr < CONFIG_MBASE + CONFIG_MSIZE) {
         return pmem + (paddr - CONFIG_MBASE);
     }
@@ -97,11 +97,11 @@ extern "C" uint32_t pmem_read(int addr, int len) {
     uint32_t uaddr = (uint32_t)addr;
 
     // itrace 读取 FLASH 范围指令
-    /* if (uaddr >= MROM_BASE && uaddr + (uint32_t)len <= MROM_BASE + MROM_SIZE) {
+    if (uaddr >= MROM_BASE && uaddr + (uint32_t)len <= MROM_BASE + MROM_SIZE) {
         uint32_t data = 0;
         memcpy(&data, mrom + (uaddr - MROM_BASE), len);
         return data;
-    } */
+    }
     if (uaddr >= FLASH_BASE && uaddr + (uint32_t)len <= FLASH_BASE + FLASH_SIZE) {
         uint32_t data = 0;
         memcpy(&data, flash + (uaddr - FLASH_BASE), len);
@@ -148,7 +148,7 @@ extern "C" void pmem_write(int addr, int len, int data) {
     }
 }
 
-/* long load_mrom(const char *filename) {
+long load_mrom(const char *filename) {
     if (!filename) return 0;
     FILE *fp = fopen(filename, "rb");
     if (!fp) {
@@ -164,9 +164,9 @@ extern "C" void pmem_write(int addr, int len, int data) {
     fclose(fp);
     printf("[MROM] Loaded %ld bytes from '%s'\n", size, filename);
     return size;
-} */
+}
 
-long load_flash(const char *filename) {
+/* long load_flash(const char *filename) {
     if (!filename) return 0;
     FILE *fp = fopen(filename, "rb");
     if (!fp) {
@@ -182,18 +182,17 @@ long load_flash(const char *filename) {
     fclose(fp);
     printf("[FLASH] Loaded %ld bytes from '%s'\n", size, filename);
     return size;
-}
+} */
 
 extern "C" void flash_read(int32_t addr, int32_t *data) {
     // printf("flash_read addr = %08x\n", addr);
-    uint32_t offset = (uint32_t)addr;
+   /*  uint32_t offset = (uint32_t)addr;
     if (offset + 4 <= FLASH_SIZE) {
         memcpy(data, flash + offset, 4);
     } else {
         *data = 0;
-    }
-
-    /* uint32_t offset = (uint32_t)addr;
+    } */
+    uint32_t offset = (uint32_t)addr;
     // 我们在此处直接返回 char-test.bin 的机器码以模拟存放在 flash 颗粒中
     const uint32_t char_test_bin[] = {
         0x100007b7, // lui a5,0x10000
@@ -205,25 +204,25 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
         memcpy(data, (uint8_t*)char_test_bin + offset, 4);
     } else {
         *data = 0; // 其他地址默认返回 0
-    } */
+    }
 
 }
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
-    /* uint32_t offset = (uint32_t)addr - MROM_BASE;
+    uint32_t offset = (uint32_t)addr - MROM_BASE;
     if (offset + 4 <= MROM_SIZE) {
         memcpy(data, mrom + offset, 4);
     } else {
         *data = 0;
-    } */
-    *data = 0;
+    }
+    // *data = 0;
 }
 
 // 返回 guest 物理地址对应的 host 指针（支持 MROM/SRAM/PSRAM）
 void *pmem_addr(uint32_t addr) {
     uint32_t uaddr = addr;
-   /*  if (uaddr >= MROM_BASE && uaddr < MROM_BASE + MROM_SIZE)
-        return (void *)(mrom + (uaddr - MROM_BASE)); */
+    if (uaddr >= MROM_BASE && uaddr < MROM_BASE + MROM_SIZE)
+        return (void *)(mrom + (uaddr - MROM_BASE));
     if (uaddr >= FLASH_BASE && uaddr < FLASH_BASE + FLASH_SIZE)
         return (void *)(flash + (uaddr - FLASH_BASE));
     if (uaddr >= SRAM_BASE && uaddr < SRAM_BASE + SRAM_SIZE)

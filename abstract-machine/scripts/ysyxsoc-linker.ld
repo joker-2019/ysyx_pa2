@@ -12,8 +12,8 @@
 ENTRY(_start)
 
 MEMORY {
-  /* mrom : ORIGIN = 0x20000000, LENGTH = 0x1000  4KB MROM */
-  flash : ORIGIN = 0X30000000, LENGTH = 0X01000000  /* 16MB FLASH */
+  mrom : ORIGIN = 0x20000000, LENGTH = 0x1000  /*4KB MROM */
+  /* flash : ORIGIN = 0X30000000, LENGTH = 0X01000000  16MB FLASH */
   sram : ORIGIN = 0x0f000000, LENGTH = 0x2000   /* 8KB SRAM */
 }
 /*
@@ -27,12 +27,12 @@ PHDRS {
 
 SECTIONS {
   /* ---- MROM：代码 + 只读数据 + .data 初始值（LMA） . = ORIGIN(mrom);---- */
-  . = ORIGIN(flash);
+  . = ORIGIN(mrom);
 
   .text : {
     *(entry)        /* _start 必须是第一条指令 代码段（存放指令）*/
     *(.text*)
-  } > flash : text
+  } > mrom : text
 
    /* 切换到 SRAM，放置运行时 rodata/data */
   . = ORIGIN(sram);
