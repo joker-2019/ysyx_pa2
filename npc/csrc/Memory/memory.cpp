@@ -107,6 +107,11 @@ extern "C" uint32_t pmem_read(int addr, int len) {
         memcpy(&data, flash + (uaddr - FLASH_BASE), len);
         return data;
     }
+    if (uaddr >= SRAM_BASE && uaddr + (uint32_t)len <= SRAM_BASE + SRAM_SIZE) {
+        uint32_t data = 0;
+        memcpy(&data, sram + (uaddr - SRAM_BASE), len);
+        return data;
+    }
     uint8_t *host_addr = guest_to_host(uaddr);
     // 地址越界检查：只有在 SRAM/PSRAM 范围内才访问内存，否则返回 0
     if (host_addr == NULL) {
@@ -198,7 +203,8 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
         0x100007b7, // lui a5,0x10000
         0x04100713, // li a4,65 ('A')
         0x00e78023, // sb a4,0(a5)
-        0x0000006f  // j 0 (死循环)
+        0x00000513, // li a0,0 (GOOD TRAP exit code)
+        0x00100073  // ebreak
     };
     if (offset < sizeof(char_test_bin)) {
         memcpy(data, (uint8_t*)char_test_bin + offset, 4);
@@ -230,7 +236,6 @@ void *pmem_addr(uint32_t addr) {
     return (void *)guest_to_host(uaddr);
 }
 
-extern bool sim_in_reset;
 
 extern "C" int is_valid_address(uint32_t addr) {
     // 检查地址是否在合法范围

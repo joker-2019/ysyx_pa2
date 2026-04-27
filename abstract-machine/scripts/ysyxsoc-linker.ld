@@ -82,7 +82,12 @@ SECTIONS {
 
   /* 栈：固定在 SRAM 末尾，向低地址增长，分配 4KB */
   /* 堆范围是 [heap_start, stack_top)  栈范围是[stack_top, sram_end) 动态加载获取 SRAM 首尾地址*/
-  _stack_pointer = ORIGIN(sram) + LENGTH(sram);
+  /* _stack_pointer = ORIGIN(sram) + LENGTH(sram);
   _stack_top     = _stack_pointer - 0x1000;
+  */
+  /* 栈：限定在 SRAM 前 4KB 的末尾，向低地址增长。后 4KB 预留给 char-test */
+  /* 堆范围是 [heap_start, stack_top)  栈范围是[stack_top, stack_pointer) */
+  _stack_pointer = ORIGIN(sram) + 0x1000;
+  _stack_top     = _stack_pointer - 0x0800; /* 分配 2KB 给栈，剩下的为堆 */
   _heap_end      = _stack_top;
 }

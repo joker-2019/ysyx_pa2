@@ -231,8 +231,6 @@ module ysyx_22040080_ifu(
   output [31:0] io_araddr, // @[scala/ysyx/ysyx_22040080_ifu.scala 11:14]
   output        io_arvalid, // @[scala/ysyx/ysyx_22040080_ifu.scala 11:14]
   input         io_arready, // @[scala/ysyx/ysyx_22040080_ifu.scala 11:14]
-  input         io_rvalid, // @[scala/ysyx/ysyx_22040080_ifu.scala 11:14]
-  output        io_rready, // @[scala/ysyx/ysyx_22040080_ifu.scala 11:14]
   output        io_access_fault // @[scala/ysyx/ysyx_22040080_ifu.scala 11:14]
 );
 `ifdef RANDOMIZE_REG_INIT
@@ -240,75 +238,48 @@ module ysyx_22040080_ifu(
   reg [31:0] _RAND_1;
   reg [31:0] _RAND_2;
   reg [31:0] _RAND_3;
-  reg [31:0] _RAND_4;
-  reg [31:0] _RAND_5;
 `endif // RANDOMIZE_REG_INIT
-  wire [31:0] addrChecker_addr; // @[scala/ysyx/ysyx_22040080_ifu.scala 47:27]
-  wire  addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 47:27]
-  reg  initialStart; // @[scala/ysyx/ysyx_22040080_ifu.scala 36:29]
-  reg [31:0] araddrReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 37:29]
-  reg  arvalidReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 39:29]
-  reg  rreadyReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
-  reg  accessFaultReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 41:31]
-  reg [7:0] respReadyCnt; // @[scala/ysyx/ysyx_22040080_ifu.scala 44:29]
-  wire [7:0] _respReadyCnt_T_1 = 8'h3 - 8'h1; // @[scala/ysyx/ysyx_22040080_ifu.scala 65:43]
-  wire  _T = ~addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 66:10]
-  wire [7:0] _GEN_4 = io_pc_valid ? _respReadyCnt_T_1 : respReadyCnt; // @[scala/ysyx/ysyx_22040080_ifu.scala 69:28 73:18 44:29]
-  wire  _GEN_5 = io_pc_valid & _T; // @[scala/ysyx/ysyx_22040080_ifu.scala 59:18 69:28]
-  wire  _GEN_7 = initialStart ? 1'h0 : initialStart; // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22 64:18 36:29]
-  wire [7:0] _GEN_8 = initialStart ? _respReadyCnt_T_1 : _GEN_4; // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22 65:18]
-  wire [7:0] _respReadyCnt_T_5 = respReadyCnt - 8'h1; // @[scala/ysyx/ysyx_22040080_ifu.scala 87:36]
-  wire  _GEN_13 = respReadyCnt > 8'h0 ? 1'h0 : 1'h1; // @[scala/ysyx/ysyx_22040080_ifu.scala 86:30 88:20 90:17]
-  wire  _GEN_15 = io_rvalid & _GEN_13; // @[scala/ysyx/ysyx_22040080_ifu.scala 58:13 85:19]
-  is_valid_address_wrapper addrChecker ( // @[scala/ysyx/ysyx_22040080_ifu.scala 47:27]
+  wire [31:0] addrChecker_addr; // @[scala/ysyx/ysyx_22040080_ifu.scala 49:27]
+  wire  addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 49:27]
+  reg  initialStart; // @[scala/ysyx/ysyx_22040080_ifu.scala 39:29]
+  reg [31:0] araddrReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
+  reg  arvalidReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 42:29]
+  reg  accessFaultReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 43:31]
+  wire  _T = ~addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 67:10]
+  wire  _GEN_5 = io_pc_valid & _T; // @[scala/ysyx/ysyx_22040080_ifu.scala 59:18 70:28]
+  wire  _GEN_7 = initialStart ? 1'h0 : initialStart; // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22 64:18 39:29]
+  is_valid_address_wrapper addrChecker ( // @[scala/ysyx/ysyx_22040080_ifu.scala 49:27]
     .addr(addrChecker_addr),
     .valid(addrChecker_valid)
   );
-  assign io_araddr = araddrReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 97:14]
-  assign io_arvalid = arvalidReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 98:14]
-  assign io_rready = rreadyReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 99:14]
-  assign io_access_fault = accessFaultReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 100:19]
-  assign addrChecker_addr = initialStart ? araddrReg : io_pc; // @[scala/ysyx/ysyx_22040080_ifu.scala 49:17]
+  assign io_araddr = araddrReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 91:14]
+  assign io_arvalid = arvalidReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 92:14]
+  assign io_access_fault = accessFaultReg; // @[scala/ysyx/ysyx_22040080_ifu.scala 95:19]
+  assign addrChecker_addr = initialStart ? araddrReg : io_pc; // @[scala/ysyx/ysyx_22040080_ifu.scala 51:17]
   always @(posedge clock) begin
-    initialStart <= reset | _GEN_7; // @[scala/ysyx/ysyx_22040080_ifu.scala 36:{29,29}]
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 37:29]
-      araddrReg <= 32'h20000000; // @[scala/ysyx/ysyx_22040080_ifu.scala 37:29]
+    initialStart <= reset | _GEN_7; // @[scala/ysyx/ysyx_22040080_ifu.scala 39:{29,29}]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
+      araddrReg <= 32'h20000000; // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
     end else if (!(initialStart)) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22]
-      if (io_pc_valid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 69:28]
-        araddrReg <= io_pc; // @[scala/ysyx/ysyx_22040080_ifu.scala 71:18]
+      if (io_pc_valid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 70:28]
+        araddrReg <= io_pc; // @[scala/ysyx/ysyx_22040080_ifu.scala 72:18]
       end
     end
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 39:29]
-      arvalidReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 39:29]
-    end else if (arvalidReg & io_arready) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 80:34]
-      arvalidReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 81:16]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 42:29]
+      arvalidReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 42:29]
+    end else if (arvalidReg & io_arready) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 82:34]
+      arvalidReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 83:16]
     end else if (initialStart) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22]
       arvalidReg <= addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 63:18]
-    end else if (io_pc_valid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 69:28]
-      arvalidReg <= addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 72:18]
+    end else if (io_pc_valid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 70:28]
+      arvalidReg <= addrChecker_valid; // @[scala/ysyx/ysyx_22040080_ifu.scala 73:18]
     end
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
-      rreadyReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 40:29]
-    end else begin
-      rreadyReg <= _GEN_15;
-    end
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 41:31]
-      accessFaultReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 41:31]
+    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 43:31]
+      accessFaultReg <= 1'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 43:31]
     end else if (initialStart) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 61:22]
       accessFaultReg <= _T;
     end else begin
       accessFaultReg <= _GEN_5;
-    end
-    if (reset) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 44:29]
-      respReadyCnt <= 8'h0; // @[scala/ysyx/ysyx_22040080_ifu.scala 44:29]
-    end else if (io_rvalid) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 85:19]
-      if (respReadyCnt > 8'h0) begin // @[scala/ysyx/ysyx_22040080_ifu.scala 86:30]
-        respReadyCnt <= _respReadyCnt_T_5; // @[scala/ysyx/ysyx_22040080_ifu.scala 87:20]
-      end else begin
-        respReadyCnt <= _GEN_8;
-      end
-    end else begin
-      respReadyCnt <= _GEN_8;
     end
   end
 // Register and memory initialization
@@ -354,11 +325,7 @@ initial begin
   _RAND_2 = {1{`RANDOM}};
   arvalidReg = _RAND_2[0:0];
   _RAND_3 = {1{`RANDOM}};
-  rreadyReg = _RAND_3[0:0];
-  _RAND_4 = {1{`RANDOM}};
-  accessFaultReg = _RAND_4[0:0];
-  _RAND_5 = {1{`RANDOM}};
-  respReadyCnt = _RAND_5[7:0];
+  accessFaultReg = _RAND_3[0:0];
 `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
@@ -374,8 +341,6 @@ module ysyx_22040080_axi_arbiter(
   input         io_ifu_arvalid, // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 36:14]
   output        io_ifu_arready, // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 36:14]
   output [31:0] io_ifu_rdata, // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 36:14]
-  output        io_ifu_rvalid, // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 36:14]
-  input         io_ifu_rready, // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 36:14]
   input  [31:0] io_lsu_araddr, // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 36:14]
   input         io_lsu_arvalid, // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 36:14]
   output        io_lsu_arready, // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 36:14]
@@ -433,8 +398,8 @@ module ysyx_22040080_axi_arbiter(
   wire [3:0] _wstrbWire_T_6 = 2'h0 == axSize ? _wstrbWire_T_1[3:0] : 4'hf; // @[src/main/scala/chisel3/util/Mux.scala 77:13]
   wire [3:0] _wstrbWire_T_8 = 2'h1 == axSize ? _wstrbWire_T_3[3:0] : _wstrbWire_T_6; // @[src/main/scala/chisel3/util/Mux.scala 77:13]
   wire [4:0] shiftBits = {addrOffLatchReg,3'h0}; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 164:22]
-  wire [62:0] _GEN_102 = {{31'd0}, io_lsu_wdata}; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 165:36]
-  wire [62:0] _alignedWdata_T = _GEN_102 << shiftBits; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 165:36]
+  wire [62:0] _GEN_14 = {{31'd0}, io_lsu_wdata}; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 165:36]
+  wire [62:0] _alignedWdata_T = _GEN_14 << shiftBits; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 165:36]
   wire [31:0] alignedWdata = _alignedWdata_T[31:0]; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 165:49]
   wire [31:0] shiftedRdata = io_m_rdata >> shiftBits; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 168:34]
   wire [23:0] _processedRdata_T_2 = shiftedRdata[7] ? 24'hffffff : 24'h0; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 170:25]
@@ -454,12 +419,10 @@ module ysyx_22040080_axi_arbiter(
   wire  _GEN_9 = io_ifu_arvalid & io_m_arready | readOwnerIfuReg; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 252:44 253:25 123:32]
   wire  _GEN_11 = io_lsu_arvalid & io_m_arready ? 1'h0 : readOwnerIfuReg; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 266:44 267:25 123:32]
   wire [2:0] _GEN_12 = io_lsu_arvalid & io_m_arready ? 3'h3 : stateReg; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 266:44 268:25 122:32]
-  wire  _mRreadyWire_T = readOwnerIfuReg ? io_ifu_rready : io_lsu_rready; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 276:25]
   wire [31:0] _GEN_13 = readOwnerIfuReg ? io_m_rdata : 32'h0; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 182:18 277:29 278:23]
-  wire  _GEN_14 = readOwnerIfuReg & io_m_rvalid; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 183:18 277:29 279:23]
   wire [31:0] _GEN_15 = readOwnerIfuReg ? 32'h0 : processedRdata; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 187:18 277:29 281:23]
   wire  _GEN_16 = readOwnerIfuReg ? 1'h0 : io_m_rvalid; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 188:18 277:29 282:23]
-  wire  _GEN_37 = 3'h3 == stateReg & _mRreadyWire_T; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 221:20 276:19 139:32]
+  wire  _GEN_37 = 3'h3 == stateReg & (readOwnerIfuReg | io_lsu_rready); // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 221:20 276:19 139:32]
   wire  _GEN_59 = 3'h2 == stateReg ? 1'h0 : _GEN_37; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 221:20 139:32]
   wire  _GEN_81 = 3'h1 == stateReg ? 1'h0 : _GEN_59; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 221:20 139:32]
   wire  mRreadyWire = 3'h0 == stateReg ? 1'h0 : _GEN_81; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 221:20 139:32]
@@ -500,7 +463,6 @@ module ysyx_22040080_axi_arbiter(
   wire  _GEN_55 = 3'h2 == stateReg & io_lsu_arvalid; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 195:18 221:20 263:22]
   wire  _GEN_56 = 3'h2 == stateReg & io_m_arready; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 186:18 221:20 264:22]
   wire [31:0] _GEN_60 = 3'h2 == stateReg ? 32'h0 : _GEN_38; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 182:18 221:20]
-  wire  _GEN_61 = 3'h2 == stateReg ? 1'h0 : 3'h3 == stateReg & _GEN_14; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 183:18 221:20]
   wire [31:0] _GEN_62 = 3'h2 == stateReg ? 32'h0 : _GEN_40; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 187:18 221:20]
   wire  _GEN_63 = 3'h2 == stateReg ? 1'h0 : 3'h3 == stateReg & _GEN_16; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 188:18 221:20]
   wire  _GEN_64 = 3'h2 == stateReg ? 1'h0 : 3'h3 == stateReg & _GEN_17; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 221:20 146:33]
@@ -517,7 +479,6 @@ module ysyx_22040080_axi_arbiter(
   wire  _GEN_77 = 3'h1 == stateReg & io_m_arready; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 181:18 221:20 250:22]
   wire  _GEN_80 = 3'h1 == stateReg ? 1'h0 : _GEN_56; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 186:18 221:20]
   wire [31:0] _GEN_82 = 3'h1 == stateReg ? 32'h0 : _GEN_60; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 182:18 221:20]
-  wire  _GEN_83 = 3'h1 == stateReg ? 1'h0 : _GEN_61; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 183:18 221:20]
   wire [31:0] _GEN_84 = 3'h1 == stateReg ? 32'h0 : _GEN_62; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 187:18 221:20]
   wire  _GEN_85 = 3'h1 == stateReg ? 1'h0 : _GEN_63; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 188:18 221:20]
   wire  _GEN_86 = 3'h1 == stateReg ? 1'h0 : _GEN_64; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 221:20 146:33]
@@ -537,7 +498,6 @@ module ysyx_22040080_axi_arbiter(
   );
   assign io_ifu_arready = 3'h0 == stateReg ? 1'h0 : _GEN_77; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 181:18 221:20]
   assign io_ifu_rdata = 3'h0 == stateReg ? 32'h0 : _GEN_82; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 182:18 221:20]
-  assign io_ifu_rvalid = 3'h0 == stateReg ? 1'h0 : _GEN_83; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 183:18 221:20]
   assign io_lsu_arready = 3'h0 == stateReg ? 1'h0 : _GEN_80; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 186:18 221:20]
   assign io_lsu_rdata = 3'h0 == stateReg ? 32'h0 : _GEN_84; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 187:18 221:20]
   assign io_lsu_rvalid = 3'h0 == stateReg ? 1'h0 : _GEN_85; // @[scala/ysyx/ysyx_22040080_axi_arbiter.scala 188:18 221:20]
@@ -2904,8 +2864,6 @@ module ysyx_22040080_cpu(
   wire [31:0] ifu_io_araddr; // @[scala/ysyx/ysyx_22040080_cpu.scala 104:25]
   wire  ifu_io_arvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 104:25]
   wire  ifu_io_arready; // @[scala/ysyx/ysyx_22040080_cpu.scala 104:25]
-  wire  ifu_io_rvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 104:25]
-  wire  ifu_io_rready; // @[scala/ysyx/ysyx_22040080_cpu.scala 104:25]
   wire  ifu_io_access_fault; // @[scala/ysyx/ysyx_22040080_cpu.scala 104:25]
   wire  arbiter_clock; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
   wire  arbiter_reset; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
@@ -2913,8 +2871,6 @@ module ysyx_22040080_cpu(
   wire  arbiter_io_ifu_arvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
   wire  arbiter_io_ifu_arready; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
   wire [31:0] arbiter_io_ifu_rdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
-  wire  arbiter_io_ifu_rvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
-  wire  arbiter_io_ifu_rready; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
   wire [31:0] arbiter_io_lsu_araddr; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
   wire  arbiter_io_lsu_arvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
   wire  arbiter_io_lsu_arready; // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
@@ -3078,29 +3034,29 @@ module ysyx_22040080_cpu(
   wire  _GEN_29 = readRouted & ~readToClint & arbiter_io_m_rready; // @[scala/ysyx/ysyx_22040080_cpu.scala 214:21 274:43 280:25]
   wire [31:0] _awClint_T = arbiter_io_m_awaddr & 32'hffff0000; // @[scala/ysyx/ysyx_22040080_cpu.scala 187:45]
   wire  awClint = _awClint_T == 32'h2000000; // @[scala/ysyx/ysyx_22040080_cpu.scala 187:59]
-  wire  _GEN_39 = clint_mod_io_awready | writeToClint; // @[scala/ysyx/ysyx_22040080_cpu.scala 304:34 305:22 194:29]
-  wire  _GEN_40 = clint_mod_io_awready | writeRouted; // @[scala/ysyx/ysyx_22040080_cpu.scala 304:34 306:22 195:29]
-  wire  _GEN_42 = io_master_awready | writeRouted; // @[scala/ysyx/ysyx_22040080_cpu.scala 314:31 316:22 195:29]
-  wire  _GEN_45 = awClint ? clint_mod_io_awready : io_master_awready; // @[scala/ysyx/ysyx_22040080_cpu.scala 300:19 303:28 313:28]
+  wire  _GEN_39 = clint_mod_io_awready | writeToClint; // @[scala/ysyx/ysyx_22040080_cpu.scala 314:34 315:22 194:29]
+  wire  _GEN_40 = clint_mod_io_awready | writeRouted; // @[scala/ysyx/ysyx_22040080_cpu.scala 314:34 316:22 195:29]
+  wire  _GEN_42 = io_master_awready | writeRouted; // @[scala/ysyx/ysyx_22040080_cpu.scala 336:31 338:22 195:29]
+  wire  _GEN_45 = awClint ? clint_mod_io_awready : io_master_awready; // @[scala/ysyx/ysyx_22040080_cpu.scala 300:19 303:28 323:28]
   wire  _GEN_47 = awClint ? _GEN_40 : _GEN_42; // @[scala/ysyx/ysyx_22040080_cpu.scala 300:19]
-  wire  _GEN_48 = awClint ? 1'h0 : 1'h1; // @[scala/ysyx/ysyx_22040080_cpu.scala 300:19 216:21 309:28]
-  wire [31:0] _GEN_49 = awClint ? 32'h0 : arbiter_io_m_awaddr; // @[scala/ysyx/ysyx_22040080_cpu.scala 300:19 217:21 310:28]
+  wire  _GEN_48 = awClint ? 1'h0 : 1'h1; // @[scala/ysyx/ysyx_22040080_cpu.scala 300:19 216:21 319:28]
+  wire [31:0] _GEN_49 = awClint ? 32'h0 : arbiter_io_m_awaddr; // @[scala/ysyx/ysyx_22040080_cpu.scala 300:19 217:21 320:28]
   wire  _GEN_56 = ~writeRouted & arbiter_io_m_awvalid ? _GEN_47 : writeRouted; // @[scala/ysyx/ysyx_22040080_cpu.scala 195:29 299:46]
-  wire [31:0] _GEN_63 = writeRouted & ~writeToClint ? arbiter_io_m_wdata : 32'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 223:21 338:45 339:26]
-  wire  _GEN_64 = writeRouted & ~writeToClint & arbiter_io_m_wvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 222:21 338:45 340:26]
-  wire [3:0] _GEN_65 = arbiter_io_m_wstrb; // @[scala/ysyx/ysyx_22040080_cpu.scala 224:21 338:45 341:26]
-  wire  _GEN_67 = writeRouted & ~writeToClint & io_master_wready; // @[scala/ysyx/ysyx_22040080_cpu.scala 338:45 343:26 352:26]
-  wire  _GEN_68 = writeRouted & ~writeToClint & io_master_bvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 338:45 344:26 353:26]
-  wire  _GEN_71 = writeRouted & ~writeToClint & arbiter_io_m_bready; // @[scala/ysyx/ysyx_22040080_cpu.scala 226:21 338:45 347:26]
-  wire  _busReadFault_T_3 = _GEN_25 & arbiter_io_m_rready; // @[scala/ysyx/ysyx_22040080_cpu.scala 381:39]
-  wire  _busReadFault_T_4 = io_master_rresp != 2'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 383:39]
-  wire  busReadFault = _busReadFault_T_3 & _busReadFault_T_4; // @[scala/ysyx/ysyx_22040080_cpu.scala 382:42]
-  wire  _busWriteFault_T_3 = _GEN_68 & arbiter_io_m_bready; // @[scala/ysyx/ysyx_22040080_cpu.scala 387:40]
-  wire  _busWriteFault_T_4 = io_master_bresp != 2'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 389:40]
-  wire  busWriteFault = _busWriteFault_T_3 & _busWriteFault_T_4; // @[scala/ysyx/ysyx_22040080_cpu.scala 388:43]
-  wire  accessFaultNow = ifu_io_access_fault | lsu_io_access_fault | busReadFault | busWriteFault; // @[scala/ysyx/ysyx_22040080_cpu.scala 391:83]
-  wire  _GEN_86 = accessFaultLatched ? 1'h0 : accessFaultLatched; // @[scala/ysyx/ysyx_22040080_cpu.scala 395:35 397:24 116:35]
-  wire  _GEN_87 = accessFaultNow | _GEN_86; // @[scala/ysyx/ysyx_22040080_cpu.scala 393:24 394:24]
+  wire [31:0] _GEN_63 = writeRouted & ~writeToClint ? arbiter_io_m_wdata : 32'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 223:21 360:45 361:26]
+  wire  _GEN_64 = writeRouted & ~writeToClint & arbiter_io_m_wvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 222:21 360:45 362:26]
+  wire [3:0] _GEN_65 = arbiter_io_m_wstrb; // @[scala/ysyx/ysyx_22040080_cpu.scala 224:21 360:45 363:26]
+  wire  _GEN_67 = writeRouted & ~writeToClint & io_master_wready; // @[scala/ysyx/ysyx_22040080_cpu.scala 360:45 365:26 374:26]
+  wire  _GEN_68 = writeRouted & ~writeToClint & io_master_bvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 360:45 366:26 375:26]
+  wire  _GEN_71 = writeRouted & ~writeToClint & arbiter_io_m_bready; // @[scala/ysyx/ysyx_22040080_cpu.scala 226:21 360:45 369:26]
+  wire  _busReadFault_T_3 = _GEN_25 & arbiter_io_m_rready; // @[scala/ysyx/ysyx_22040080_cpu.scala 403:39]
+  wire  _busReadFault_T_4 = io_master_rresp != 2'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 405:39]
+  wire  busReadFault = _busReadFault_T_3 & _busReadFault_T_4; // @[scala/ysyx/ysyx_22040080_cpu.scala 404:42]
+  wire  _busWriteFault_T_3 = _GEN_68 & arbiter_io_m_bready; // @[scala/ysyx/ysyx_22040080_cpu.scala 409:40]
+  wire  _busWriteFault_T_4 = io_master_bresp != 2'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 411:40]
+  wire  busWriteFault = _busWriteFault_T_3 & _busWriteFault_T_4; // @[scala/ysyx/ysyx_22040080_cpu.scala 410:43]
+  wire  accessFaultNow = ifu_io_access_fault | lsu_io_access_fault | busReadFault | busWriteFault; // @[scala/ysyx/ysyx_22040080_cpu.scala 413:83]
+  wire  _GEN_86 = accessFaultLatched ? 1'h0 : accessFaultLatched; // @[scala/ysyx/ysyx_22040080_cpu.scala 417:35 419:24 116:35]
+  wire  _GEN_87 = accessFaultNow | _GEN_86; // @[scala/ysyx/ysyx_22040080_cpu.scala 415:24 416:24]
   generate_next_pc gpc ( // @[scala/ysyx/ysyx_22040080_cpu.scala 102:25]
     .clock(gpc_clock),
     .reset(gpc_reset),
@@ -3132,8 +3088,6 @@ module ysyx_22040080_cpu(
     .io_araddr(ifu_io_araddr),
     .io_arvalid(ifu_io_arvalid),
     .io_arready(ifu_io_arready),
-    .io_rvalid(ifu_io_rvalid),
-    .io_rready(ifu_io_rready),
     .io_access_fault(ifu_io_access_fault)
   );
   ysyx_22040080_axi_arbiter arbiter ( // @[scala/ysyx/ysyx_22040080_cpu.scala 105:25]
@@ -3143,8 +3097,6 @@ module ysyx_22040080_cpu(
     .io_ifu_arvalid(arbiter_io_ifu_arvalid),
     .io_ifu_arready(arbiter_io_ifu_arready),
     .io_ifu_rdata(arbiter_io_ifu_rdata),
-    .io_ifu_rvalid(arbiter_io_ifu_rvalid),
-    .io_ifu_rready(arbiter_io_ifu_rready),
     .io_lsu_araddr(arbiter_io_lsu_araddr),
     .io_lsu_arvalid(arbiter_io_lsu_arvalid),
     .io_lsu_arready(arbiter_io_lsu_arready),
@@ -3306,11 +3258,11 @@ module ysyx_22040080_cpu(
   assign io_master_awlen = 8'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 219:21 299:46]
   assign io_master_awsize = arbiter_io_m_awsize; // @[scala/ysyx/ysyx_22040080_cpu.scala 220:21]
   assign io_master_awburst = 2'h1; // @[scala/ysyx/ysyx_22040080_cpu.scala 221:21]
-  assign io_master_wvalid = writeRouted & writeToClint ? 1'h0 : _GEN_64; // @[scala/ysyx/ysyx_22040080_cpu.scala 222:21 327:37]
-  assign io_master_wdata = writeRouted & writeToClint ? 32'h0 : _GEN_63; // @[scala/ysyx/ysyx_22040080_cpu.scala 223:21 327:37]
-  assign io_master_wstrb = writeRouted & writeToClint ? arbiter_io_m_wstrb : _GEN_65; // @[scala/ysyx/ysyx_22040080_cpu.scala 224:21 327:37]
-  assign io_master_wlast = 1'h1; // @[scala/ysyx/ysyx_22040080_cpu.scala 225:21 327:37]
-  assign io_master_bready = writeRouted & writeToClint ? 1'h0 : _GEN_71; // @[scala/ysyx/ysyx_22040080_cpu.scala 226:21 327:37]
+  assign io_master_wvalid = writeRouted & writeToClint ? 1'h0 : _GEN_64; // @[scala/ysyx/ysyx_22040080_cpu.scala 222:21 349:37]
+  assign io_master_wdata = writeRouted & writeToClint ? 32'h0 : _GEN_63; // @[scala/ysyx/ysyx_22040080_cpu.scala 223:21 349:37]
+  assign io_master_wstrb = writeRouted & writeToClint ? arbiter_io_m_wstrb : _GEN_65; // @[scala/ysyx/ysyx_22040080_cpu.scala 224:21 349:37]
+  assign io_master_wlast = 1'h1; // @[scala/ysyx/ysyx_22040080_cpu.scala 225:21 349:37]
+  assign io_master_bready = writeRouted & writeToClint ? 1'h0 : _GEN_71; // @[scala/ysyx/ysyx_22040080_cpu.scala 226:21 349:37]
   assign io_master_arvalid = ~readRouted & arbiter_io_m_arvalid & _GEN_9; // @[scala/ysyx/ysyx_22040080_cpu.scala 208:21 236:45]
   assign io_master_araddr = ~readRouted & arbiter_io_m_arvalid ? _GEN_10 : 32'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 209:21 236:45]
   assign io_master_arid = 4'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 210:21 236:45]
@@ -3318,17 +3270,17 @@ module ysyx_22040080_cpu(
   assign io_master_arsize = arbiter_io_m_arsize; // @[scala/ysyx/ysyx_22040080_cpu.scala 212:21]
   assign io_master_arburst = 2'h1; // @[scala/ysyx/ysyx_22040080_cpu.scala 213:21]
   assign io_master_rready = readRouted & readToClint ? 1'h0 : _GEN_29; // @[scala/ysyx/ysyx_22040080_cpu.scala 214:21 264:35]
-  assign io_slave_awready = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 362:20]
-  assign io_slave_wready = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 363:20]
-  assign io_slave_bvalid = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 364:20]
-  assign io_slave_bresp = 2'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 365:20]
-  assign io_slave_bid = 4'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 366:20]
-  assign io_slave_arready = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 367:20]
-  assign io_slave_rvalid = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 368:20]
-  assign io_slave_rresp = 2'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 369:20]
-  assign io_slave_rdata = 32'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 370:20]
-  assign io_slave_rlast = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 371:20]
-  assign io_slave_rid = 4'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 372:20]
+  assign io_slave_awready = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 384:20]
+  assign io_slave_wready = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 385:20]
+  assign io_slave_bvalid = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 386:20]
+  assign io_slave_bresp = 2'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 387:20]
+  assign io_slave_bid = 4'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 388:20]
+  assign io_slave_arready = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 389:20]
+  assign io_slave_rvalid = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 390:20]
+  assign io_slave_rresp = 2'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 391:20]
+  assign io_slave_rdata = 32'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 392:20]
+  assign io_slave_rlast = 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 393:20]
+  assign io_slave_rid = 4'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 394:20]
   assign gpc_clock = clock;
   assign gpc_reset = reset;
   assign gpc_io_pc = pc_mod_io_pc; // @[scala/ysyx/ysyx_22040080_cpu.scala 122:23]
@@ -3350,12 +3302,10 @@ module ysyx_22040080_cpu(
   assign ifu_io_pc = pc_mod_io_pc; // @[scala/ysyx/ysyx_22040080_cpu.scala 142:23]
   assign ifu_io_pc_valid = pc_mod_io_pc_valid; // @[scala/ysyx/ysyx_22040080_cpu.scala 144:23]
   assign ifu_io_arready = arbiter_io_ifu_arready; // @[scala/ysyx/ysyx_22040080_cpu.scala 151:26]
-  assign ifu_io_rvalid = arbiter_io_ifu_rvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 153:26]
   assign arbiter_clock = clock;
   assign arbiter_reset = reset;
   assign arbiter_io_ifu_araddr = ifu_io_araddr; // @[scala/ysyx/ysyx_22040080_cpu.scala 149:26]
   assign arbiter_io_ifu_arvalid = ifu_io_arvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 150:26]
-  assign arbiter_io_ifu_rready = ifu_io_rready; // @[scala/ysyx/ysyx_22040080_cpu.scala 154:26]
   assign arbiter_io_lsu_araddr = lsu_io_araddr; // @[scala/ysyx/ysyx_22040080_cpu.scala 159:26]
   assign arbiter_io_lsu_arvalid = lsu_io_arvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 160:26]
   assign arbiter_io_lsu_rready = lsu_io_rready; // @[scala/ysyx/ysyx_22040080_cpu.scala 164:26]
@@ -3366,8 +3316,8 @@ module ysyx_22040080_cpu(
   assign arbiter_io_lsu_bready = lsu_io_bready; // @[scala/ysyx/ysyx_22040080_cpu.scala 176:26]
   assign arbiter_io_lsu_func3 = lsu_io_lsu_func3; // @[scala/ysyx/ysyx_22040080_cpu.scala 178:26]
   assign arbiter_io_m_awready = ~writeRouted & arbiter_io_m_awvalid & _GEN_45; // @[scala/ysyx/ysyx_22040080_cpu.scala 293:24 299:46]
-  assign arbiter_io_m_wready = writeRouted & writeToClint ? clint_mod_io_wready : _GEN_67; // @[scala/ysyx/ysyx_22040080_cpu.scala 327:37 330:26]
-  assign arbiter_io_m_bvalid = writeRouted & writeToClint ? clint_mod_io_bvalid : _GEN_68; // @[scala/ysyx/ysyx_22040080_cpu.scala 327:37 331:26]
+  assign arbiter_io_m_wready = writeRouted & writeToClint ? clint_mod_io_wready : _GEN_67; // @[scala/ysyx/ysyx_22040080_cpu.scala 349:37 352:26]
+  assign arbiter_io_m_bvalid = writeRouted & writeToClint ? clint_mod_io_bvalid : _GEN_68; // @[scala/ysyx/ysyx_22040080_cpu.scala 349:37 353:26]
   assign arbiter_io_m_arready = ~readRouted & arbiter_io_m_arvalid & _GEN_6; // @[scala/ysyx/ysyx_22040080_cpu.scala 229:24 236:45]
   assign arbiter_io_m_rvalid = readRouted & readToClint ? clint_mod_io_rvalid : _GEN_25; // @[scala/ysyx/ysyx_22040080_cpu.scala 264:35 266:25]
   assign arbiter_io_m_rdata = readRouted & readToClint ? clint_mod_io_rdata : _GEN_24; // @[scala/ysyx/ysyx_22040080_cpu.scala 264:35 265:25]
@@ -3377,56 +3327,56 @@ module ysyx_22040080_cpu(
   assign clint_mod_io_arvalid = ~readRouted & arbiter_io_m_arvalid & arClint; // @[scala/ysyx/ysyx_22040080_cpu.scala 199:24 236:45]
   assign clint_mod_io_rready = readRouted & readToClint & arbiter_io_m_rready; // @[scala/ysyx/ysyx_22040080_cpu.scala 200:24 264:35 270:25]
   assign clint_mod_io_awvalid = ~writeRouted & arbiter_io_m_awvalid & awClint; // @[scala/ysyx/ysyx_22040080_cpu.scala 202:24 299:46]
-  assign clint_mod_io_wvalid = writeRouted & writeToClint & arbiter_io_m_wvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 204:24 327:37 329:26]
-  assign clint_mod_io_bready = writeRouted & writeToClint & arbiter_io_m_bready; // @[scala/ysyx/ysyx_22040080_cpu.scala 205:24 327:37 334:26]
+  assign clint_mod_io_wvalid = writeRouted & writeToClint & arbiter_io_m_wvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 204:24 349:37 351:26]
+  assign clint_mod_io_bready = writeRouted & writeToClint & arbiter_io_m_bready; // @[scala/ysyx/ysyx_22040080_cpu.scala 205:24 349:37 356:26]
   assign csr_clock = clock;
   assign csr_reset = reset;
-  assign csr_io_wen = alu_io_csr_wen; // @[scala/ysyx/ysyx_22040080_cpu.scala 423:22]
-  assign csr_io_csr_addr = idu_io_csr_addr; // @[scala/ysyx/ysyx_22040080_cpu.scala 424:22]
-  assign csr_io_wdata = alu_io_csr_wdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 425:22]
-  assign csr_io_trap_valid = alu_io_trap_valid; // @[scala/ysyx/ysyx_22040080_cpu.scala 426:22]
-  assign csr_io_trap_mepc = alu_io_trap_mepc; // @[scala/ysyx/ysyx_22040080_cpu.scala 427:22]
-  assign csr_io_trap_mcause = alu_io_trap_mcause; // @[scala/ysyx/ysyx_22040080_cpu.scala 428:22]
+  assign csr_io_wen = alu_io_csr_wen; // @[scala/ysyx/ysyx_22040080_cpu.scala 445:22]
+  assign csr_io_csr_addr = idu_io_csr_addr; // @[scala/ysyx/ysyx_22040080_cpu.scala 446:22]
+  assign csr_io_wdata = alu_io_csr_wdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 447:22]
+  assign csr_io_trap_valid = alu_io_trap_valid; // @[scala/ysyx/ysyx_22040080_cpu.scala 448:22]
+  assign csr_io_trap_mepc = alu_io_trap_mepc; // @[scala/ysyx/ysyx_22040080_cpu.scala 449:22]
+  assign csr_io_trap_mcause = alu_io_trap_mcause; // @[scala/ysyx/ysyx_22040080_cpu.scala 450:22]
   assign lsu_clock = clock;
   assign lsu_reset = reset;
-  assign lsu_io_mem_addr = alu_io_mem_addr; // @[scala/ysyx/ysyx_22040080_cpu.scala 433:24]
-  assign lsu_io_mem_wdata = alu_io_mem_wdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 434:24]
-  assign lsu_io_func3 = idu_io_func3; // @[scala/ysyx/ysyx_22040080_cpu.scala 435:24]
-  assign lsu_io_is_load = idu_io_is_load; // @[scala/ysyx/ysyx_22040080_cpu.scala 436:24]
-  assign lsu_io_is_store = idu_io_is_store; // @[scala/ysyx/ysyx_22040080_cpu.scala 437:24]
-  assign lsu_io_lsu_reqValid = idu_io_lsu_reqValid; // @[scala/ysyx/ysyx_22040080_cpu.scala 439:24]
-  assign lsu_io_lsu_respReady = regfile_io_lsu_respReady; // @[scala/ysyx/ysyx_22040080_cpu.scala 440:24]
+  assign lsu_io_mem_addr = alu_io_mem_addr; // @[scala/ysyx/ysyx_22040080_cpu.scala 455:24]
+  assign lsu_io_mem_wdata = alu_io_mem_wdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 456:24]
+  assign lsu_io_func3 = idu_io_func3; // @[scala/ysyx/ysyx_22040080_cpu.scala 457:24]
+  assign lsu_io_is_load = idu_io_is_load; // @[scala/ysyx/ysyx_22040080_cpu.scala 458:24]
+  assign lsu_io_is_store = idu_io_is_store; // @[scala/ysyx/ysyx_22040080_cpu.scala 459:24]
+  assign lsu_io_lsu_reqValid = idu_io_lsu_reqValid; // @[scala/ysyx/ysyx_22040080_cpu.scala 461:24]
+  assign lsu_io_lsu_respReady = regfile_io_lsu_respReady; // @[scala/ysyx/ysyx_22040080_cpu.scala 462:24]
   assign lsu_io_arready = arbiter_io_lsu_arready; // @[scala/ysyx/ysyx_22040080_cpu.scala 161:26]
   assign lsu_io_rdata = arbiter_io_lsu_rdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 162:26]
   assign lsu_io_rvalid = arbiter_io_lsu_rvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 163:26]
   assign lsu_io_awready = arbiter_io_lsu_awready; // @[scala/ysyx/ysyx_22040080_cpu.scala 171:26]
   assign lsu_io_wready = arbiter_io_lsu_wready; // @[scala/ysyx/ysyx_22040080_cpu.scala 174:26]
   assign lsu_io_bvalid = arbiter_io_lsu_bvalid; // @[scala/ysyx/ysyx_22040080_cpu.scala 175:26]
-  assign idu_io_rdata = arbiter_io_ifu_rdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 403:22]
-  assign idu_io_inst_active = arbiter_io_inst_active; // @[scala/ysyx/ysyx_22040080_cpu.scala 404:22]
-  assign alu_io_rs1_data = regfile_io_rdata1; // @[scala/ysyx/ysyx_22040080_cpu.scala 409:22]
-  assign alu_io_rs2_data = regfile_io_rdata2; // @[scala/ysyx/ysyx_22040080_cpu.scala 410:22]
-  assign alu_io_imm_ext = idu_io_imm_ext; // @[scala/ysyx/ysyx_22040080_cpu.scala 411:22]
-  assign alu_io_func3 = idu_io_func3; // @[scala/ysyx/ysyx_22040080_cpu.scala 412:22]
-  assign alu_io_func7 = idu_io_func7; // @[scala/ysyx/ysyx_22040080_cpu.scala 413:22]
-  assign alu_io_op = idu_io_op; // @[scala/ysyx/ysyx_22040080_cpu.scala 414:22]
-  assign alu_io_pc = pc_mod_io_pc; // @[scala/ysyx/ysyx_22040080_cpu.scala 415:22]
-  assign alu_io_shamt = idu_io_shamt; // @[scala/ysyx/ysyx_22040080_cpu.scala 416:22]
-  assign alu_io_inst_active = arbiter_io_inst_active; // @[scala/ysyx/ysyx_22040080_cpu.scala 417:22]
-  assign alu_io_csr_rdata = csr_io_rdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 418:22]
+  assign idu_io_rdata = arbiter_io_ifu_rdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 425:22]
+  assign idu_io_inst_active = arbiter_io_inst_active; // @[scala/ysyx/ysyx_22040080_cpu.scala 426:22]
+  assign alu_io_rs1_data = regfile_io_rdata1; // @[scala/ysyx/ysyx_22040080_cpu.scala 431:22]
+  assign alu_io_rs2_data = regfile_io_rdata2; // @[scala/ysyx/ysyx_22040080_cpu.scala 432:22]
+  assign alu_io_imm_ext = idu_io_imm_ext; // @[scala/ysyx/ysyx_22040080_cpu.scala 433:22]
+  assign alu_io_func3 = idu_io_func3; // @[scala/ysyx/ysyx_22040080_cpu.scala 434:22]
+  assign alu_io_func7 = idu_io_func7; // @[scala/ysyx/ysyx_22040080_cpu.scala 435:22]
+  assign alu_io_op = idu_io_op; // @[scala/ysyx/ysyx_22040080_cpu.scala 436:22]
+  assign alu_io_pc = pc_mod_io_pc; // @[scala/ysyx/ysyx_22040080_cpu.scala 437:22]
+  assign alu_io_shamt = idu_io_shamt; // @[scala/ysyx/ysyx_22040080_cpu.scala 438:22]
+  assign alu_io_inst_active = arbiter_io_inst_active; // @[scala/ysyx/ysyx_22040080_cpu.scala 439:22]
+  assign alu_io_csr_rdata = csr_io_rdata; // @[scala/ysyx/ysyx_22040080_cpu.scala 440:22]
   assign regfile_clock = clock;
   assign regfile_reset = reset;
-  assign regfile_io_wen = alu_io_wen; // @[scala/ysyx/ysyx_22040080_cpu.scala 445:28]
-  assign regfile_io_raddr1 = idu_io_rs1; // @[scala/ysyx/ysyx_22040080_cpu.scala 446:28]
-  assign regfile_io_raddr2 = idu_io_rs2; // @[scala/ysyx/ysyx_22040080_cpu.scala 447:28]
-  assign regfile_io_waddr = idu_io_rd; // @[scala/ysyx/ysyx_22040080_cpu.scala 448:28]
-  assign regfile_io_wdata = alu_io_result; // @[scala/ysyx/ysyx_22040080_cpu.scala 449:28]
-  assign regfile_io_is_branch = idu_io_is_branch; // @[scala/ysyx/ysyx_22040080_cpu.scala 450:28]
-  assign regfile_io_is_load = idu_io_is_load; // @[scala/ysyx/ysyx_22040080_cpu.scala 451:28]
-  assign regfile_io_is_store = idu_io_is_store; // @[scala/ysyx/ysyx_22040080_cpu.scala 452:28]
-  assign regfile_io_load_data = lsu_io_load_data; // @[scala/ysyx/ysyx_22040080_cpu.scala 453:28]
-  assign regfile_io_lsu_reqReady = lsu_io_lsu_reqReady; // @[scala/ysyx/ysyx_22040080_cpu.scala 454:28]
-  assign regfile_io_lsu_respValid = lsu_io_lsu_respValid; // @[scala/ysyx/ysyx_22040080_cpu.scala 455:28]
+  assign regfile_io_wen = alu_io_wen; // @[scala/ysyx/ysyx_22040080_cpu.scala 467:28]
+  assign regfile_io_raddr1 = idu_io_rs1; // @[scala/ysyx/ysyx_22040080_cpu.scala 468:28]
+  assign regfile_io_raddr2 = idu_io_rs2; // @[scala/ysyx/ysyx_22040080_cpu.scala 469:28]
+  assign regfile_io_waddr = idu_io_rd; // @[scala/ysyx/ysyx_22040080_cpu.scala 470:28]
+  assign regfile_io_wdata = alu_io_result; // @[scala/ysyx/ysyx_22040080_cpu.scala 471:28]
+  assign regfile_io_is_branch = idu_io_is_branch; // @[scala/ysyx/ysyx_22040080_cpu.scala 472:28]
+  assign regfile_io_is_load = idu_io_is_load; // @[scala/ysyx/ysyx_22040080_cpu.scala 473:28]
+  assign regfile_io_is_store = idu_io_is_store; // @[scala/ysyx/ysyx_22040080_cpu.scala 474:28]
+  assign regfile_io_load_data = lsu_io_load_data; // @[scala/ysyx/ysyx_22040080_cpu.scala 475:28]
+  assign regfile_io_lsu_reqReady = lsu_io_lsu_reqReady; // @[scala/ysyx/ysyx_22040080_cpu.scala 476:28]
+  assign regfile_io_lsu_respValid = lsu_io_lsu_respValid; // @[scala/ysyx/ysyx_22040080_cpu.scala 477:28]
   always @(posedge clock) begin
     if (reset) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 116:35]
       accessFaultLatched <= 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 116:35]
@@ -3464,21 +3414,21 @@ module ysyx_22040080_cpu(
     end else if (~writeRouted & arbiter_io_m_awvalid) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 299:46]
       if (awClint) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 300:19]
         writeToClint <= _GEN_39;
-      end else if (io_master_awready) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 314:31]
-        writeToClint <= 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 315:22]
+      end else if (io_master_awready) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 336:31]
+        writeToClint <= 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 337:22]
       end
     end
     if (reset) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 195:29]
       writeRouted <= 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 195:29]
-    end else if (writeRouted & writeToClint) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 327:37]
-      if (clint_mod_io_bvalid & arbiter_io_m_bready) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 335:54]
-        writeRouted <= 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 336:19]
+    end else if (writeRouted & writeToClint) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 349:37]
+      if (clint_mod_io_bvalid & arbiter_io_m_bready) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 357:54]
+        writeRouted <= 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 358:19]
       end else begin
         writeRouted <= _GEN_56;
       end
-    end else if (writeRouted & ~writeToClint) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 338:45]
-      if (io_master_bvalid & arbiter_io_m_bready) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 348:51]
-        writeRouted <= 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 349:19]
+    end else if (writeRouted & ~writeToClint) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 360:45]
+      if (io_master_bvalid & arbiter_io_m_bready) begin // @[scala/ysyx/ysyx_22040080_cpu.scala 370:51]
+        writeRouted <= 1'h0; // @[scala/ysyx/ysyx_22040080_cpu.scala 371:19]
       end else begin
         writeRouted <= _GEN_56;
       end

@@ -202,16 +202,6 @@ void exec_once() {
   // 超时判断（防止CPU卡死）
   if (!instr_finish) {
     printf("Error: Instruction execution timeout (max %d cycles)\n", MAX_TIMEOUT);
-    /*
-    printf("[timeout] accessFaultLatched=%d arbiter_arvalid=%d arbiter_rvalid=%d master_araddr=0x%08x pcReg=0x%08x tracePc=0x%08x traceInstr=0x%08x\n",
-      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__accessFaultLatched,
-      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arbiter_io_m_arvalid,
-      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arbiter_io_m_rvalid,
-      rootp->ysyxSoCFull__DOT__asic__DOT___cpu_auto_master_out_araddr,
-      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc_mod__DOT__pcReg,
-      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc_mod__DOT__tracePcReg,
-      rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc_mod__DOT__traceInstrReg);
-      */
     contextp->gotFinish(true);
     return;
   }
@@ -224,6 +214,14 @@ void exec_once() {
   }
   cpu.pc = latched_pc;
   uint32_t inst = latched_inst;
+  // Itrace 显示修正：当 PC 在硬件 SRAM 范围且 latched_inst 为 0 时，
+  // 直接从 Verilog SRAM 读回当前指令，避免显示 c.unimp 的假象。
+  if (inst == 0 &&
+      cpu.pc >= SRAM_BASE &&
+      cpu.pc < (SRAM_BASE + SRAM_SIZE)) {
+    uint32_t idx = (cpu.pc - SRAM_BASE) >> 2;
+    inst = rootp->ysyxSoCFull__DOT__asic__DOT__axi4ram__DOT__mem_ext__DOT__Memory[idx];
+  }
   // NPC执行一条指令后，让REF(NEMU)执行一条
 
   // 多个 trace 可以 hook 在这里
