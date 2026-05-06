@@ -42,10 +42,10 @@ static long load_img() {
   assert(ret == 1);
 
   fclose(fp); */
-   printf("Loading MROM image: %s\n", img_file);
-  long size = load_mrom(img_file);
- /*  printf("Loading FLASH image: %s\n", img_file);
-  long size = load_flash(img_file); */
+  /* printf("Loading MROM image: %s\n", img_file);
+  long size = load_mrom(img_file); */
+  printf("Loading FLASH image: %s\n", img_file);
+  long size = load_flash(img_file);
   assert(size > 0);
   // printf("MROM image loaded, size = %ld\n", size);
   printf("FLASH image loaded, size = %ld\n", size);
@@ -109,13 +109,12 @@ void init_monitor(int argc, char *argv[]){
   /* Initialize differential testing. */
   difftest_init_nemu();
 
-  /*将镜像同步到REF(nemu) 的内存 需要把镜像文件（image）load到NPC的物理内存区域（或者RESET_VECTOR）中 MROM_BASE, pmem_addr(MROM_BASE)*/ 
-  // difftest_memcpy(FLASH_BASE, pmem_addr(FLASH_BASE), img_size, DIFFTEST_TO_REF);
-  difftest_memcpy(MROM_BASE, pmem_addr(MROM_BASE), img_size, DIFFTEST_TO_REF);
+  /* 将镜像同步到 REF(nemu) 的 flash 区域 */
+  difftest_memcpy(FLASH_BASE, pmem_addr(FLASH_BASE), img_size, DIFFTEST_TO_REF);
 
   // 检查内存是否一致 MROM_BASE pmem_addr(MROM_BASE)
-  // check_difftest_memcpy(FLASH_BASE, pmem_addr(FLASH_BASE), img_size);
-  check_difftest_memcpy(MROM_BASE, pmem_addr(MROM_BASE), img_size);
+  check_difftest_memcpy(FLASH_BASE, pmem_addr(FLASH_BASE), img_size);
+  // check_difftest_memcpy(MROM_BASE, pmem_addr(MROM_BASE), img_size);
 
   // 执行10个周期的复位
   reset(10);

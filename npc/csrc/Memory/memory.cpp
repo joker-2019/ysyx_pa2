@@ -51,8 +51,8 @@ void init_mem(){
     memset(sram, 0, sizeof(sram));
     memset(flash, 0, sizeof(flash));
 
-    /*  uint32_t *flash_ptr = (uint32_t *)(flash + 0x100000); // 偏移 1MB 处
-    *flash_ptr = 0xdeadbeef; */
+    uint32_t *flash_ptr = (uint32_t *)(flash + 0x100000); // 偏移 1MB 处
+    *flash_ptr = 0xdeadbeef;
 }
 
 uint8_t *guest_to_host(uint32_t paddr){
@@ -171,7 +171,7 @@ long load_mrom(const char *filename) {
     return size;
 }
 
-/* long load_flash(const char *filename) {
+long load_flash(const char *filename) {
     if (!filename) return 0;
     FILE *fp = fopen(filename, "rb");
     if (!fp) {
@@ -187,16 +187,16 @@ long load_mrom(const char *filename) {
     fclose(fp);
     printf("[FLASH] Loaded %ld bytes from '%s'\n", size, filename);
     return size;
-} */
+}
 
 extern "C" void flash_read(int32_t addr, int32_t *data) {
-    // printf("flash_read addr = %08x\n", addr);
-   /*  uint32_t offset = (uint32_t)addr;
+    uint32_t offset = (uint32_t)addr;
     if (offset + 4 <= FLASH_SIZE) {
         memcpy(data, flash + offset, 4);
     } else {
         *data = 0;
-    } */
+    }
+    /*
     uint32_t offset = (uint32_t)addr;
     // 我们在此处直接返回 char-test.bin 的机器码以模拟存放在 flash 颗粒中
     const uint32_t char_test_bin[] = {
@@ -211,6 +211,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
     } else {
         *data = 0; // 其他地址默认返回 0
     }
+    */
 
 }
 

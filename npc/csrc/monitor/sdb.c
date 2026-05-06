@@ -234,8 +234,11 @@ int sdb_mainloop(int argc, char *argv[]) {
 
   init_sdb();          // 初始化 SDB
 
-  char *line = NULL;
-  while (!contextp->gotFinish()) {
+  if (is_batch_mode) {
+    cmd_c(NULL);
+  } else {
+    char *line = NULL;
+    while (!contextp->gotFinish()) {
   // while(!sim_finished){
     line = rl_gets();
     if (line == NULL) break;  // readline 遇到 EOF 时返回 NULL，防止 strlen(NULL) 段错误
@@ -245,12 +248,13 @@ int sdb_mainloop(int argc, char *argv[]) {
         break;
     }
   }
+  }
 
   step_and_dump_wave();
 
   sim_exit();          // 退出模拟器
 
-  free(line);          // 释放输入行内存
+  // free(line);          // 释放输入行内存
  
   return 0;
 }
