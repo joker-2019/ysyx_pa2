@@ -66,6 +66,8 @@
 #define GPIO_SIZE    0x10
 #define PSRAM_BASE   0x80000000 // PSRAM 地址和大小(PSRAM 控制器)
 #define PSRAM_SIZE   0x400000
+#define SDRAM_BASE   0xa0000000 // SDRAM 地址和大小(SDRAM 控制器)
+#define SDRAM_SIZE   0x2000000  // SDRAM 大小 32M = 16^7/(1024*1024)
 
 #define FLASH_BASE  0X30000000  // FLASE 地址
 #define FLASH_SIZE  0x01000000  // FLASE 大小 256M = 16^7/(1024*1024)

@@ -3296,7 +3296,7 @@ module ysyx_22040080_cpu(
   assign pc_mod_io_mtvec = csr_io_mtvec; // @[scala/ysyx/ysyx_22040080_cpu.scala 134:26]
   assign pc_mod_io_mepc = csr_io_mepc; // @[scala/ysyx/ysyx_22040080_cpu.scala 135:26]
   assign pc_mod_io_next_pc = gpc_io_next_pc; // @[scala/ysyx/ysyx_22040080_cpu.scala 136:26]
-  assign pc_mod_io_pc_update_en = regfile_io_wb_done | accessFaultLatched; // @[scala/ysyx/ysyx_22040080_cpu.scala 117:41]
+  assign pc_mod_io_pc_update_en = regfile_io_wb_done | accessFaultLatched | alu_io_is_mret | alu_io_trap_valid; // @[scala/ysyx/ysyx_22040080_cpu.scala 117:41]
   assign ifu_clock = clock;
   assign ifu_reset = reset;
   assign ifu_io_pc = pc_mod_io_pc; // @[scala/ysyx/ysyx_22040080_cpu.scala 142:23]

@@ -1,13 +1,16 @@
-/* ysyxSoC 专用链接脚本
+/* ysyxSoC 专用链接脚本 - 两级 bootloader (FSBL + SSBL)
  *
  * 内存布局：
- *   MROM  0x20000000  4KB  只读（CPU 复位入口，存放代码 + rodata/data 初始化镜像）
- *   SRAM  0x0f000000  8KB  可读写（.rodata/.data 运行时、.bss、栈、堆）
- *   FLASH 0X30000000  256M
- * .rodata/.data 段采用 LMA/VMA 分离方案：
- *   LMA（加载地址）= MROM（ELF 文件中存储初始化镜像）
- *   VMA（运行地址）= SRAM（运行时访问地址）
- *   启动代码负责将 .rodata/.data 从 MROM 拷贝到 SRAM。
+ *   FLASH 0x30000000  16MB  存放 FSBL/SSBL/程序的初始化镜像（LMA）
+ *   SRAM  0x0f000000  8KB   SSBL 运行地址（VMA 底部）+ 栈（顶部向低地址增长）
+ *   PSRAM 0x80000000  4MB   程序运行地址（VMA）
+ *
+ * LMA/VMA 分离方案：
+ *   .fsbl  VMA=LMA=FLASH：FSBL 在 FLASH 中原地执行
+ *   .ssbl  LMA=FLASH（紧跟 .fsbl）, VMA=SRAM 底部：FSBL 将其拷贝到 SRAM 再执行
+ *   .text/.rodata/.data  LMA=FLASH（紧跟 .ssbl）, VMA=PSRAM：SSBL 将其拷贝到 PSRAM 再执行
+ *   .bss   NOLOAD，VMA=PSRAM：SSBL 负责清零
+ *   栈     始终位于 SRAM 顶部，向低地址增长
  */
 ENTRY(_start)
 
@@ -15,79 +18,121 @@ MEMORY {
   /* mrom : ORIGIN = 0x20000000, LENGTH = 0x1000  4KB MROM  */
   flash : ORIGIN = 0X30000000, LENGTH = 0X01000000  /* 16MB FLASH */
   sram : ORIGIN = 0x0f000000, LENGTH = 0x2000   /* 8KB SRAM */
-}
-/*
-* PHDRS（Program Headers）：定义 ELF 文件的程序头（供加载器使用），标记哪些段需要加载到内存；
-* text PT_LOAD：标记 .text 段为可加载  data PT_LOAD：标记 .bss 等数据段为可加载
-*/
-PHDRS {
-  text PT_LOAD;
-  data PT_LOAD;
+  psram : ORIGIN = 0x80000000, LENGTH = 0x400000 /* 4MB PSRAM */
 }
 
 SECTIONS {
-  /* ---- MROM：代码 + 只读数据 + .data 初始值（LMA） . = ORIGIN(mrom);---- */
+  /* ---- FLASH：FSBL（VMA = LMA = FLASH，CPU 复位后原地执行）---- */
   . = ORIGIN(flash);
 
-  .text : {
-    *(entry)        /* _start 必须是第一条指令 代码段（存放指令）*/
-    *(.text*)
-  } > flash : text
+  .fsbl : {
+    KEEP(*(fsbl))   /* _start 必须是第一条指令 */
+  } > flash
 
-   /* 切换到 SRAM，放置运行时 rodata/data */
+  /* ---- SRAM：SSBL（VMA = SRAM 底部，LMA = FLASH 紧跟 .fsbl）----
+   *
+   * FSBL 负责将此段从 FLASH LMA 拷贝到 SRAM VMA，然后跳转执行。
+   * SSBL 体积小，放在 SRAM 底部；栈在 SRAM 顶部，两者不重叠。
+   */
   . = ORIGIN(sram);
 
-  /* .rodata：VMA 在 SRAM 动态执行区之后，LMA 在 MROM(.text 之后) */
+  .ssbl : AT(ALIGN(LOADADDR(.fsbl) + SIZEOF(.fsbl), 4)) {
+    _ssbl_start = .;
+    KEEP(*(ssbl))
+    . = ALIGN(4);
+    _ssbl_end = .;
+  } > sram
+
+  /* 供 FSBL 拷贝 SSBL 时使用的地址/长度符号 */
+  _ssbl_ma  = LOADADDR(.ssbl);  /* SSBL 在 FLASH 中的加载地址（LMA） */
+  _ssbl_sa  = ADDR(.ssbl);      /* SSBL 在 SRAM 中的运行地址（VMA） */
+  _ssbl_len = SIZEOF(.ssbl);
+
+  /* ---- PSRAM：程序运行时代码和数据（VMA），LMA 紧跟 .ssbl 之后在 FLASH ---- */
+  . = ORIGIN(psram);
+
+  /* .text：VMA 在 PSRAM，LMA 在 FLASH（紧跟 .ssbl 之后） */
+  .text : AT(ALIGN(LOADADDR(.ssbl) + SIZEOF(.ssbl), 4)) {
+    _text_start = .;
+    *(.text*)
+    . = ALIGN(4);
+    _text_end = .;
+  } > psram
+
+  /* 供 SSBL 拷贝 .text 时使用的地址/长度符号 */
+  _text_ma  = LOADADDR(.text);
+  _text_sa  = ADDR(.text);
+  _text_len = SIZEOF(.text);
+
+  /* .rodata：VMA 在 PSRAM，LMA 在 FLASH（紧跟 .text 之后） */
   .rodata : AT(ALIGN(LOADADDR(.text) + SIZEOF(.text), 4)) {
     _rodata_start = .;
     *(.rodata*)
     *(.srodata*)
     . = ALIGN(4);
     _rodata_end = .;
-  } > sram : data
+  } > psram
 
-  /* .data：VMA 在 SRAM，LMA 紧跟 .rodata 的 LMA */
-  .data : AT(ALIGN(LOADADDR(.rodata) + SIZEOF(.rodata), 4)) {
-    _data_start = .;        /* VMA 起始（SRAM 运行地址） */
-    *(.data)
-    *(.data*)
-    *(.sdata*)
-    . = ALIGN(4);
-    _data_end = .;          /* VMA 结束 */
-  } > sram : data
-
-  /* 显式导出 MA/SA/LEN，供启动代码拷贝 .rodata/.data 使用 */
   _rodata_ma  = LOADADDR(.rodata);
   _rodata_sa  = ADDR(.rodata);
   _rodata_len = SIZEOF(.rodata);
 
+  /* .data：VMA 在 PSRAM，LMA 在 FLASH（紧跟 .rodata 之后）
+   *
+   * extra.ld 通过 INSERT AFTER .data 插入 .data.extra（带 AT() 指令），
+   * 使 .data.extra 的 LMA 紧跟 .data 之后落入 FLASH，再由 SSBL 单独拷贝。
+   */
+  .data : AT(ALIGN(LOADADDR(.rodata) + SIZEOF(.rodata), 4)) {
+    _data_start = .;
+    *(.data)
+    *(.data*)
+    *(.sdata*)
+    . = ALIGN(4);
+    _data_end = .;
+  } > psram
+
   _data_ma  = LOADADDR(.data);
   _data_sa  = ADDR(.data);
   _data_len = SIZEOF(.data);
-  _data_lma = _data_ma;
 
-  /* ---- SRAM：BSS + 栈 + 堆 ---- */
+  /* .data.extra 由 extra.ld INSERT AFTER .data 插入，其 LMA 紧跟 .data 之后，
+   * 因此这些符号可在 SSBL 中用于将 .data.extra 从 FLASH 拷贝到 PSRAM。
+   * 注：符号在 .data 段之后定义，此时 .data.extra 已通过 INSERT AFTER 加入布局。
+   *
+   * 【RT-Thread 专用，已注释】只有在引入 extra.ld 时 .data.extra 段才存在；
+   * 普通程序(如 mem-test)不含 extra.ld，对不存在的段取 LOADADDR/ADDR/SIZEOF
+   * 会触发 "undefined section `.data.extra'" 链接错误。测试 RT-Thread 时再恢复，
+   * 并同步恢复 start.S 中 .data.extra 的拷贝循环。 */
+  /*
+  _data_extra_ma  = LOADADDR(.data.extra);
+  _data_extra_sa  = ADDR(.data.extra);
+  _data_extra_len = SIZEOF(.data.extra);
+  */
 
-  .bss (NOLOAD) : {
+  /* ---- PSRAM：BSS + 堆 ---- */
+
+  /* extra.ld 通过 INSERT BEFORE .bss 在 .data.extra 和 .bss.extra 之后插入，
+   * 但 GNU ld 的 INSERT 指令不更新主脚本的位置计数器，导致 .bss VMA 与
+   * .data.extra 重叠——SSBL BSS 清零循环会覆盖已写入的 .rti_fn* 函数指针。
+   * 修复：extra.ld 在 .bss.extra 末尾定义 _bss_extra_end；此处用显式 VMA 表达式
+   * 设置 .bss 起始地址，令其紧跟所有 INSERT 段之后。
+   * PROVIDE 为无 extra.ld 场景提供安全的后备值（. = 当前位置）。 */
+  PROVIDE(_bss_extra_end = .);
+
+  .bss _bss_extra_end (NOLOAD) : {
     _bss_start = .;
     *(.bss*)
     *(.sbss*)
     *(.scommon)
     . = ALIGN(4);
     _bss_end = .;
-  } > sram :NONE
+  } > psram
 
-  /* 堆：放在 .bss 之后，避免覆盖全局变量 */
+  /* 堆：放在 .bss 之后，上限为 PSRAM 末尾 */
   _heap_start = ALIGN(_bss_end, 0x10);
+  _heap_end   = ORIGIN(psram) + LENGTH(psram);
 
-  /* 栈：固定在 SRAM 末尾，向低地址增长，分配 4KB */
-  /* 堆范围是 [heap_start, stack_top)  栈范围是[stack_top, sram_end) 动态加载获取 SRAM 首尾地址*/
-  /* _stack_pointer = ORIGIN(sram) + LENGTH(sram);
-  _stack_top     = _stack_pointer - 0x1000;
-  */
-  /* 栈：限定在 SRAM 前 4KB 的末尾，向低地址增长。后 4KB 预留给 char-test */
-  /* 堆范围是 [heap_start, stack_top)  栈范围是[stack_top, stack_pointer) */
-  _stack_pointer = ORIGIN(sram) + 0x1000;
-  _stack_top     = _stack_pointer - 0x0800; /* 分配 2KB 给栈，剩下的为堆 */
-  _heap_end      = _stack_top;
+  /* ---- SRAM：仅放栈，向低地址增长（.ssbl 在 SRAM 底部，栈在 SRAM 顶部）---- */
+  _stack_pointer = ORIGIN(sram) + LENGTH(sram);
+  _stack_top     = ORIGIN(sram);
 }

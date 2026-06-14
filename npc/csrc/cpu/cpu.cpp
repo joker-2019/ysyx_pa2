@@ -84,26 +84,26 @@ extern "C" void get_csr_info(
 
 void step_and_dump_wave() {
   // top->eval();
-  tfp->dump(contextp->time());
+  // tfp->dump(contextp->time());
   contextp->timeInc(1);
 }
 
 void sim_init() {
   contextp = new VerilatedContext;
-  tfp = new VerilatedVcdC;
+  // tfp = new VerilatedVcdC;
   // top = new Vysyx_22040080_cpu;
   top = new VysyxSoCFull;
   rootp = top->rootp;
 
   init_disasm("riscv32-pc-linux-gnu"); // 初始化反汇编器
-  contextp->traceEverOn(true); // 关闭波形器可以运行红白机模拟器 make ARCH=native run mainargs=mario
-  top->trace(tfp, 0);
-  tfp->open("dump.vcd");
+  contextp->traceEverOn(false); // 关闭波形器可以运行红白机模拟器 make ARCH=native run mainargs=mario
+  // top->trace(tfp, 0);
+  // tfp->open("dump.vcd");
 }
 
 void sim_exit() {
   step_and_dump_wave();
-  if(tfp) tfp->close();
+  // if(tfp) tfp->close();
 }
 
 void reset(int n) {
@@ -164,7 +164,7 @@ void print_cpu_regs(const CPU_state *cpu) {
 void exec_once() {
   bool instr_finish = false;
   int timeout_cnt = 0;
-  const int MAX_TIMEOUT = 10000;
+  const int MAX_TIMEOUT = 5000000;
   uint32_t latched_pc = 0;
   uint32_t latched_inst = 0;
   bool has_latched_trace = false;
@@ -201,7 +201,14 @@ void exec_once() {
   }
   // 超时判断（防止CPU卡死）
   if (!instr_finish) {
-    printf("Error: Instruction execution timeout (max %d cycles)\n", MAX_TIMEOUT);
+    /* 尝试从 DPI 读取当前 PC，辅助定位卡死位置 */
+    uint32_t cur_pc = 0, cur_inst = 0;
+    svBit cur_done = 0;
+    svScope prev2 = svSetScope(instr_pc_scope);
+    get_instr_pc(&cur_pc, &cur_inst, &cur_done);
+    svSetScope(prev2);
+    printf("Error: Instruction execution timeout (max %d cycles) at PC=0x%08x inst=0x%08x (last committed PC=0x%08x)\n",
+           MAX_TIMEOUT, cur_pc, cur_inst, cpu.pc);
     contextp->gotFinish(true);
     return;
   }

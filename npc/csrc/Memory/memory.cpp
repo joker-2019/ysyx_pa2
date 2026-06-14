@@ -17,6 +17,9 @@ static uint64_t boot_time = 0; //系统启动时间
 static uint8_t mrom[MROM_SIZE];
 static uint8_t flash[FLASH_SIZE];
 static uint8_t sram[SRAM_SIZE];
+static uint8_t psram[PSRAM_SIZE];
+// MT48LC16M16A2 SDRAM 行为模型的存储后端 (32MB), 由 ysyxSoC sdramChisel 经 DPI 访问
+static uint8_t sdram_mem[SDRAM_SIZE];
 
 static bool need_update = false;
 static int uart_char;
@@ -50,11 +53,14 @@ void init_mem(){
     memset(mrom, 0, sizeof(mrom));
     memset(sram, 0, sizeof(sram));
     memset(flash, 0, sizeof(flash));
+    memset(psram, 0, sizeof(psram));
+    memset(sdram_mem, 0, sizeof(sdram_mem));
 
     uint32_t *flash_ptr = (uint32_t *)(flash + 0x100000); // 偏移 1MB 处
     *flash_ptr = 0xdeadbeef;
 }
 
+// 地址越界检测 目前支持 MROM/SRAM/FLASH/PSRAM
 uint8_t *guest_to_host(uint32_t paddr){
     if (paddr >= SRAM_BASE && paddr < SRAM_BASE + SRAM_SIZE) {
         return sram + (paddr - SRAM_BASE);
@@ -62,11 +68,17 @@ uint8_t *guest_to_host(uint32_t paddr){
     if(paddr >= MROM_BASE && paddr < MROM_BASE + MROM_SIZE) {
         return mrom + (paddr - MROM_BASE);
     }
-    if (paddr >= CONFIG_MBASE && paddr < CONFIG_MBASE + CONFIG_MSIZE) {
+    /* if (paddr >= CONFIG_MBASE && paddr < CONFIG_MBASE + CONFIG_MSIZE) {
         return pmem + (paddr - CONFIG_MBASE);
-    }
+    } */
     if (paddr >= FLASH_BASE && paddr < FLASH_BASE + FLASH_SIZE) {
         return flash + (paddr - FLASH_BASE);
+    }
+    if (paddr >= PSRAM_BASE && paddr < PSRAM_BASE + PSRAM_SIZE) {
+        return psram + (paddr - PSRAM_BASE);
+    }
+    if (paddr >= SDRAM_BASE && paddr < SDRAM_BASE + SDRAM_SIZE) {
+        return sdram_mem + (paddr - SDRAM_BASE);
     }
     return NULL;
 }
@@ -112,8 +124,13 @@ extern "C" uint32_t pmem_read(int addr, int len) {
         memcpy(&data, sram + (uaddr - SRAM_BASE), len);
         return data;
     }
-    uint8_t *host_addr = guest_to_host(uaddr);
+    if (uaddr >= PSRAM_BASE && uaddr + (uint32_t)len <= PSRAM_BASE + PSRAM_SIZE) {
+        uint32_t data = 0;
+        memcpy(&data, psram + (uaddr - PSRAM_BASE), len);
+        return data;
+    }
     // 地址越界检查：只有在 SRAM/PSRAM 范围内才访问内存，否则返回 0
+    uint8_t *host_addr = guest_to_host(uaddr);
     if (host_addr == NULL) {
         return 0;
     }
@@ -196,23 +213,6 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
     } else {
         *data = 0;
     }
-    /*
-    uint32_t offset = (uint32_t)addr;
-    // 我们在此处直接返回 char-test.bin 的机器码以模拟存放在 flash 颗粒中
-    const uint32_t char_test_bin[] = {
-        0x100007b7, // lui a5,0x10000
-        0x04100713, // li a4,65 ('A')
-        0x00e78023, // sb a4,0(a5)
-        0x00000513, // li a0,0 (GOOD TRAP exit code)
-        0x00100073  // ebreak
-    };
-    if (offset < sizeof(char_test_bin)) {
-        memcpy(data, (uint8_t*)char_test_bin + offset, 4);
-    } else {
-        *data = 0; // 其他地址默认返回 0
-    }
-    */
-
 }
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
@@ -235,6 +235,10 @@ void *pmem_addr(uint32_t addr) {
     if (uaddr >= SRAM_BASE && uaddr < SRAM_BASE + SRAM_SIZE)
         return (void *)(sram + (uaddr - SRAM_BASE));
     return (void *)guest_to_host(uaddr);
+    if (uaddr >= PSRAM_BASE && uaddr < PSRAM_BASE + PSRAM_SIZE)
+        return (void *)(psram + (uaddr - PSRAM_BASE));
+    if (uaddr >= SDRAM_BASE && uaddr < SDRAM_BASE + SDRAM_SIZE)
+        return (void *)(sdram_mem + (uaddr - SDRAM_BASE));
 }
 
 

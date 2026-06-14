@@ -1,11 +1,17 @@
 # ysyxSoC 平台 AM 源文件列表 s代表.S文件 c代表.c文件 SR代表源文件source
 AM_SRCS := riscv/ysyxsoc/start.S \
            riscv/ysyxsoc/trm.c \
+           riscv/ysyxsoc/cte.c \
+           riscv/ysyxsoc/trap.S \
+           riscv/ysyxsoc/ioe.c \
+           riscv/ysyxsoc/timer.c \
+           riscv/ysyxsoc/input.c \
            platform/dummy/vme.c \
            platform/dummy/mpe.c
 # 编译（CFLAGS）和链接（LDFLAGS）参数  - -fdata-sections：每个全局变量单独生成一个数据段； - -ffunction-sections：每个函数单独生成一个代码段；
 # 作用：为后续链接时的 “垃圾回收” 做准备，只保留用到的段。  - --gc-sections：开启 “垃圾回收”，删除未被使用的代码段 / 数据段
-CFLAGS  += -fdata-sections -ffunction-sections
+# CFLAGS  += -fdata-sections -ffunction-sections
+CFLAGS  += -fdata-sections -ffunction-sections -Os
 LDFLAGS += -T $(AM_HOME)/scripts/ysyxsoc-linker.ld
 LDFLAGS += --gc-sections -e _start  # 指定程序的入口点为 _start（对应 start.S 中的 _start 符号)
 
@@ -23,16 +29,18 @@ CFLAGS  += -DMAINARGS=\"$(mainargs)\"
 # 如果地址分离，甚至会生成几百 MB / 几 GB 的无效 bin
 # 旧的编译包含.text(代码)、.rodata(只读数据)、.data(有初值的变量)、强制加入的.bss段（全 0 填充） 体积巨大
 # 现在的做法是仅包含.text、.rodata、.data三个必须的段，无任何冗余内容
+# @$(OBJCOPY) -S -j .entry -j .text -j .rodata -j .data -O binary $(IMAGE).elf $(IMAGE).bin
 image: $(IMAGE).elf
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
-	@$(OBJCOPY) -S -j .text -j .rodata -j .data -O binary $(IMAGE).elf $(IMAGE).bin	
+	@$(OBJCOPY) -S -j .fsbl -j .ssbl -j .text -j .rodata -j .data -j .data.extra -O binary $(IMAGE).elf $(IMAGE).bin
 
 .PHONY: run
 run: image
 	@echo + RUNNING $(IMAGE).bin ON ysyxSoC NPC
-	$(MAKE) -C $(NPC_HOME) ISA=$(ISA) run ARGS="-e $(IMAGE).elf $(IMAGE).bin" IMG=$(IMAGE).bin
+	$(MAKE) -C $(NPC_HOME) ISA=$(ISA) run ARGS="-b -e $(IMAGE).elf $(IMAGE).bin" IMG=$(IMAGE).bin
 # $(MAKE) -C $(NPC_HOME) 进入 $(NPC_HOME)（NPC 模拟器的目录）执行 make；
 # ISA=$(ISA)：传递给 NPC 模拟器的 ISA 参数，确保使用正确的指令集架构；
 # ARGS="-e $(IMAGE).elf $(IMAGE).bin"：传递给 NPC 模拟器的参数，-e 指定 ELF 文件，$(IMAGE).bin 指定 bin 文件；
 # IMG=$(IMAGE).bin：指定 bin 文件，用于后续的仿真；
+# $(MAKE) -C $(NPC_HOME) ISA=$(ISA) run ARGS="-b -e $(IMAGE).elf $(IMAGE).bin" IMG=$(IMAGE).bin
